@@ -1,0 +1,48 @@
+{
+  "users": {
+    "alice@test.com": {
+      "email": "alice@test.com",
+      "salt": "83f5d9e2d604620ef42b65aa7f90d138",
+      "verifierHash": "51bb89c97d63848c792625f201bc90879fb76a4ade3bfc6f2048765287b9be8c",
+      "encryptedVault": "ENCRYPTED_VAULT_PAYLOAD_ALICE_UPDATED",
+      "updatedAt": "2026-09-12T22:11:11.656Z",
+      "version": 2,
+      "createdAt": "2026-09-12T22:11:11.648Z"
+    },
+    "bob@test.com": {
+      "email": "bob@test.com",
+      "salt": "29d2d586d3edbfef21a28ebbe6542d01",
+      "verifierHash": "a63c3d3ca78b7a9e3e19900a3c6b0993d08f446585c5a2b465d7114dbdb3a6d7",
+      "encryptedVault": "ENCRYPTED_VAULT_BOB",
+      "updatedAt": "2026-09-12T22:11:11.663Z",
+      "version": 1,
+      "createdAt": "2026-09-12T22:11:11.663Z"
+    },
+    "ranakaharian1@gmail.com": {
+      "email": "ranakaharian1@gmail.com",
+      "salt": "7cfb8c756bb5123ee248814dbd336e99",
+      "verifierHash": "055c405332a3e214df5cbda011968abe439aa884b85af1e82e49d1abb459efcd",
+      "encryptedVault": {
+        "cipherHex": "d3bf4cbd4ade4eaea83bfc8b3919a7fe6046957a38a8780e811ae8c16c96f66497e279ff8b5f070af0aa6590abbf0d9b582059db7213a479eba0ee509a0b8fb91434ebd479a704166b1c2cdfa05cd0b499f0adf8d8405d95c435f90278c4562df16e00c94bb35ecb804c61f7300f0542125f8b659a5fe5cf7d0936cd609ba3192015eb861e0acf7fdcbe01f198b6ddb801286aa11afa6e23d11548e6f287fd8e2a4778e26597299d9e41013e325e3260d880e80a074752575067270a60c1ecd0a1ecd38b49bcfe6d711126a8eeb10df884ec66e898cf7b95b7ce1c45cb142c2159e6549e71c1b4228b3c2dfdd1dbf20f7f6a7ec4aa4dfb48ccb2f6171c83daa4bebb25d72cf0a0e4f34f2335feb2d2e691eb823fdc76fcc33f31afc4a5a30844ac16444bad449c00c215a42bc043c56cf9147bcfd3e2e2fb2b0fbbbad387a1d0132d8bf79b495da4d412ce299af26f71374b12862f143b9345bcb1def475c7cae1f8c5a2db826338ed06b2828b424851ef9321a6281c90c6f8ce055a522dc5390c564974ddc27f5c023e6ea49fffe79f9e842974a79fdfe81f96db17226a7b88a9aa6432e4e9f1bd1a73ac171c22ab9a7a1392eae658c4e9f112e2201ba50322ea880c74d3b95ce6fa449df2eebb8a51e1e5309a7b12e1c26f96e2d4d82f3403866697448dc84d8c455d62ae6ea360c9537b3c0626d59d003bc4f45c3663d65a43372d",
+        "ivHex": "8686093df8596aba3235ae13",
+        "tagHex": "19a3b79b5b2e878029325c578b78c3d1"
+      },
+      "updatedAt": "2026-09-13T19:32:27.205Z",
+      "version": 2,
+      "createdAt": "2026-09-13T19:32:27.032Z"
+    },
+    "user_bob_switch@test.com": {
+      "email": "user_bob_switch@test.com",
+      "salt": "e1a56aafa5a83ab9f4fe89dc7e47500c",
+      "verifierHash": "bfd9a159e11bf101482300e7301351707403613c78433e5f9f1a3d03cdb15ddd",
+      "encryptedVault": {
+        "cipherHex": "55054d80a0008de11a5fa28e1ec1b4f4cd34c471ac2f7967bbdc3565c3e803028bae919f088ba96369e3be72e5abddc95936d9f765fea200e7368ada9e7d1fe9aeec917a7c08a2ceb77e509b4cc6fb5ad6aa27441973bdb6",
+        "ivHex": "ccf82e40daea2d4a442a634e",
+        "tagHex": "d2bffe8246ed680656bca316e1f74837"
+      },
+      "updatedAt": "2026-09-13T19:32:27.162Z",
+      "version": 1,
+      "createdAt": "2026-09-13T19:32:27.162Z"
+    }
+  }
+}
