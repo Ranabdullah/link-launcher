@@ -81,6 +81,125 @@ function saveDatabase() {
 
 loadDatabase();
 
+// PostgreSQL Connection Pool (Render / Railway / Supabase / Neon)
+let pool = null;
+if (process.env.DATABASE_URL) {
+  try {
+    const { Pool } = require('pg');
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false }
+    });
+    console.log('PostgreSQL database pool initialized.');
+  } catch (e) {
+    console.warn('Could not initialize pg Pool:', e.message);
+    pool = null;
+  }
+}
+
+async function initDatabase() {
+  if (pool) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          email VARCHAR(255) PRIMARY KEY,
+          salt VARCHAR(64) NOT NULL,
+          verifier_hash VARCHAR(128) NOT NULL,
+          encrypted_vault TEXT,
+          updated_at VARCHAR(64) NOT NULL,
+          version INTEGER DEFAULT 1,
+          created_at VARCHAR(64) NOT NULL
+        );
+      `);
+      console.log('PostgreSQL table "users" verified/created successfully.');
+    } catch (err) {
+      console.error('Failed to initialize PostgreSQL table, falling back to local file DB:', err.message);
+      pool = null;
+    }
+  }
+}
+
+// Database Abstraction Helpers
+async function findUser(email) {
+  const normalizedEmail = (email || '').toLowerCase().trim();
+  if (pool) {
+    try {
+      const res = await pool.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
+      if (res.rows && res.rows.length > 0) {
+        const row = res.rows[0];
+        return {
+          email: row.email,
+          salt: row.salt,
+          verifierHash: row.verifier_hash,
+          encryptedVault: row.encrypted_vault,
+          updatedAt: row.updated_at,
+          version: row.version || 1,
+          createdAt: row.created_at
+        };
+      }
+      return null;
+    } catch (err) {
+      console.error('PostgreSQL findUser error, checking memory DB:', err.message);
+    }
+  }
+  return db.users[normalizedEmail] || null;
+}
+
+async function insertUser(user) {
+  const normalizedEmail = user.email.toLowerCase().trim();
+  if (pool) {
+    try {
+      await pool.query(`
+        INSERT INTO users (email, salt, verifier_hash, encrypted_vault, updated_at, version, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (email) DO UPDATE SET
+          salt = EXCLUDED.salt,
+          verifier_hash = EXCLUDED.verifier_hash,
+          encrypted_vault = EXCLUDED.encrypted_vault,
+          updated_at = EXCLUDED.updated_at,
+          version = EXCLUDED.version
+      `, [
+        normalizedEmail,
+        user.salt,
+        user.verifierHash,
+        user.encryptedVault || null,
+        user.updatedAt,
+        user.version || 1,
+        user.createdAt
+      ]);
+    } catch (err) {
+      console.error('PostgreSQL insertUser error:', err.message);
+      throw err;
+    }
+  }
+  // Keep local memory/file synced
+  db.users[normalizedEmail] = user;
+  saveDatabase();
+  return user;
+}
+
+async function updateUserVault(email, encryptedVault, updatedAt, version) {
+  const normalizedEmail = email.toLowerCase().trim();
+  if (pool) {
+    try {
+      await pool.query(`
+        UPDATE users 
+        SET encrypted_vault = $1, updated_at = $2, version = $3
+        WHERE email = $4
+      `, [encryptedVault, updatedAt, version, normalizedEmail]);
+    } catch (err) {
+      console.error('PostgreSQL updateUserVault error:', err.message);
+      throw err;
+    }
+  }
+  if (db.users[normalizedEmail]) {
+    db.users[normalizedEmail].encryptedVault = encryptedVault;
+    db.users[normalizedEmail].updatedAt = updatedAt;
+    db.users[normalizedEmail].version = version;
+    saveDatabase();
+  }
+}
+
 // Cryptographic helpers
 function hashVerifier(authVerifier, saltHex) {
   const salt = Buffer.from(saltHex, 'hex');
@@ -139,13 +258,14 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'DreamsLab Cloud Vault Service',
-    version: '1.0.0',
+    version: '1.0.6',
+    storage: pool ? 'postgres' : 'file',
     time: new Date().toISOString()
   });
 });
 
 // 2. Register Account
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, authVerifier, encryptedVault } = req.body;
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -156,7 +276,8 @@ app.post('/api/auth/register', (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    if (db.users[normalizedEmail]) {
+    const existing = await findUser(normalizedEmail);
+    if (existing) {
       return res.status(409).json({ error: 'An account with this email already exists. Please Sign In.' });
     }
 
@@ -164,7 +285,7 @@ app.post('/api/auth/register', (req, res) => {
     const verifierHash = hashVerifier(authVerifier, saltHex);
     const now = new Date().toISOString();
 
-    db.users[normalizedEmail] = {
+    const newUser = {
       email: normalizedEmail,
       salt: saltHex,
       verifierHash,
@@ -173,7 +294,7 @@ app.post('/api/auth/register', (req, res) => {
       version: 1,
       createdAt: now
     };
-    saveDatabase();
+    await insertUser(newUser);
 
     const token = generateToken(normalizedEmail);
     return res.status(201).json({
@@ -191,7 +312,7 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // 3. Login Account
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, authVerifier } = req.body;
     if (!email || !authVerifier) {
@@ -199,7 +320,7 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const user = db.users[normalizedEmail];
+    const user = await findUser(normalizedEmail);
 
     if (!user) {
       return res.status(404).json({ error: 'Account not found for this email. Switch to "Create Account" to register.' });
@@ -229,9 +350,9 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // 4. Get Vault Data (authenticated)
-app.get('/api/vault', requireAuth, (req, res) => {
+app.get('/api/vault', requireAuth, async (req, res) => {
   try {
-    const user = db.users[req.userEmail];
+    const user = await findUser(req.userEmail);
     if (!user) {
       return res.status(404).json({ error: 'User record not found.' });
     }
@@ -249,28 +370,27 @@ app.get('/api/vault', requireAuth, (req, res) => {
 });
 
 // 5. Update Vault Data (authenticated)
-app.post('/api/vault', requireAuth, (req, res) => {
+app.post('/api/vault', requireAuth, async (req, res) => {
   try {
     const { encryptedVault, version, updatedAt } = req.body;
     if (!encryptedVault) {
       return res.status(400).json({ error: 'encryptedVault payload is required.' });
     }
 
-    const user = db.users[req.userEmail];
+    const user = await findUser(req.userEmail);
     if (!user) {
       return res.status(404).json({ error: 'User record not found.' });
     }
 
     const now = new Date().toISOString();
-    user.encryptedVault = encryptedVault;
-    user.updatedAt = updatedAt || now;
-    user.version = (user.version || 1) + 1;
-    saveDatabase();
+    const nextVersion = (user.version || 1) + 1;
+    const finalUpdatedAt = updatedAt || now;
+    await updateUserVault(req.userEmail, encryptedVault, finalUpdatedAt, nextVersion);
 
     return res.json({
       success: true,
-      updatedAt: user.updatedAt,
-      version: user.version
+      updatedAt: finalUpdatedAt,
+      version: nextVersion
     });
   } catch (err) {
     console.error('Save vault error:', err);
@@ -278,10 +398,11 @@ app.post('/api/vault', requireAuth, (req, res) => {
   }
 });
 
-function startServer(port = PORT) {
+async function startServer(port = PORT) {
+  await initDatabase();
   return app.listen(port, () => {
     console.log(`DreamsLab Cloud Vault API running on http://localhost:${port}`);
-    console.log(`Database storage: ${DB_FILE}`);
+    console.log(`Database storage: ${pool ? 'PostgreSQL' : DB_FILE}`);
   });
 }
 
@@ -290,5 +411,6 @@ if (require.main === module) {
   startServer(PORT);
 }
 
-module.exports = { app, db, loadDatabase, saveDatabase, startServer };
+module.exports = { app, db, pool, loadDatabase, saveDatabase, findUser, insertUser, updateUserVault, initDatabase, startServer };
+
 
