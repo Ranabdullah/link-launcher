@@ -1103,6 +1103,11 @@
       color: #ffffff;
       border-color: var(--google-blue);
     }
+
+    /* Modals must appear above lock screen (z-index: 9999) */
+    .modal-overlay {
+      z-index: 10000 !important;
+    }
 </style>
 </head>
 <body>
@@ -2045,6 +2050,18 @@
         if (footerToggle) {
           footerToggle.innerHTML = 'Already have an account? <a href="#" onclick="setLockMode(false); return false;" style="color: var(--google-blue); text-decoration: underline; cursor: pointer; font-weight: 500;">Sign In</a>';
         }
+        setTimeout(() => {
+          const emailIn = document.getElementById('userEmailInput');
+          const passIn = document.getElementById('masterPasswordInput');
+          const confIn = document.getElementById('confirmPasswordInput');
+          if (emailIn && !emailIn.value) {
+            emailIn.focus();
+          } else if (passIn && passIn.value && confIn) {
+            confIn.focus();
+          } else if (passIn) {
+            passIn.focus();
+          }
+        }, 60);
       } else {
         if (title) title.textContent = 'Sign In to Vault';
         if (subtitle) subtitle.textContent = 'Enter your email & master password to sync';
@@ -2057,6 +2074,15 @@
         if (footerToggle) {
           footerToggle.innerHTML = 'Need an account? <a href="#" onclick="setLockMode(true); return false;" style="color: var(--google-blue); text-decoration: underline; cursor: pointer; font-weight: 500;">Create Account</a>';
         }
+        setTimeout(() => {
+          const emailIn = document.getElementById('userEmailInput');
+          const passIn = document.getElementById('masterPasswordInput');
+          if (emailIn && !emailIn.value) {
+            emailIn.focus();
+          } else if (passIn) {
+            passIn.focus();
+          }
+        }, 60);
       }
 
       const serverLabel = document.getElementById('lockServerUrlText');
@@ -2129,6 +2155,7 @@
 
     async function confirmResetLocalVault() {
       closeModal('resetDeviceModal');
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
 
       const key = getStorageKey(currentUserEmail);
       if (key) localStorage.removeItem(key);
@@ -2146,19 +2173,44 @@
       currentUserEmail = '';
       cloudAuthToken = null;
       vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+      activeProfileEmail = null;
+      activeCategory = 'ALL';
+
+      // Clear main app DOM
+      const linksContainer = document.getElementById('linksListContainer');
+      if (linksContainer) linksContainer.innerHTML = '';
+      const profileContainer = document.getElementById('profileNavList');
+      if (profileContainer) profileContainer.innerHTML = '';
+
+      // Force lock screen visible
+      const lockScreen = document.getElementById('lockScreen');
+      if (lockScreen) lockScreen.style.display = 'flex';
+
       setLockMode(true);
       const emailInput = document.getElementById('userEmailInput');
       const passInput = document.getElementById('masterPasswordInput');
       const confirmInput = document.getElementById('confirmPasswordInput');
-      if (emailInput) emailInput.value = '';
-      if (passInput) passInput.value = '';
-      if (confirmInput) confirmInput.value = '';
+      if (emailInput) {
+        emailInput.value = '';
+        emailInput.disabled = false;
+        emailInput.readOnly = false;
+      }
+      if (passInput) {
+        passInput.value = '';
+        passInput.disabled = false;
+        passInput.readOnly = false;
+      }
+      if (confirmInput) {
+        confirmInput.value = '';
+        confirmInput.disabled = false;
+        confirmInput.readOnly = false;
+      }
 
       setTimeout(() => {
         if (emailInput) {
           emailInput.focus();
         }
-      }, 50);
+      }, 100);
 
       showToast('🧹 Device cache reset complete. Ready to sign in or create account.');
     }
@@ -2291,7 +2343,7 @@
           if (loginRes.status === 404) {
             const localCached = localStorage.getItem(getStorageKey(email));
             if (!localCached) {
-              errorEl.innerHTML = 'Account not found for this email. <a href="#" onclick="setLockMode(true); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">Create Account</a> to register.';
+              errorEl.innerHTML = 'Account not found for <b>' + escapeHtml(email) + '</b> on the cloud server. <a href="#" onclick="setLockMode(true); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">Create Account</a> to register.';
               return;
             }
           }
