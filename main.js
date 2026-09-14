@@ -114,6 +114,19 @@ function createWindow() {
     }
   });
 
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    // Prevent in-window navigation away from local launcher UI
+    if (navigationUrl !== mainWindow.webContents.getURL()) {
+      event.preventDefault();
+      try {
+        const parsed = new URL(navigationUrl);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          shell.openExternal(navigationUrl);
+        }
+      } catch(e) {}
+    }
+  });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
       const parsed = new URL(url);
@@ -219,38 +232,50 @@ function findChromeUserDataDir() {
 ipcMain.handle('launch-chrome-profile', async (event, { folder, url, email }) => {
   let profileDir = 'Default';
   const userDataDir = findChromeUserDataDir();
+  let matched = false;
 
   // If email is provided, dynamically resolve local Chrome folder from Local State
-  if (email && typeof email === 'string' && email.trim() && userDataDir) {
-    try {
-      const localStatePath = path.join(userDataDir, 'Local State');
-      if (fs.existsSync(localStatePath)) {
-        const localStateRaw = fs.readFileSync(localStatePath, 'utf8');
-        const localState = JSON.parse(localStateRaw);
-        const profileInfoCache = localState.profile?.info_cache || {};
-        const targetEmail = email.toLowerCase().trim();
-        let matched = false;
-        for (const [fName, info] of Object.entries(profileInfoCache)) {
-          const uEmail = (info.user_name || info.hosted_domain || '').toLowerCase().trim();
-          if (uEmail && uEmail === targetEmail) {
-            profileDir = fName;
-            matched = true;
-            console.log(`Matched email ${email} to Chrome profile folder: ${profileDir}`);
-            break;
+  if (email && typeof email === 'string' && email.trim()) {
+    const targetEmail = email.toLowerCase().trim();
+    if (userDataDir) {
+      try {
+        const localStatePath = path.join(userDataDir, 'Local State');
+        if (fs.existsSync(localStatePath)) {
+          const localStateRaw = fs.readFileSync(localStatePath, 'utf8');
+          const localState = JSON.parse(localStateRaw);
+          const profileInfoCache = localState.profile?.info_cache || {};
+          for (const [fName, info] of Object.entries(profileInfoCache)) {
+            const uEmail = (info.user_name || info.hosted_domain || '').toLowerCase().trim();
+            if (uEmail && uEmail === targetEmail) {
+              profileDir = fName;
+              matched = true;
+              console.log(`Matched email ${email} to Chrome profile folder: ${profileDir}`);
+              break;
+            }
           }
         }
-        if (!matched && folder && !folder.startsWith('Profile')) {
-          profileDir = folder;
-        }
+      } catch(e) {
+        console.warn('Email resolution warning:', e.message);
       }
-    } catch(e) {
-      console.warn('Email resolution warning:', e.message);
+    }
+    if (!matched) {
+      return {
+        success: false,
+        error: `Chrome profile for account "${targetEmail}" is not present on this computer.`
+      };
     }
   } else if (folder) {
     profileDir = folder;
   }
 
-  const chromeExe = findChromeExecutable() || 'chrome.exe';
+  const chromeExe = findChromeExecutable();
+  if (!chromeExe) {
+    return {
+      success: false,
+      error: 'Google Chrome executable not found on this computer. Please install Google Chrome.'
+    };
+  }
+
   const targetUrl = (url && typeof url === 'string' && url.trim()) ? url.trim() : 'chrome://newtab';
 
   // Sanitize target URL
@@ -275,8 +300,20 @@ ipcMain.handle('launch-chrome-profile', async (event, { folder, url, email }) =>
         detached: true,
         stdio: 'ignore'
       });
+      let responded = false;
+      child.on('error', (err) => {
+        if (!responded) {
+          responded = true;
+          resolve({ success: false, error: 'Failed to launch Chrome process: ' + err.message });
+        }
+      });
       child.unref();
-      resolve({ success: true, folder: profileDir });
+      setTimeout(() => {
+        if (!responded) {
+          responded = true;
+          resolve({ success: true, folder: profileDir });
+        }
+      }, 150);
     } catch (error) {
       console.error('Chrome spawn error:', error.message);
       resolve({ success: false, error: error.message });

@@ -1183,7 +1183,7 @@
         </div>
         <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <a href="#" onclick="openUpdateModal(); return false;" style="color: var(--google-blue); text-decoration: underline; font-size: 11px; cursor: pointer; font-weight: 500;">🔄 Check for Updates</a>
-          <a href="#" onclick="openServerConfigModal(); return false;" style="color: var(--text-muted); text-decoration: underline; font-size: 11px; cursor: pointer;">⚙️ Cloud Server: <span id="lockServerUrlText">https://link-launcher.onrender.com</span></a>
+          <a href="#" onclick="openServerConfigModal(); return false;" style="color: var(--text-muted); text-decoration: underline; font-size: 11px; cursor: pointer;">⚙️ Cloud Server: <span id="lockServerUrlText">https://dreamslab-cloud-vault.onrender.com</span></a>
         </div>
       </div>
     </div>
@@ -1239,6 +1239,12 @@
     </div>
   </header>
   <div id="desktopDiagnosticBanner" class="diagnostic-banner" style="display: none;"></div>
+    <!-- CONCURRENCY CONFLICT BANNER -->
+    <div id="conflictBanner" style="display:none; padding: 10px 16px; background: #fef2f2; border: 1px solid #f87171; border-radius: 8px; margin: 10px 16px; align-items: center; justify-content: space-between; color: #991b1b; font-size: 12.5px;">
+      <div>⚠️ <b>Cloud data changed on another device</b> (Cloud v<span id="conflictCloudVer"></span> vs Local v<span id="conflictLocalVer"></span>). Your changes are saved locally. Reload to sync with the latest cloud version.</div>
+      <button type="button" class="btn-primary" style="background: #dc2626; border-color: #dc2626; font-size: 12px; padding: 4px 10px;" onclick="pullLatestFromCloud()">🔄 Reload Cloud Version</button>
+    </div>
+
 
   <!-- ========================================================================
        APP BODY: 3-COLUMN LAYOUT
@@ -1549,11 +1555,11 @@
       </div>
       <div class="modal-body">
         <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
-          Specify your Link Launcher Cloud API URL (default: <code>https://link-launcher.onrender.com</code> or your custom server):
+          Specify your Link Launcher Cloud API URL (default: <code>https://dreamslab-cloud-vault.onrender.com</code> or your custom server):
         </p>
         <div class="form-group">
           <label class="form-label" style="font-size: 12px;">Cloud Server URL</label>
-          <input type="text" id="configServerUrlInput" class="form-control" placeholder="https://link-launcher.onrender.com" style="font-size: 13px;">
+          <input type="text" id="configServerUrlInput" class="form-control" placeholder="https://dreamslab-cloud-vault.onrender.com" style="font-size: 13px;">
         </div>
         <div id="serverConfigStatus" style="font-size: 12px; text-align: center; min-height: 18px; font-weight: 500;"></div>
       </div>
@@ -1583,17 +1589,55 @@
     </div>
   </div>
 
-  <div id="cloudModal" class="modal-overlay">
+    <!-- CHROME LAUNCH ERROR MODAL -->
+  <div id="chromeLaunchErrorModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px; color: var(--google-red);">
+          <span>⚠️</span> Chrome Profile Launch Failed
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('chromeLaunchErrorModal')">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
+        <p>Could not open link in the requested Chrome profile:</p>
+        <div style="margin: 10px 0; padding: 10px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; font-weight: 500; color: #991b1b;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #b91c1c; margin-bottom: 2px;">Target Profile</div>
+          <div id="chromeLaunchErrorEmail" style="word-break: break-all;"></div>
+          <div id="chromeLaunchErrorDesc" style="margin-top: 6px; font-size: 12px; font-weight: normal; color: #7f1d1d;"></div>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted);">Link Launcher will not silently switch to your default browser to ensure privacy and correct profile isolation.</p>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('chromeLaunchErrorModal')">Cancel</button>
+        <button type="button" id="chromeLaunchRetryBtn" class="btn-primary" style="background: var(--google-blue);">🔄 Retry Launch</button>
+      </div>
+    </div>
+  </div>
+
+<div id="cloudModal" class="modal-overlay">
     <div class="modal-card" style="max-width: 560px;">
       <div class="modal-header">
         <div class="modal-title" style="display: flex; align-items: center; gap: 8px;">
-          <span>☁️</span> AES-256 Cloud Sync (GitHub Gist)
+          <span>☁️</span> Link Launcher Cloud Sync
         </div>
         <button class="modal-close-btn" onclick="closeModal('cloudModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
-          Synchronize your encrypted bookmarks and profile mappings across multiple PCs using a private GitHub Gist.
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+          <div style="font-weight: 600; font-size: 12.5px; color: #166534; display: flex; align-items: center; justify-content: space-between;">
+            <span>☁️ Primary Storage: Link Launcher Cloud API</span>
+            <button type="button" class="btn-primary" style="font-size: 11.5px; padding: 3px 8px;" onclick="pullLatestFromCloud()">🔄 Sync Now</button>
+          </div>
+          <div style="font-size: 11.5px; color: #15803d; margin-top: 4px;">
+            Your vault is automatically synchronized with your central account (<span id="cloudAccountEmailDesc" style="font-weight: 600;"></span>).
+            All bookmarks and profiles are encrypted with zero-knowledge AES-256-GCM.
+          </div>
+        </div>
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;">
+          📦 Legacy GitHub Gist Backup & Migration (Optional)
+        </div>
+        <p style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
+          A GitHub Personal Access Token is <b>not required</b> for normal cloud sync. Use this section only if you wish to export to or import from an external GitHub Gist backup.
         </p>
 
         <!-- 30-SECOND TUTORIAL ACCORDION -->
@@ -1753,8 +1797,9 @@
     let chromeDetectionError = '';
 
     // Cloud Backend Configuration
-    let cloudApiUrl = localStorage.getItem('dreamslab_cloud_api_url') || 'https://link-launcher.onrender.com';
+    let cloudApiUrl = localStorage.getItem('dreamslab_cloud_api_url') || 'https://dreamslab-cloud-vault.onrender.com';
     let cloudAuthToken = sessionStorage.getItem('dreamslab_auth_token') || null;
+    let cloudVaultVersion = 1;
     let syncStatusState = 'synced'; // 'synced', 'syncing', 'offline'
 
     let activeNavView = 'ALL';       // 'ALL', 'STARRED', 'HIGH', 'MEDIUM', 'LOW'
@@ -1891,13 +1936,72 @@
         badge.style.color = 'var(--google-blue)';
         badge.style.background = 'rgba(11,87,208,0.1)';
       } else if (status === 'synced') {
-        badge.textContent = '☁️ Synced';
+        badge.textContent = '☁️ Synced (v' + cloudVaultVersion + ')';
         badge.style.color = '#188038';
         badge.style.background = 'rgba(24,128,56,0.1)';
+      } else if (status === 'conflict') {
+        badge.textContent = '⚠️ Cloud Conflict';
+        badge.style.color = '#c5221f';
+        badge.style.background = 'rgba(217,48,37,0.15)';
+      } else if (status === 'error') {
+        badge.textContent = '❌ Sync Failed';
+        badge.style.color = '#c5221f';
+        badge.style.background = 'rgba(217,48,37,0.1)';
       } else {
         badge.textContent = '📡 Offline';
         badge.style.color = 'var(--text-muted)';
         badge.style.background = 'rgba(114,119,122,0.1)';
+      }
+    }
+
+    function showConflictBanner(cloudVer, localVer) {
+      const banner = document.getElementById('conflictBanner');
+      const cVer = document.getElementById('conflictCloudVer');
+      const lVer = document.getElementById('conflictLocalVer');
+      if (banner) {
+        if (cVer) cVer.textContent = cloudVer;
+        if (lVer) lVer.textContent = localVer;
+        banner.style.display = 'flex';
+      }
+    }
+
+    function hideConflictBanner() {
+      const banner = document.getElementById('conflictBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    async function pullLatestFromCloud() {
+      if (!cloudAuthToken || !currentPassword) {
+        showToast('⚠️ Please Sign In to pull cloud data.');
+        return;
+      }
+      showToast('🔄 Fetching latest data from cloud...');
+      updateSyncBadge('syncing');
+      try {
+        const res = await fetch(cloudApiUrl + '/api/vault', {
+          headers: {
+            'Authorization': 'Bearer ' + cloudAuthToken
+          }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.encryptedVault) {
+          const decrypted = await decryptData(data.encryptedVault, currentPassword);
+          if (decrypted && decrypted.links) {
+            vaultData = decrypted;
+            normalizeVaultLinks();
+            cloudVaultVersion = data.version || 1;
+            const key = getStorageKey(currentUserEmail);
+            localStorage.setItem(key, JSON.stringify(data.encryptedVault));
+            hideConflictBanner();
+            updateSyncBadge('synced');
+            renderApp();
+            showToast('✅ Cloud vault refreshed to latest version (v' + cloudVaultVersion + ')');
+          }
+        }
+      } catch (err) {
+        updateSyncBadge('error');
+        showToast('❌ Failed to reload from cloud: ' + err.message);
       }
     }
 
@@ -1975,7 +2079,7 @@
     }
 
     async function saveVault() {
-      if (!currentPassword) return;
+      if (!currentPassword) return { success: false, error: 'No active session' };
       try {
         normalizeVaultLinks();
         // Guarantee cloud profiles are completely decoupled from local hardware folders:
@@ -1994,29 +2098,62 @@
         // Automatic Cloud Sync
         if (cloudAuthToken) {
           updateSyncBadge('syncing');
-          fetch(cloudApiUrl + '/api/vault', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + cloudAuthToken
-            },
-            body: JSON.stringify({
-              encryptedVault: encrypted,
-              updatedAt: new Date().toISOString()
-            })
-          }).then(r => r.json()).then(res => {
-            if (res && res.success) {
-              updateSyncBadge('synced');
-            } else {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+            const res = await fetch(cloudApiUrl + '/api/vault', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + cloudAuthToken
+              },
+              body: JSON.stringify({
+                encryptedVault: encrypted,
+                version: cloudVaultVersion,
+                updatedAt: new Date().toISOString()
+              }),
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (res.status === 200) {
+              const resData = await res.json();
+              if (resData && resData.success) {
+                cloudVaultVersion = resData.version || (cloudVaultVersion + 1);
+                updateSyncBadge('synced');
+                hideConflictBanner();
+                return { success: true, version: cloudVaultVersion };
+              }
+              updateSyncBadge('error');
+              return { success: false, error: 'Malformed response' };
+            } else if (res.status === 409) {
+              // Optimistic Concurrency Conflict: Data changed on another device!
+              const errData = await res.json().catch(() => ({}));
+              updateSyncBadge('conflict');
+              showConflictBanner(errData.cloudVersion || 'newer', cloudVaultVersion);
+              showToast('⚠️ Cloud data changed on another device. Please reload.', 6000);
+              return { success: false, status: 409, error: 'Concurrency conflict' };
+            } else if (res.status === 401 || res.status === 403) {
               updateSyncBadge('offline');
+              showToast('⚠️ Cloud session expired. Please sign in again.', 5000);
+              return { success: false, status: res.status, error: 'Session expired' };
+            } else {
+              updateSyncBadge('error');
+              showToast('⚠️ Cloud save failed (HTTP ' + res.status + '). Changes kept locally.', 4000);
+              return { success: false, status: res.status, error: 'HTTP ' + res.status };
             }
-          }).catch(err => {
-            console.warn('Cloud autosave notice:', err.message);
-            updateSyncBadge('offline');
-          });
+          } catch (netErr) {
+            updateSyncBadge('error');
+            const isTimeout = netErr.name === 'AbortError';
+            console.warn('Cloud save notice:', isTimeout ? 'Timeout' : netErr.message);
+            showToast(isTimeout ? '⚠️ Cloud sync timed out. Changes kept locally.' : '⚠️ Cloud sync offline. Changes kept locally.', 4000);
+            return { success: false, error: netErr.message };
+          }
         }
+        return { success: true, localOnly: true };
       } catch (err) {
         console.error('Error saving vault:', err);
+        return { success: false, error: err.message };
       }
     }
 
@@ -2103,7 +2240,7 @@
       if (!input) return;
       let url = input.value.trim();
       if (url.endsWith('/')) url = url.slice(0, -1);
-      if (!url) url = 'https://link-launcher.onrender.com';
+      if (!url) url = 'https://dreamslab-cloud-vault.onrender.com';
 
       statusEl.innerHTML = '<span style="color: var(--google-blue);">⏳ Testing connection...</span>';
       try {
@@ -2253,8 +2390,8 @@
           if (confirmInput) confirmInput.focus();
           return;
         }
-        if (pass.length < 4) {
-          errorEl.textContent = 'Password must be at least 4 characters.';
+        if (pass.length < 12) {
+          errorEl.textContent = 'Master password must be at least 12 characters for secure protection.';
           if (passInput) passInput.focus();
           return;
         }
@@ -2289,6 +2426,7 @@
             if (regRes.ok) {
               const regData = await regRes.json();
               cloudAuthToken = regData.token;
+              cloudVaultVersion = regData.version || 1;
               sessionStorage.setItem('dreamslab_auth_token', regData.token);
               cloudRegistered = true;
             }
@@ -2351,6 +2489,7 @@
           if (loginRes.ok) {
             const loginData = await loginRes.json();
             cloudAuthToken = loginData.token;
+            cloudVaultVersion = loginData.version || 1;
             sessionStorage.setItem('dreamslab_auth_token', loginData.token);
             cloudPayload = loginData.encryptedVault;
             cloudSuccess = true;
@@ -2683,7 +2822,13 @@
 
       const localEmails = getLocalEmailsSet();
       return allActiveLinks.filter(l => {
-        const lEmail = (l.profileEmail || '').toLowerCase().trim();
+        let lEmail = (l.profileEmail || '').toLowerCase().trim();
+        if (!lEmail && l.profileId) {
+          const matchedProfile = (vaultData.profiles || []).find(p => p.id === l.profileId);
+          if (matchedProfile && matchedProfile.email) {
+            lEmail = matchedProfile.email.toLowerCase().trim();
+          }
+        }
         if (!lEmail) return false;
         return localEmails.has(lEmail);
       });
@@ -3120,7 +3265,7 @@
       const item = (vaultData.links || []).find(l => l.id === id);
       if (!item) return;
       const prof = getProfileForLink(item);
-      launchChromeLink(item.url, prof.email || item.profileEmail || '');
+      launchChromeLink(item.url, prof.email || item.profileEmail || '', prof.folder || '');
     }
 
     function handleLinkOpen(id) {
@@ -3314,27 +3459,22 @@
       if (!sel) return;
       let html = '<option value="">Default Profile</option>';
 
-      // In Web mode, show all cloud profiles. On Desktop, show local first, then other cloud profiles.
-      const displayProfs = getDisplayProfiles();
-      const addedEmails = new Set();
+      // IF CLOUD MODE / WEB MODE:
+      //   populate selector with ALL vaultData.profiles.
+      // IF DESKTOP LOCAL MODE:
+      //   populate selector ONLY with getDisplayProfiles()
+      //   DO NOT append cloud-only profiles afterward.
+      const isDesktopLocal = isDesktopApp && filterToLocalOnly;
+      const targetProfiles = isDesktopLocal ? getDisplayProfiles() : (vaultData.profiles || []);
 
-      displayProfs.forEach(p => {
+      const addedEmails = new Set();
+      targetProfiles.forEach(p => {
         const email = (p.email || '').toLowerCase().trim();
         if (!email || addedEmails.has(email)) return;
         addedEmails.add(email);
         const meta = getProfileMeta(email, p.name);
         const isSel = selectedVal && (selectedVal.toLowerCase() === email || selectedVal === p.id);
         html += '<option value="' + escapeHtml(email) + '" ' + (isSel ? 'selected' : '') + '>' + escapeHtml(meta.name) + ' (' + escapeHtml(email) + ')</option>';
-      });
-
-      // Other cloud profiles not currently on this machine
-      (vaultData.profiles || []).forEach(p => {
-        const email = (p.email || '').toLowerCase().trim();
-        if (!email || addedEmails.has(email)) return;
-        addedEmails.add(email);
-        const meta = getProfileMeta(email, p.name);
-        const isSel = selectedVal && (selectedVal.toLowerCase() === email || selectedVal === p.id);
-        html += '<option value="' + escapeHtml(email) + '" ' + (isSel ? 'selected' : '') + '>☁️ ' + escapeHtml(meta.name) + ' (' + escapeHtml(email) + ')</option>';
       });
 
       sel.innerHTML = html;
@@ -3365,9 +3505,27 @@
     /* ==========================================================================
        LINK LAUNCHING & BROWSER DISPATCH
        ========================================================================== */
-    async function launchChromeLink(url, email) {
+    function showChromeLaunchErrorModal(url, email, errorMsg, folder) {
+      const modal = document.getElementById('chromeLaunchErrorModal');
+      const errEmailEl = document.getElementById('chromeLaunchErrorEmail');
+      const errDescEl = document.getElementById('chromeLaunchErrorDesc');
+      const retryBtn = document.getElementById('chromeLaunchRetryBtn');
+
+      if (errEmailEl) errEmailEl.textContent = email || folder || 'Default Profile';
+      if (errDescEl) errDescEl.textContent = errorMsg || 'Unable to launch Chrome profile.';
+      if (retryBtn) {
+        retryBtn.onclick = () => {
+          closeModal('chromeLaunchErrorModal');
+          launchChromeLink(url, email, folder);
+        };
+      }
+      openModal('chromeLaunchErrorModal');
+    }
+
+    async function launchChromeLink(url, email, folder) {
       if (!url) return;
       const targetEmail = (email || '').toLowerCase().trim();
+      const targetFolder = (folder || '').trim();
 
       // Web Browser mode: Open directly in new browser tab
       if (!isDesktopApp || !window.electronAPI || !window.electronAPI.launchChromeProfile) {
@@ -3378,23 +3536,39 @@
 
       // Desktop App mode: Resolve folder dynamically from local Chrome profiles on THIS computer
       let localFolder = 'Default';
-      const localMatch = (localDetectedProfiles || []).find(lp =>
-        (lp.email || '').toLowerCase().trim() === targetEmail
-      );
-      if (localMatch && localMatch.folder) {
-        localFolder = localMatch.folder;
+      if (targetEmail) {
+        const localMatch = (localDetectedProfiles || []).find(lp =>
+          (lp.email || '').toLowerCase().trim() === targetEmail
+        );
+        if (localMatch && localMatch.folder) {
+          localFolder = localMatch.folder;
+        } else {
+          // Profile requested, but NOT present on this machine!
+          // NEVER silently fall back to default browser!
+          showChromeLaunchErrorModal(url, targetEmail, `The Chrome profile for "${targetEmail}" is not present on this computer.`, targetFolder);
+          return;
+        }
+      } else if (targetFolder && targetFolder !== 'Default') {
+        const localMatch = (localDetectedProfiles || []).find(lp =>
+          lp.folder && lp.folder.toLowerCase() === targetFolder.toLowerCase()
+        );
+        if (localMatch && localMatch.folder) {
+          localFolder = localMatch.folder;
+        } else {
+          showChromeLaunchErrorModal(url, targetFolder, `The Chrome profile folder "${targetFolder}" is not present on this computer.`, targetFolder);
+          return;
+        }
       }
 
       showToast('🚀 Launching Chrome (' + (targetEmail || localFolder) + ')...');
       try {
         const res = await window.electronAPI.launchChromeProfile(localFolder, url, targetEmail);
         if (!res || !res.success) {
-          if (window.electronAPI.openExternal) window.electronAPI.openExternal(url);
-          else window.open(url, '_blank');
+          const errMsg = (res && res.error) || 'Failed to launch Google Chrome.';
+          showChromeLaunchErrorModal(url, targetEmail || localFolder, errMsg, targetFolder);
         }
       } catch (e) {
-        if (window.electronAPI.openExternal) window.electronAPI.openExternal(url);
-        else window.open(url, '_blank');
+        showChromeLaunchErrorModal(url, targetEmail || localFolder, e.message || 'Error communicating with Chrome launcher.', targetFolder);
       }
     }
 
@@ -3643,7 +3817,7 @@
       if (!input) return;
       let url = input.value.trim();
       if (url.endsWith('/')) url = url.slice(0, -1);
-      if (!url) url = 'https://link-launcher.onrender.com';
+      if (!url) url = 'https://dreamslab-cloud-vault.onrender.com';
       cloudApiUrl = url;
       localStorage.setItem('dreamslab_cloud_api_url', url);
       const label = document.getElementById('lockServerUrlText');
@@ -3657,12 +3831,26 @@
         statusEl.style.color = 'var(--google-blue)';
         statusEl.textContent = '⏳ Synchronizing with Cloud Server...';
       }
-      await saveVault();
-      if (statusEl) {
-        statusEl.style.color = '#188038';
-        statusEl.textContent = '✅ Cloud account fully synchronized!';
+      const res = await saveVault();
+      if (res && res.success) {
+        if (statusEl) {
+          statusEl.style.color = '#188038';
+          statusEl.textContent = '✅ Cloud account fully synchronized!';
+        }
+        showToast('Cloud synchronized');
+      } else if (res && res.status === 409) {
+        if (statusEl) {
+          statusEl.style.color = '#f2994a';
+          statusEl.textContent = '⚠️ Version conflict: Cloud data changed on another device.';
+        }
+        showToast('⚠️ Cloud data conflict detected. Please reload.', 5000);
+      } else {
+        if (statusEl) {
+          statusEl.style.color = '#d93025';
+          statusEl.textContent = '❌ Cloud sync failed (' + (res && res.error ? res.error : 'Network/Server error') + ').';
+        }
+        showToast('⚠️ Cloud sync failed. Changes kept locally.', 4000);
       }
-      showToast('Cloud synchronized');
     }
 
     async function migrateFromGist() {
