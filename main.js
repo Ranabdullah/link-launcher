@@ -296,6 +296,48 @@ ipcMain.handle('launch-chrome-profile', async (event, { folder, url, email }) =>
         console.warn('Email resolution warning:', e.message);
       }
     }
+    // Secondary source: if Local State did not match email, inspect profile Preferences files
+    if (!matched && userDataDir) {
+      try {
+        const checkFolderPref = (fName) => {
+          const prefPath = path.join(userDataDir, fName, 'Preferences');
+          if (fs.existsSync(prefPath)) {
+            try {
+              const pref = JSON.parse(fs.readFileSync(prefPath, 'utf8'));
+              let pEmail = '';
+              if (Array.isArray(pref.account_info) && pref.account_info.length > 0 && pref.account_info[0].email) {
+                pEmail = pref.account_info[0].email.toLowerCase().trim();
+              }
+              if (!pEmail && pref.google && pref.google.services && pref.google.services.username) {
+                pEmail = pref.google.services.username.toLowerCase().trim();
+              }
+              return pEmail === targetEmail;
+            } catch (e) {}
+          }
+          return false;
+        };
+
+        if (folder && checkFolderPref(folder)) {
+          profileDir = folder;
+          matched = true;
+          console.log(`Matched email ${email} to Chrome profile folder via Preferences: ${profileDir}`);
+        } else {
+          const entries = fs.readdirSync(userDataDir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isDirectory() && (entry.name === 'Default' || entry.name.startsWith('Profile '))) {
+              if (checkFolderPref(entry.name)) {
+                profileDir = entry.name;
+                matched = true;
+                console.log(`Matched email ${email} to Chrome profile folder via Preferences: ${profileDir}`);
+                break;
+              }
+            }
+          }
+        }
+      } catch (prefErr) {
+        console.warn('Email resolution secondary lookup warning:', prefErr.message);
+      }
+    }
     if (!matched) {
       return {
         success: false,
