@@ -473,9 +473,27 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// ----------------------------------------------------------------------------
-// API ROUTES
-// ----------------------------------------------------------------------------
+// Root landing & web launcher
+app.get('/', (req, res) => {
+  const rootIndex = path.join(__dirname, '..', 'index.html');
+  if (fs.existsSync(rootIndex)) {
+    return res.sendFile(rootIndex);
+  }
+  return res.json({
+    service: 'DreamsLab Cloud Vault API',
+    version: '1.0.9',
+    status: 'online',
+    health: '/api/health'
+  });
+});
+
+app.get('/version.json', (req, res) => {
+  const vPath = path.join(__dirname, '..', 'version.json');
+  if (fs.existsSync(vPath)) {
+    return res.sendFile(vPath);
+  }
+  return res.json({ version: '1.0.9' });
+});
 
 // 1. Health check
 app.get('/api/health', async (req, res) => {
