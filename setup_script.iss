@@ -1,6 +1,6 @@
 [Setup]
 AppName=DreamsLab Cyber Launcher
-AppVersion=1.0.6
+AppVersion=1.0.9
 AppPublisher=DreamsLabStudio
 AppPublisherURL=https://github.com/abdullahinayat24-lang/link-launcher
 AppSupportURL=https://github.com/abdullahinayat24-lang/link-launcher
@@ -9,14 +9,14 @@ DefaultDirName={userappdata}\..\Local\Programs\DreamsLab Cyber Launcher
 DefaultGroupName=DreamsLab Cyber Launcher
 DisableProgramGroupPage=yes
 OutputBaseFilename=DreamsLab-Cyber-Launcher-Setup
-OutputDir=f:\AntiGravity\Apps Data\Link Launcher\inno_out
+OutputDir=inno_out
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
 CloseApplications=yes
 RestartApplications=no
-SetupIconFile=f:\AntiGravity\Apps Data\Link Launcher\app_icon.ico
+SetupIconFile=app_icon.ico
 UninstallDisplayName=DreamsLab Cyber Launcher
 UninstallDisplayIcon={app}\DreamsLab Cyber Launcher.exe
 
@@ -29,12 +29,15 @@ Type: files; Name: "{userappdata}\DreamsLab Cyber Launcher\update\index.html"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "f:\AntiGravity\Apps Data\Link Launcher\build_dist\DreamsLab Cyber Launcher-win32-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\DreamsLab Cyber Launcher-win32-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\DreamsLab Cyber Launcher"; Filename: "{app}\DreamsLab Cyber Launcher.exe"
 Name: "{group}\Uninstall DreamsLab Cyber Launcher"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\DreamsLab Cyber Launcher"; Filename: "{app}\DreamsLab Cyber Launcher.exe"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\DreamsLab Cyber Launcher.exe"; Description: "Launch DreamsLab Cyber Launcher"; Flags: nowait postinstall skipifsilent
 
 [Registry]
 Root: HKCU; Subkey: "Software\Classes\chromeprofile"; ValueType: string; ValueName: ""; ValueData: "URL:Chrome Profile Protocol"; Flags: uninsdeletekey

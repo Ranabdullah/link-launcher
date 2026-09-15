@@ -9,6 +9,7 @@
     "desktop": "electron .",
     "start:server": "node server/server.js",
     "package:win": "electron-packager . \"DreamsLab Cyber Launcher\" --platform=win32 --arch=x64 --out=dist --overwrite",
+    "package:installer": "electron-builder --win nsis --publish never",
     "test": "node tests/run-all.js"
   },
   "keywords": [
@@ -32,6 +33,7 @@
   "build": {
     "appId": "com.dreamslabstudio.linklauncher",
     "productName": "DreamsLab Cyber Launcher",
+    "artifactName": "DreamsLab-Cyber-Launcher-Setup-${version}.${ext}",
     "asar": true,
     "directories": {
       "output": "dist_installer"
