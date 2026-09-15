@@ -2382,7 +2382,10 @@
           vaultData = initialVault;
           const storageKey = getStorageKey(currentUserEmail);
           localStorage.setItem(storageKey, JSON.stringify(encryptedVault));
-          // dreamslab_session_key purged for zero-knowledge security
+          const rememberCheck = document.getElementById('rememberSessionCheck');
+          if (!rememberCheck || rememberCheck.checked) {
+            await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
+          }
           if (window.electronAPI && window.electronAPI.saveToDocuments) {
             window.electronAPI.saveToDocuments(JSON.stringify(encryptedVault));
           }
@@ -2472,7 +2475,10 @@
             // Account created on cloud but no vault stored yet
             currentPassword = pass;
             vaultData = { links: [], categories: [...DEFAULT_CATEGORIES], profiles: [], createdAt: new Date().toISOString() };
-            // dreamslab_session_key purged for zero-knowledge security
+            const rememberCheck = document.getElementById('rememberSessionCheck');
+          if (!rememberCheck || rememberCheck.checked) {
+            await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
+          }
             document.getElementById('lockScreen').style.display = 'none';
             errorEl.textContent = '';
             if (isDesktopApp) await refreshLocalChromeProfiles();
@@ -2496,7 +2502,10 @@
         // Cache payload locally under user email
         const storageKey = getStorageKey(currentUserEmail);
         localStorage.setItem(storageKey, typeof rawToDecrypt === 'string' ? rawToDecrypt : JSON.stringify(rawToDecrypt));
-        // dreamslab_session_key purged for zero-knowledge security
+        const rememberCheck = document.getElementById('rememberSessionCheck');
+          if (!rememberCheck || rememberCheck.checked) {
+            await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
+          }
 
         document.getElementById('lockScreen').style.display = 'none';
         errorEl.textContent = '';
@@ -2523,31 +2532,36 @@
 
     function lockVault() {
       currentPassword = null;
-      // dreamslab_session_key removed
-      clearSecureSession();
+      // Note: Lock does NOT delete secure_session.dat - it only locks the screen
+      const emailInput = document.getElementById('userEmailInput');
+      if (emailInput && currentUserEmail) {
+        emailInput.value = currentUserEmail;
+      }
+      const lockTitle = document.getElementById('lockTitle');
+      if (lockTitle) {
+        lockTitle.textContent = 'Vault Locked (' + (currentUserEmail.split('@')[0] || 'User') + ')';
+      }
+      const passInput = document.getElementById('masterPasswordInput');
+      if (passInput) {
+        passInput.value = '';
+      }
+      setLockMode(false);
       document.getElementById('lockScreen').style.display = 'flex';
-      checkLockScreenState();
-      showToast('🔒 Vault locked');
+      setTimeout(() => { if (passInput) passInput.focus(); }, 50);
+      showToast('🔒 Vault locked — enter password to resume');
     }
 
-    function handleLogout() {
+    async function handleLogout() {
       currentPassword = null;
       currentUserEmail = '';
       cloudAuthToken = null;
       vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
       activeProfileEmail = null;
       activeCategory = 'ALL';
-      // dreamslab_session_key removed
-      clearSecureSession();
-      sessionStorage.clear();
-      setLockMode(false);
 
-      const emailInput = document.getElementById('userEmailInput');
-      if (emailInput) emailInput.value = '';
-      const passInput = document.getElementById('masterPasswordInput');
-      if (passInput) passInput.value = '';
-      const confirmInput = document.getElementById('confirmPasswordInput');
-      if (confirmInput) confirmInput.value = '';
+      // Full logout completely deletes the remembered session and clears all inputs
+      await clearSecureSession();
+      sessionStorage.clear();
 
       // Clear active DOM stream
       const linksContainer = document.getElementById('linksListContainer');
@@ -2555,23 +2569,33 @@
       const profileContainer = document.getElementById('sidebarProfilesList');
       if (profileContainer) profileContainer.innerHTML = '';
 
+      const emailInput = document.getElementById('userEmailInput');
+      if (emailInput) emailInput.value = '';
+      const passInput = document.getElementById('masterPasswordInput');
+      if (passInput) passInput.value = '';
+      const confirmInput = document.getElementById('confirmPasswordInput');
+      if (confirmInput) confirmInput.value = '';
+      const lockTitle = document.getElementById('lockTitle');
+      if (lockTitle) lockTitle.textContent = 'Sign In to Vault';
+
+      setLockMode(false);
       document.getElementById('lockScreen').style.display = 'flex';
-      checkLockScreenState();
       setTimeout(() => { if (emailInput) emailInput.focus(); }, 50);
-      showToast('🔒 Logged out successfully');
+      showToast('🚪 Logged out — session cleared');
     }
 
     async function tryAutoUnlock() {
       try {
-        // SafeStorage Session Check
         const savedSession = await retrieveSecureSession();
-        if (savedSession && savedSession.email && savedSession.token) {
-          currentUserEmail = savedSession.email;
-          cloudAuthToken = savedSession.token;
-          setCloudState('CLOUD_CONNECTED');
+        if (!savedSession || !savedSession.email || !savedSession.key) {
+          return false;
         }
 
-        const storageKey = getStorageKey(session.email);
+        currentUserEmail = savedSession.email;
+        cloudAuthToken = savedSession.token || null;
+        currentPassword = savedSession.key;
+
+        const storageKey = getStorageKey(currentUserEmail);
         let rawToDecrypt = localStorage.getItem(storageKey);
         if (!rawToDecrypt) {
           rawToDecrypt = localStorage.getItem('dreamslab_cyber_vault_v1');
@@ -2588,12 +2612,11 @@
         if (!rawToDecrypt) return false;
 
         let parsedEncrypted = typeof rawToDecrypt === 'object' ? rawToDecrypt : JSON.parse(rawToDecrypt);
-        const decrypted = await decryptData(parsedEncrypted, session.key);
+        const decrypted = await decryptData(parsedEncrypted, currentPassword);
         if (!decrypted || typeof decrypted !== 'object') {
           return false;
         }
 
-        currentPassword = session.key;
         vaultData = decrypted;
         normalizeVaultLinks();
 
@@ -2605,12 +2628,17 @@
         }
 
         renderApp();
-        console.log('DreamsLab: Restored active session for', session.email);
+        if (cloudAuthToken) {
+          setCloudState('CLOUD_CONNECTED');
+          syncWithCloudVault(false);
+        } else {
+          setCloudState('LOCAL_ONLY');
+        }
+
+        console.log('DreamsLab: Restored active session for', currentUserEmail);
         return true;
       } catch (e) {
         console.warn('Auto-unlock notice:', e.message);
-        // dreamslab_session_key removed
-      clearSecureSession();
         return false;
       }
     }
