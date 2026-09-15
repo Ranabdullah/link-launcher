@@ -5,7 +5,8 @@
   "description": "Futuristic Glass Chrome Link Launcher by DreamsLabStudio",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node main.js",
+    "desktop": "electron .",
     "start:server": "node server/server.js",
     "package:win": "electron-packager . \"DreamsLab Cyber Launcher\" --platform=win32 --arch=x64 --out=dist --overwrite"
   },
@@ -19,7 +20,8 @@
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@electron/packager": "^18.4.1",

@@ -26,11 +26,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Production Secrets Validation: Never use hardcoded secrets in production!
-const JWT_SECRET = process.env.JWT_SECRET || (!isProduction ? crypto.randomBytes(32).toString('hex') : null);
-if (isProduction && !JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is required in production.');
-  process.exit(1);
+// Production Secrets Validation: Auto-generate secure random secret if not set in environment
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+if (!process.env.JWT_SECRET) {
+  console.log('Notice: JWT_SECRET not provided in environment, generated dynamic session secret.');
 }
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -71,10 +70,9 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// In-Memory Database with persistence to DB_FILE (DEV / FALLBACK MODE ONLY)
+// In-Memory Database with persistence to DB_FILE (FILE-STORE FALLBACK)
 let db = { users: {} };
 function loadDatabase() {
-  if (isProduction) return; // Never load local file database in production
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
@@ -88,7 +86,6 @@ function loadDatabase() {
 }
 
 function saveDatabase() {
-  if (isProduction) return; // Never save local file database in production
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -101,17 +98,10 @@ function saveDatabase() {
   }
 }
 
-if (!isProduction) {
-  loadDatabase();
-}
+loadDatabase();
 
 // PostgreSQL Connection Pool (Render / Railway / Supabase / Neon)
 let pool = null;
-
-if (isProduction && !process.env.DATABASE_URL) {
-  console.error('FATAL: DATABASE_URL environment variable is required in production.');
-  process.exit(1);
-}
 
 if (process.env.DATABASE_URL) {
   try {
@@ -122,12 +112,11 @@ if (process.env.DATABASE_URL) {
     });
     console.log('PostgreSQL database pool initialized.');
   } catch (e) {
-    console.error('Could not initialize pg Pool:', e.message);
-    if (isProduction) {
-      process.exit(1);
-    }
+    console.error('Could not initialize pg Pool, using local database:', e.message);
     pool = null;
   }
+} else {
+  console.log('Notice: DATABASE_URL not set, running in local file-store mode.');
 }
 
 async function initDatabase() {
@@ -210,11 +199,8 @@ async function findUser(email) {
       return null;
     } catch (err) {
       console.error('PostgreSQL findUser error:', err.message);
-      throw err; // A PostgreSQL query failure must return a database error, NEVER search vaults.json
+      throw err;
     }
-  }
-  if (isProduction) {
-    throw new Error('PostgreSQL database unavailable in production');
   }
   return db.users[normalizedEmail] || null;
 }
@@ -245,20 +231,14 @@ async function insertUser(user) {
         user.version || 1,
         user.createdAt
       ]);
-      if (!isProduction) {
-        db.users[normalizedEmail] = user;
-        saveDatabase();
-      }
+      db.users[normalizedEmail] = user;
+      saveDatabase();
       return user;
     } catch (err) {
       console.error('PostgreSQL insertUser error:', err.message);
       throw err;
     }
   }
-  if (isProduction) {
-    throw new Error('PostgreSQL database unavailable in production');
-  }
-  // Local development file fallback
   db.users[normalizedEmail] = user;
   saveDatabase();
   return user;
@@ -314,11 +294,7 @@ async function atomicUpdateUserVault(email, encryptedVault, updatedAt, clientVer
     }
   }
 
-  if (isProduction) {
-    throw new Error('PostgreSQL database unavailable in production');
-  }
-
-  // Non-production development fallback
+  // File-store fallback
   const devUser = db.users[normalizedEmail];
   if (!devUser) return { success: false, notFound: true };
 
