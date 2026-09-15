@@ -377,6 +377,31 @@
     .account-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .account-email { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+    .account-item-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-profile-del {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 3px 5px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .account-item:hover .btn-profile-del {
+      display: inline-flex;
+    }
+    .btn-profile-del:hover {
+      color: var(--google-red);
+      background: rgba(217, 48, 37, 0.12);
+    }
+
     /* ==========================================================================
        3. MIDDLE MAIN PANE (LINKS TABLE STREAM)
        ========================================================================== */
@@ -1198,7 +1223,7 @@
       <div class="brand-title-wrap">
         <div class="brand-name">
           DreamsLab
-          <span class="brand-version-badge">v1.0.6</span>
+          <span class="brand-version-badge">v1.0.7</span>
           <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
         </div>
       </div>
@@ -1223,7 +1248,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Backup
       </button>
-      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.6)" style="position: relative;">
+      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.7)" style="position: relative;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
         Update
         <span id="updateDot" style="display:none;width:7px;height:7px;background:#f59e0b;border-radius:50%;position:absolute;top:4px;right:4px;"></span>
@@ -1736,7 +1761,7 @@
         <div style="background: #fdf2f2; border: 1px solid #f5c2c7; border-radius: 8px; padding: 14px;">
           <div style="font-weight: 600; font-size: 13px; color: var(--google-red); margin-bottom: 4px;">Reset Local Device</div>
           <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Clear all local cache & stored data on this computer. (Cloud backup remains safe).</p>
-          <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="resetLocalVault(event)">🧹 Reset Local Vault</button>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="openResetDeviceModal(event)">🧹 Reset Local Vault</button>
         </div>
         <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
           <div style="font-weight: 600; font-size: 13px; color: var(--google-purple); margin-bottom: 4px;">Import Vault Backup</div>
@@ -1763,7 +1788,7 @@
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
           <div style="font-size: 28px;">⚡</div>
           <div>
-            <div style="font-family: var(--font-google); font-size: 14px; font-weight: 600;">DreamsLab Cyber Launcher <span class="brand-version-badge" style="background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; font-size: 11px;">v1.0.6</span></div>
+            <div style="font-family: var(--font-google); font-size: 14px; font-weight: 600;">DreamsLab Cyber Launcher <span class="brand-version-badge" style="background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; font-size: 11px;">v1.0.7</span></div>
             <div style="font-size: 12px; color: var(--text-muted);">Hot-Update Engine & Cloud Vault Sync</div>
           </div>
         </div>
@@ -2285,6 +2310,10 @@
       }
     }
 
+    function resetLocalVault(e) {
+      openResetDeviceModal(e);
+    }
+
     function openResetDeviceModal(e) {
       if (e && e.preventDefault) e.preventDefault();
       openModal('resetDeviceModal');
@@ -2294,6 +2323,15 @@
       closeModal('resetDeviceModal');
       document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
 
+      // Clear all local cache and vault keys from localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('dreamslab_') || k.startsWith('dl_') || k.includes('vault'))) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
       const key = getStorageKey(currentUserEmail);
       if (key) localStorage.removeItem(key);
       localStorage.removeItem('dreamslab_cyber_vault_v1');
@@ -2637,6 +2675,8 @@
       }
 
       renderDesktopDiagnostics();
+      renderSidebarProfiles();
+      renderLinksStream();
     }
 
     async function retryChromeDetection() {
@@ -2775,21 +2815,20 @@
 
     // ZERO-FALLBACK PROFILES VIEW FILTER
     function getDisplayProfiles() {
-      if (!isDesktopApp || !filterToLocalOnly) {
-        // Online mode or user toggled to view all cloud profiles
-        return vaultData.profiles || [];
+      if (filterToLocalOnly && isDesktopApp) {
+        if (chromeDetectionStatus === 'PROFILES_FOUND' && localDetectedProfiles && localDetectedProfiles.length > 0) {
+          const localEmails = getLocalEmailsSet();
+          return (vaultData.profiles || []).filter(p => {
+            const email = (p.email || '').toLowerCase().trim();
+            return email && localEmails.has(email);
+          });
+        } else if (chromeDetectionStatus === 'INITIALIZING') {
+          return vaultData.profiles || [];
+        } else {
+          return [];
+        }
       }
-
-      // Desktop App: ZERO FALLBACK RULE
-      if (chromeDetectionStatus !== 'PROFILES_FOUND' || !localDetectedProfiles || localDetectedProfiles.length === 0) {
-        return [];
-      }
-
-      const localEmails = getLocalEmailsSet();
-      return (vaultData.profiles || []).filter(p => {
-        const email = (p.email || '').toLowerCase().trim();
-        return email && localEmails.has(email);
-      });
+      return vaultData.profiles || [];
     }
 
     // Returns detected Chrome profiles on this computer not yet linked in Link Launcher cloud vault
@@ -2835,9 +2874,46 @@
     }
 
     function toggleProfileScope() {
+      if (!isDesktopApp) {
+        showToast('ℹ️ Local PC detection requires the DreamsLab Cyber Launcher desktop app.');
+        return;
+      }
       filterToLocalOnly = !filterToLocalOnly;
+      if (filterToLocalOnly && (!localDetectedProfiles || localDetectedProfiles.length === 0)) {
+        refreshLocalChromeProfiles();
+      }
       renderApp();
       showToast(filterToLocalOnly ? '💻 Showing profiles on this PC' : '☁️ Showing all cloud profiles');
+    }
+
+    async function deleteProfile(profileIdOrEmail, e) {
+      if (e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.preventDefault) e.preventDefault();
+      }
+      if (!profileIdOrEmail) return;
+
+      const normId = String(profileIdOrEmail).toLowerCase().trim();
+      const prof = (vaultData.profiles || []).find(p => (p.id && String(p.id).toLowerCase() === normId) || (p.email && p.email.toLowerCase().trim() === normId));
+      const profName = prof ? (prof.name || prof.email) : profileIdOrEmail;
+
+      if (!confirm(`Remove profile "${profName}" from your Link Launcher account?\n\n(Note: Links assigned to this profile will remain in your vault).`)) {
+        return;
+      }
+
+      vaultData.profiles = (vaultData.profiles || []).filter(p => {
+        const matchesId = p.id && String(p.id).toLowerCase() === normId;
+        const matchesEmail = p.email && p.email.toLowerCase().trim() === normId;
+        return !matchesId && !matchesEmail;
+      });
+
+      if (activeProfileEmail && (activeProfileEmail.toLowerCase().trim() === normId || (prof && prof.email && activeProfileEmail.toLowerCase().trim() === prof.email.toLowerCase().trim()))) {
+        activeProfileEmail = null;
+      }
+
+      await saveVault();
+      renderApp();
+      showToast(`🗑️ Profile "${profName}" removed from account.`);
     }
 
     // Dynamic folder & metadata resolution
@@ -2938,8 +3014,15 @@
 
       const btnScope = document.getElementById('btnToggleScope');
       if (btnScope) {
-        btnScope.textContent = filterToLocalOnly ? '💻 Local' : '☁️ Cloud';
-        btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view all Cloud)' : 'Viewing all cloud profiles (Click to scope to this PC)';
+        if (isDesktopApp) {
+          btnScope.style.display = 'inline-block';
+          btnScope.textContent = filterToLocalOnly ? '💻 Local' : '☁️ Cloud';
+          btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view all Cloud)' : 'Viewing all cloud profiles (Click to scope to this PC)';
+        } else {
+          btnScope.style.display = 'inline-block';
+          btnScope.textContent = '☁️ Cloud';
+          btnScope.title = 'Running in web browser (Showing all cloud profiles)';
+        }
       }
 
       const displayProfiles = getDisplayProfiles();
@@ -2969,6 +3052,7 @@
       // Render Active / Matching Profiles
       displayProfiles.forEach(p => {
         const meta = getProfileMeta(p.email, p.name);
+        const isLocalInstalled = isDesktopApp && p.email && getLocalEmailsSet().has(p.email.toLowerCase().trim());
         const count = getScopedLinks().filter(l => {
           const lp = getProfileForLink(l);
           return (p.email && lp.email && lp.email.toLowerCase() === p.email.toLowerCase()) || (p.id && lp.id === p.id);
@@ -2986,12 +3070,15 @@
               <div class="account-info">
                 <div class="account-name" style="font-weight:600; display:flex; align-items:center; gap:4px;">
                   <span>${escapeHtml(meta.name)}</span>
-                  ${isDesktopApp ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038;"></span>' : ''}
+                  ${isDesktopApp ? (isLocalInstalled ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038; flex-shrink:0;"></span>' : '<span title="Cloud profile (Not on this PC)" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#9aa0a6; flex-shrink:0;"></span>') : ''}
                 </div>
                 <div class="account-email">${escapeHtml(p.email || 'Default')}</div>
               </div>
             </div>
-            <span class="nav-badge">${count}</span>
+            <div class="account-item-right">
+              <span class="nav-badge">${count}</span>
+              <button type="button" class="btn-profile-del" onclick="deleteProfile('${escapeHtml(p.id || p.email)}', event)" title="Remove this profile from account">✕</button>
+            </div>
           </div>
         `;
       });
@@ -4320,7 +4407,7 @@
             }
             showToast('Update check failed');
           } else {
-            const ver = (res && res.version) ? res.version : '1.0.6';
+            const ver = (res && res.version) ? String(res.version).replace(/^v+/i, '') : '1.0.7';
             if (statusEl) {
               statusEl.innerHTML = '<span style="color: #188038; font-weight: 500;">✅ You are running the latest version of DreamsLab Launcher (v' + escapeHtml(ver) + ').</span>';
             }
@@ -4333,7 +4420,7 @@
         }
       } else {
         if (statusEl) {
-          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.6). Always fresh via GitHub Pages!</span>';
+          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.7). Always fresh via GitHub Pages!</span>';
         }
         showToast('Web version is always up to date');
       }
@@ -4360,13 +4447,17 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
-      window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       checkLockScreenState();
+      if (isDesktopApp) {
+        await refreshLocalChromeProfiles();
+      }
       if (window.electronAPI && window.electronAPI.onUpdateAvailable) {
         window.electronAPI.onUpdateAvailable((info) => {
           const dot = document.getElementById('updateDot');
           if (dot) dot.style.display = 'block';
-          showToast('⚡ New update available (v' + (info && info.latestVersion || '1.0.6') + ')! Click Update to install.');
+          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.7';
+          showToast('⚡ New update available (v' + updateVer + ')! Click Update to install.');
         });
       }
     });

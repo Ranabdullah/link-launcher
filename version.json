@@ -1,6 +1,6 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "minSupportedAppVersion": "1.0.0",
-  "releaseDate": "2026-09-12",
-  "releaseNotes": "v1.0.6: Real Cross-Device Cloud Login, Zero-Knowledge Encryption, and Hardened Electron Updates"
+  "releaseDate": "2026-09-15",
+  "releaseNotes": "v1.0.7: Fix profile detection scope, add profile deletion, fix reset device button, and versioning cleanup"
 }

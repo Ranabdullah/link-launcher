@@ -491,7 +491,7 @@ app.get('/api/health', async (req, res) => {
   return res.status(statusCode).json({
     status: isHealthy ? 'ok' : 'degraded',
     service: 'DreamsLab Cloud Vault Service',
-    version: '1.0.6',
+    version: '1.0.7',
     storage: pool ? 'postgres' : (isProduction ? 'postgres (disconnected)' : 'file'),
     databaseConnected: dbConnected,
     schemaReady: schemaReady,

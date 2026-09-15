@@ -138,7 +138,7 @@ function createWindow() {
   });
 }
 
-const CURRENT_APP_VERSION = '1.0.6';
+const CURRENT_APP_VERSION = '1.0.7';
 
 function checkBackgroundUpdate() {
   const manifestUrl = 'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/version.json?t=' + Date.now();
@@ -245,7 +245,7 @@ ipcMain.handle('launch-chrome-profile', async (event, { folder, url, email }) =>
           const localState = JSON.parse(localStateRaw);
           const profileInfoCache = localState.profile?.info_cache || {};
           for (const [fName, info] of Object.entries(profileInfoCache)) {
-            const uEmail = (info.user_name || info.hosted_domain || '').toLowerCase().trim();
+            const uEmail = (info.user_name || (info.hosted_domain && info.hosted_domain !== 'NO_HOSTED_DOMAIN' ? info.hosted_domain : '') || '').toLowerCase().trim();
             if (uEmail && uEmail === targetEmail) {
               profileDir = fName;
               matched = true;
@@ -355,13 +355,14 @@ ipcMain.handle('detect-local-chrome-profiles', async () => {
         const localState = JSON.parse(localStateRaw);
         const profileInfoCache = localState.profile?.info_cache || {};
         for (const [folderName, info] of Object.entries(profileInfoCache)) {
-          const email = (info.user_name || info.hosted_domain || '').toLowerCase().trim();
-          const name = info.name || folderName;
+          const email = (info.user_name || (info.hosted_domain && info.hosted_domain !== 'NO_HOSTED_DOMAIN' ? info.hosted_domain : '') || '').toLowerCase().trim();
+          const name = info.shortcut_name || info.name || info.gaia_name || folderName;
           profileMap.set(folderName, {
             folder: folderName,
             name: name,
             email: email,
-            avatarIcon: info.avatar_icon || ''
+            gaiaName: info.gaia_name || '',
+            avatarIcon: info.avatar_icon || info.last_downloaded_gaia_picture_url_with_size || ''
           });
         }
       } catch (parseErr) {
@@ -404,13 +405,14 @@ ipcMain.handle('detect-local-chrome-profiles', async () => {
               if (profileMap.has(folderName)) {
                 const existing = profileMap.get(folderName);
                 if (!existing.email && prefEmail) existing.email = prefEmail;
-                if (prefName && existing.name === folderName) existing.name = prefName;
+                if (prefName && (existing.name === folderName || !existing.name)) existing.name = prefName;
                 if (avatarPic && !existing.avatarIcon) existing.avatarIcon = avatarPic;
               } else {
                 profileMap.set(folderName, {
                   folder: folderName,
                   name: prefName || folderName,
                   email: prefEmail,
+                  gaiaName: '',
                   avatarIcon: avatarPic
                 });
               }
