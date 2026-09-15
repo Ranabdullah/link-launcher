@@ -1,14 +1,15 @@
 {
   "name": "dreamslab-cyber-launcher",
   "productName": "DreamsLab Cyber Launcher",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Futuristic Glass Chrome Link Launcher by DreamsLabStudio",
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
     "desktop": "electron .",
     "start:server": "node server/server.js",
-    "package:win": "electron-packager . \"DreamsLab Cyber Launcher\" --platform=win32 --arch=x64 --out=dist --overwrite"
+    "package:win": "electron-packager . \"DreamsLab Cyber Launcher\" --platform=win32 --arch=x64 --out=dist --overwrite",
+    "test": "node tests/run-all.js"
   },
   "keywords": [
     "launcher",

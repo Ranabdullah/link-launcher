@@ -178,6 +178,11 @@ async function initDatabase() {
 // Database Abstraction Helpers
 async function findUser(email) {
   const normalizedEmail = (email || '').toLowerCase().trim();
+  if (isProduction && !pool) {
+    const err = new Error('Database service unavailable in production.');
+    err.code = 'DB_UNAVAILABLE';
+    throw err;
+  }
   if (pool) {
     try {
       const res = await pool.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
@@ -196,6 +201,7 @@ async function findUser(email) {
       return null;
     } catch (err) {
       console.error('PostgreSQL findUser error:', err.message);
+      err.code = 'DB_ERROR';
       throw err;
     }
   }
@@ -204,6 +210,11 @@ async function findUser(email) {
 
 async function insertUser(user) {
   const normalizedEmail = user.email.toLowerCase().trim();
+  if (isProduction && !pool) {
+    const err = new Error('Database service unavailable in production.');
+    err.code = 'DB_UNAVAILABLE';
+    throw err;
+  }
   const vaultStr = (user.encryptedVault && typeof user.encryptedVault === 'object')
     ? JSON.stringify(user.encryptedVault)
     : (user.encryptedVault || null);
@@ -228,11 +239,14 @@ async function insertUser(user) {
         user.version || 1,
         user.createdAt
       ]);
-      db.users[normalizedEmail] = user;
-      saveDatabase();
+      if (!isProduction) {
+        db.users[normalizedEmail] = user;
+        saveDatabase();
+      }
       return user;
     } catch (err) {
       console.error('PostgreSQL insertUser error:', err.message);
+      err.code = 'DB_ERROR';
       throw err;
     }
   }
@@ -243,6 +257,11 @@ async function insertUser(user) {
 
 async function atomicUpdateUserVault(email, encryptedVault, updatedAt, clientVersion) {
   const normalizedEmail = email.toLowerCase().trim();
+  if (isProduction && !pool) {
+    const err = new Error('Database service unavailable in production.');
+    err.code = 'DB_UNAVAILABLE';
+    throw err;
+  }
   const vaultStr = (encryptedVault && typeof encryptedVault === 'object')
     ? JSON.stringify(encryptedVault)
     : (encryptedVault || null);
@@ -287,11 +306,12 @@ async function atomicUpdateUserVault(email, encryptedVault, updatedAt, clientVer
       return { success: false, notFound: true };
     } catch (err) {
       console.error('PostgreSQL atomicUpdateUserVault error:', err.message);
+      err.code = 'DB_ERROR';
       throw err;
     }
   }
 
-  // File-store fallback
+  // File-store fallback (development only)
   const devUser = db.users[normalizedEmail];
   if (!devUser) return { success: false, notFound: true };
 
@@ -315,6 +335,7 @@ async function atomicUpdateUserVault(email, encryptedVault, updatedAt, clientVer
     updatedAt
   };
 }
+
 
 // Backward-compatible wrapper for direct updates
 async function updateUserVault(email, encryptedVault, updatedAt, version) {
@@ -387,8 +408,8 @@ const VERIFIER_REGEX = /^[a-fA-F0-9]{64}$/;
 
 // Cryptographic helpers
 function hashVerifier(authVerifier, saltHex) {
-  const salt = Buffer.from(saltHex, 'hex');
-  const hash = crypto.pbkdf2Sync(authVerifier, salt, 20000, 32, 'sha256');
+  const salt = saltHex ? Buffer.from(saltHex, 'hex') : Buffer.alloc(16, 0);
+  const hash = crypto.pbkdf2Sync(String(authVerifier || ''), salt, 20000, 32, 'sha256');
   return hash.toString('hex');
 }
 
@@ -522,7 +543,10 @@ app.post('/api/auth/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Register error:', err.message);
-    return res.status(500).json({ error: 'Internal server error: ' + err.message });
+    if (err.code === 'DB_UNAVAILABLE' || err.code === 'DB_ERROR') {
+      return res.status(503).json({ error: 'Database service is currently unavailable. Please try again later.', code: 'DB_UNAVAILABLE' });
+    }
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -574,6 +598,9 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err.message);
+    if (err.code === 'DB_UNAVAILABLE' || err.code === 'DB_ERROR') {
+      return res.status(503).json({ error: 'Database service is currently unavailable. Please try again later.', code: 'DB_UNAVAILABLE' });
+    }
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -594,7 +621,10 @@ app.get('/api/vault', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Get vault error:', err.message);
-    return res.status(500).json({ error: 'Internal server error: ' + err.message });
+    if (err.code === 'DB_UNAVAILABLE' || err.code === 'DB_ERROR') {
+      return res.status(503).json({ error: 'Database service is currently unavailable. Please try again later.', code: 'DB_UNAVAILABLE' });
+    }
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -635,9 +665,13 @@ app.post('/api/vault', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Save vault error:', err.message);
-    return res.status(500).json({ error: 'Internal server error: ' + err.message });
+    if (err.code === 'DB_UNAVAILABLE' || err.code === 'DB_ERROR') {
+      return res.status(503).json({ error: 'Database service is currently unavailable. Please try again later.', code: 'DB_UNAVAILABLE' });
+    }
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 async function startServer(port = PORT) {
   await initDatabase();
@@ -670,8 +704,12 @@ module.exports = {
   loginAttempts,
   checkRegisterRateLimit,
   recordRegisterAttempt,
-  registerAttempts
+  registerAttempts,
+  hashVerifier,
+  generateToken,
+  verifyToken
 };
+
 
 
 

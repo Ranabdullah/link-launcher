@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist_installer/
+.env
+*.log
+secure_session.dat
+.DS_Store
+Thumbs.db

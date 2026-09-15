@@ -14,7 +14,7 @@ if (!electron || typeof electron !== 'object' || !electron.app) {
 }
 
 function runDesktopApplication(electron) {
-  const { app, BrowserWindow, ipcMain, shell } = electron;
+  const { app, BrowserWindow, ipcMain, shell, safeStorage } = electron;
   const path = require('path');
   const fs = require('fs');
   const https = require('https');
@@ -138,7 +138,17 @@ function createWindow() {
   });
 }
 
-const CURRENT_APP_VERSION = '1.0.8';
+const CURRENT_APP_VERSION = '1.0.9';
+
+function compareSemver(v1, v2) {
+  const parse = v => String(v || '0.0.0').replace(/^v+/i, '').split('.').map(n => parseInt(n, 10) || 0);
+  const [maj1 = 0, min1 = 0, pat1 = 0] = parse(v1);
+  const [maj2 = 0, min2 = 0, pat2 = 0] = parse(v2);
+  if (maj1 !== maj2) return maj1 > maj2 ? 1 : -1;
+  if (min1 !== min2) return min1 > min2 ? 1 : -1;
+  if (pat1 !== pat2) return pat1 > pat2 ? 1 : -1;
+  return 0;
+}
 
 function fetchTextWithFallback(urlList, onData, onError) {
   let index = 0;
@@ -178,7 +188,7 @@ function checkBackgroundUpdate() {
   fetchTextWithFallback(candidateManifests, (rawData) => {
     try {
       const manifest = JSON.parse(rawData);
-      if (manifest && manifest.version && manifest.version !== CURRENT_APP_VERSION) {
+      if (manifest && manifest.version && compareSemver(manifest.version, CURRENT_APP_VERSION) > 0) {
         console.log(`[Update] New version ${manifest.version} available (current: ${CURRENT_APP_VERSION})`);
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('update-available', {
@@ -195,6 +205,7 @@ function checkBackgroundUpdate() {
     console.log('[Update] All update servers unreachable, skipping background update check.');
   });
 }
+
 
 app.whenReady().then(() => {
   createWindow();
@@ -511,7 +522,11 @@ ipcMain.handle('check-and-apply-update', async () => {
         return resolve({ success: false, error: 'Manifest missing version number' });
       }
 
-      if (manifest.version === CURRENT_APP_VERSION) {
+      if (!manifest.sha256 || typeof manifest.sha256 !== 'string' || !manifest.sha256.trim()) {
+        return resolve({ success: false, error: 'Manifest missing mandatory SHA-256 integrity hash' });
+      }
+
+      if (compareSemver(manifest.version, CURRENT_APP_VERSION) <= 0) {
         return resolve({
           success: true,
           updated: false,
@@ -529,14 +544,12 @@ ipcMain.handle('check-and-apply-update', async () => {
       fetchTextWithFallback(candidateHtmls, (rawData) => {
         try {
           if (!isValidHtmlPackage(rawData)) {
-            return resolve({ success: false, error: 'Downloaded package failed integrity checks' });
+            return resolve({ success: false, error: 'Downloaded package failed HTML validity checks' });
           }
 
-          if (manifest.sha256) {
-            const computedSha = crypto.createHash('sha256').update(rawData).digest('hex');
-            if (computedSha.toLowerCase() !== manifest.sha256.toLowerCase()) {
-              return resolve({ success: false, error: 'Package checksum verification failed. Update discarded.' });
-            }
+          const computedSha = crypto.createHash('sha256').update(rawData).digest('hex');
+          if (computedSha.toLowerCase() !== manifest.sha256.trim().toLowerCase()) {
+            return resolve({ success: false, error: 'Package checksum verification failed. Update discarded.' });
           }
 
           const updateDir = path.join(app.getPath('userData'), 'update');
@@ -568,6 +581,51 @@ ipcMain.handle('check-and-apply-update', async () => {
       resolve({ success: false, error: 'Network error checking manifest: ' + err.message });
     });
   });
+});
+
+// IPC: Secure Session Persistent Authentication (safeStorage OS Keychain / DPAPI)
+ipcMain.handle('secure-store-session', async (event, sessionData) => {
+  try {
+    if (!safeStorage || !safeStorage.isEncryptionAvailable()) {
+      return { success: false, error: 'OS safeStorage encryption is not available on this system.' };
+    }
+    const sessionFile = path.join(app.getPath('userData'), 'secure_session.dat');
+    const raw = JSON.stringify(sessionData);
+    const encryptedBuffer = safeStorage.encryptString(raw);
+    fs.writeFileSync(sessionFile, encryptedBuffer);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('secure-retrieve-session', async () => {
+  try {
+    if (!safeStorage || !safeStorage.isEncryptionAvailable()) {
+      return { success: false, error: 'OS safeStorage encryption is not available.' };
+    }
+    const sessionFile = path.join(app.getPath('userData'), 'secure_session.dat');
+    if (!fs.existsSync(sessionFile)) {
+      return { success: false, error: 'No secure session stored.' };
+    }
+    const encryptedBuffer = fs.readFileSync(sessionFile);
+    const decrypted = safeStorage.decryptString(encryptedBuffer);
+    return { success: true, session: JSON.parse(decrypted) };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('secure-clear-session', async () => {
+  try {
+    const sessionFile = path.join(app.getPath('userData'), 'secure_session.dat');
+    if (fs.existsSync(sessionFile)) {
+      fs.unlinkSync(sessionFile);
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 // IPC: Documents Auto-Backup
@@ -608,22 +666,27 @@ ipcMain.handle('reset-local-vault', async () => {
       fs.unlinkSync(backupPath);
       console.log('Local documents backup deleted on reset:', backupPath);
     }
+    const sessionFile = path.join(app.getPath('userData'), 'secure_session.dat');
+    if (fs.existsSync(sessionFile)) {
+      fs.unlinkSync(sessionFile);
+    }
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 
-  ipcMain.handle('open-external', async (event, url) => {
-    try {
-      if (!url || typeof url !== 'string') return false;
-      const parsed = new URL(url);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        shell.openExternal(url);
-        return true;
-      }
-    } catch(e) {}
-    return false;
-  });
+ipcMain.handle('open-external', async (event, url) => {
+  try {
+    if (!url || typeof url !== 'string') return false;
+    const parsed = new URL(url);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      shell.openExternal(url);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+});
 }
+
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.8",
-  "minSupportedAppVersion": "1.0.0",
+  "version": "1.0.9",
+  "sha256": "f2bb7a7b696ca06e33011124e4a669b45368a8e520904627e31ce8d321cbb14b",
   "releaseDate": "2026-09-15",
-  "releaseNotes": "v1.0.8: Add persistent session auto-login, fix cloud pull getScopedLinks, refine local vs cloud scoping, update cloud modal email display"
+  "notes": "DreamsLab Link Launcher v1.0.9 - Full Architecture & Security Suite (3-Way Merge, Local Account Isolation, Account Star/Pin, SafeStorage DPAPI, Validated Backups)"
 }

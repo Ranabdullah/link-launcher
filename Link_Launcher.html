@@ -402,9 +402,60 @@
       background: rgba(217, 48, 37, 0.12);
     }
 
+    .btn-profile-star, .btn-profile-pin {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      padding: 2px 3px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .btn-profile-star.starred {
+      color: var(--google-yellow);
+    }
+    .btn-profile-pin.pinned {
+      color: var(--google-blue);
+    }
+    .btn-profile-star:hover {
+      color: var(--google-yellow);
+      background: rgba(242, 153, 0, 0.12);
+    }
+    .btn-profile-pin:hover {
+      color: var(--google-blue);
+      background: rgba(11, 87, 208, 0.12);
+    }
+    .profile-filter-tabs {
+      display: flex;
+      gap: 4px;
+      margin: 4px 0 6px 0;
+    }
+    .profile-filter-tab {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .profile-filter-tab.active {
+      background: var(--bg-active);
+      color: var(--text-active);
+      border-color: #c2e7ff;
+      font-weight: 600;
+    }
+
     /* ==========================================================================
        3. MIDDLE MAIN PANE (LINKS TABLE STREAM)
        ========================================================================== */
+
     .main-pane {
       flex: 1;
       background: var(--bg-surface);
@@ -1133,7 +1184,92 @@
     .modal-overlay {
       z-index: 10000 !important;
     }
-</style>
+
+    .btn-filter-pill {
+      flex: 1;
+      padding: 3px 6px;
+      font-size: 10.5px;
+      font-family: var(--font-google);
+      font-weight: 500;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .btn-filter-pill:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .btn-filter-pill.active {
+      background: var(--google-blue-light);
+      color: var(--google-blue);
+      border-color: #a8c7fa;
+      font-weight: 600;
+    }
+    .btn-profile-action {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 11px;
+      border-radius: 4px;
+      opacity: 0.6;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-profile-action:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    .btn-profile-action.active {
+      opacity: 1;
+    }
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .sync-local {
+      background: #f1f3f4;
+      color: #5f6368;
+      border: 1px solid #dadce0;
+    }
+    .sync-online {
+      background: #e6f4ea;
+      color: #137333;
+      border: 1px solid #ceead6;
+    }
+    .sync-offline {
+      background: #fef7e0;
+      color: #b06000;
+      border: 1px solid #feefc3;
+    }
+    .sync-expired {
+      background: #fce8e6;
+      color: #c5221f;
+      border: 1px solid #fad2cf;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-gray { background: #9aa0a6; }
+    .dot-green { background: #1e8e3e; }
+    .dot-yellow { background: #f9ab00; }
+    .dot-red { background: #d93025; }
+  
+  </style>
 </head>
 <body>
 
@@ -1194,6 +1330,13 @@
           <button type="button" id="toggleCloudConnectBtn" style="display: none;"></button>
         </div>
 
+        
+        <!-- KEEP ME SIGNED IN ON THIS PC -->
+        <div id="rememberSessionGroup" style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+          <input type="checkbox" id="rememberSessionCheck" checked style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--google-blue);">
+          <label for="rememberSessionCheck" style="cursor: pointer; user-select: none;">Keep me signed in on this PC (SafeStorage DPAPI)</label>
+        </div>
+  
         <button type="submit" id="unlockSubmitBtn" class="btn-primary" style="width: 100%; justify-content: center; height: 42px; font-size: 14px; margin-top: 4px;">
           Create Account & Open
         </button>
@@ -1223,7 +1366,7 @@
       <div class="brand-title-wrap">
         <div class="brand-name">
           DreamsLab
-          <span class="brand-version-badge">v1.0.8</span>
+          <span class="brand-version-badge">v1.0.9</span>
           <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
         </div>
       </div>
@@ -1248,7 +1391,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Backup
       </button>
-      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.8)" style="position: relative;">
+      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.9)" style="position: relative;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
         Update
         <span id="updateDot" style="display:none;width:7px;height:7px;background:#f59e0b;border-radius:50%;position:absolute;top:4px;right:4px;"></span>
@@ -1324,13 +1467,20 @@
         <span class="nav-badge" id="countLow">0</span>
       </div>
 
+      
       <!-- CHROME ACCOUNTS / EMAILS -->
-      <div class="nav-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="nav-section-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
         <span style="display: flex; align-items: center; gap: 6px;">
-          <span>Chrome Accounts</span>
+          <span>Accounts</span>
           <button type="button" onclick="toggleProfileScope()" id="btnToggleScope" title="Toggle This PC vs All Cloud" style="background: #eaf1fb; border: 1px solid #d3e3fd; border-radius: 10px; font-size: 10px; cursor: pointer; color: var(--google-blue); font-weight: 600; padding: 1px 6px;">💻 Local</button>
         </span>
         <button class="btn-add-mini" onclick="openAddProfileModal()" title="Add Chrome Profile">+</button>
+      </div>
+      <!-- PROFILE FILTER TABS -->
+      <div id="profileFilterTabs" style="display: flex; gap: 4px; padding: 2px 0 6px 0;">
+        <button type="button" id="btnFilterProfAll" class="btn-filter-pill active" onclick="setSidebarProfileFilter('ALL')">All</button>
+        <button type="button" id="btnFilterProfStarred" class="btn-filter-pill" onclick="setSidebarProfileFilter('STARRED')">⭐ Starred</button>
+        <button type="button" id="btnFilterProfPinned" class="btn-filter-pill" onclick="setSidebarProfileFilter('PINNED')">📌 Pinned</button>
       </div>
       <div id="sidebarProfilesList" style="display: flex; flex-direction: column;">
         <!-- Dynamic Profiles List -->
@@ -1499,277 +1649,33 @@
         <button class="modal-close-btn" onclick="closeModal('addLinkModal')">&times;</button>
       </div>
       <form onsubmit="saveNewLinkItem(event)">
-        <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">URL *</label>
-            <input type="url" id="newLinkUrl" class="form-control" placeholder="https://..." required onblur="autoFetchTitleForNew(this.value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Title *</label>
-            <input type="text" id="newLinkTitle" class="form-control" placeholder="Link Display Title" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Chrome Account / Email *</label>
-            <select id="newLinkProfileSelect" class="form-control" required></select>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Category</label>
-              <input type="text" id="newLinkCategory" class="form-control" placeholder="e.g. Book Publish" list="drawerCategoryDatalist">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Priority</label>
-              <select id="newLinkPriority" class="form-control">
-                <option value="normal">🟢 Normal</option>
-                <option value="high">🔴 High / Urgent</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="low">🟣 Low</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Notes (Optional)</label>
-            <textarea id="newLinkNotes" class="form-control" placeholder="e.g. Account credentials context"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeModal('addLinkModal')">Cancel</button>
-          <button type="submit" class="btn-primary">Save Link</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ADD PROFILE MODAL -->
-  <div id="addProfileModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">Add Chrome Profile</div>
-        <button class="modal-close-btn" onclick="closeModal('addProfileModal')">&times;</button>
-      </div>
-      <form onsubmit="saveNewProfileItem(event)">
-        <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Profile Name *</label>
-            <input type="text" id="newProfName" class="form-control" placeholder="e.g. Entertaindo, Personal, Work" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Google Account Email *</label>
-            <input type="email" id="newProfEmail" class="form-control" placeholder="e.g. entertaindo@gmail.com" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Chrome Folder Name</label>
-            <input type="text" id="newProfFolder" class="form-control" placeholder="e.g. Profile 1, Default (Auto-detected if empty)">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeModal('addProfileModal')">Cancel</button>
-          <button type="submit" class="btn-primary">Add Profile</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- CLOUD SYNC MODAL -->
-    <!-- CLOUD SERVER CONFIG MODAL -->
-  <div id="serverConfigModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 440px;">
-      <div class="modal-header">
-        <div class="modal-title" style="display: flex; align-items: center; gap: 6px;">⚙️ Cloud Server Configuration</div>
-        <button class="modal-close-btn" onclick="closeModal('serverConfigModal')">&times;</button>
-      </div>
+        
       <div class="modal-body">
-        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
-          Specify your Link Launcher Cloud API URL (default: <code>https://dreamslab-cloud-vault.onrender.com</code> or your custom server):
-        </p>
-        <div class="form-group">
-          <label class="form-label" style="font-size: 12px;">Cloud Server URL</label>
-          <input type="text" id="configServerUrlInput" class="form-control" placeholder="https://dreamslab-cloud-vault.onrender.com" style="font-size: 13px;">
-        </div>
-        <div id="serverConfigStatus" style="font-size: 12px; text-align: center; min-height: 18px; font-weight: 500;"></div>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
-        <button class="btn-secondary" onclick="closeModal('serverConfigModal')">Cancel</button>
-        <button class="btn-primary" onclick="saveServerConfigUrl()">Save & Test Connection</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- RESET DEVICE MODAL -->
-  <div id="resetDeviceModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 420px; text-align: center;">
-      <div class="modal-header">
-        <div class="modal-title" style="display: flex; align-items: center; gap: 6px; color: var(--google-red);">🧹 Reset This Device</div>
-        <button class="modal-close-btn" onclick="closeModal('resetDeviceModal')">&times;</button>
-      </div>
-      <div class="modal-body" style="text-align: left; font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
-        <p>This will erase the cached encrypted vault and local credentials stored on this computer.</p>
-        <p style="margin-top: 10px; color: var(--google-green); font-weight: 500;">✓ Your cloud vault on the server will NOT be deleted.</p>
-        <p style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">You can create a new account or sign into an existing account immediately after reset.</p>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
-        <button type="button" class="btn-secondary" onclick="closeModal('resetDeviceModal')">Cancel</button>
-        <button type="button" class="btn-primary" style="background: var(--google-red); border-color: var(--google-red);" onclick="confirmResetLocalVault()">Yes, Reset Device</button>
-      </div>
-    </div>
-  </div>
-
-    <!-- CHROME LAUNCH ERROR MODAL -->
-  <div id="chromeLaunchErrorModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 480px;">
-      <div class="modal-header">
-        <div class="modal-title" style="display: flex; align-items: center; gap: 8px; color: var(--google-red);">
-          <span>⚠️</span> Chrome Profile Launch Failed
-        </div>
-        <button class="modal-close-btn" onclick="closeModal('chromeLaunchErrorModal')">&times;</button>
-      </div>
-      <div class="modal-body" style="font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
-        <p>Could not open link in the requested Chrome profile:</p>
-        <div style="margin: 10px 0; padding: 10px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; font-weight: 500; color: #991b1b;">
-          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #b91c1c; margin-bottom: 2px;">Target Profile</div>
-          <div id="chromeLaunchErrorEmail" style="word-break: break-all;"></div>
-          <div id="chromeLaunchErrorDesc" style="margin-top: 6px; font-size: 12px; font-weight: normal; color: #7f1d1d;"></div>
-        </div>
-        <p style="font-size: 12px; color: var(--text-muted);">Link Launcher will not silently switch to your default browser to ensure privacy and correct profile isolation.</p>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
-        <button type="button" class="btn-secondary" onclick="closeModal('chromeLaunchErrorModal')">Cancel</button>
-        <button type="button" id="chromeLaunchRetryBtn" class="btn-primary" style="background: var(--google-blue);">🔄 Retry Launch</button>
-      </div>
-    </div>
-  </div>
-
-<div id="cloudModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 560px;">
-      <div class="modal-header">
-        <div class="modal-title" style="display: flex; align-items: center; gap: 8px;">
-          <span>☁️</span> Link Launcher Cloud Sync
-        </div>
-        <button class="modal-close-btn" onclick="closeModal('cloudModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
-          <div style="font-weight: 600; font-size: 12.5px; color: #166534; display: flex; align-items: center; justify-content: space-between;">
-            <span>☁️ Primary Storage: Link Launcher Cloud API</span>
-            <button type="button" class="btn-primary" style="font-size: 11.5px; padding: 3px 8px;" onclick="pullLatestFromCloud()">🔄 Sync Now</button>
-          </div>
-          <div style="font-size: 11.5px; color: #15803d; margin-top: 4px;">
-            Your vault is automatically synchronized with your central account (<span id="cloudAccountEmailDesc" style="font-weight: 600;"></span>).
-            All bookmarks and profiles are encrypted with zero-knowledge AES-256-GCM.
-          </div>
-        </div>
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;">
-          📦 Legacy GitHub Gist Backup & Migration (Optional)
-        </div>
-        <p style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
-          A GitHub Personal Access Token is <b>not required</b> for normal cloud sync. Use this section only if you wish to export to or import from an external GitHub Gist backup.
-        </p>
-
-        <!-- 30-SECOND TUTORIAL ACCORDION -->
-        <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 600; color: var(--google-blue); display: flex; align-items: center; gap: 6px;">
-              <span>📖</span> 30-Second Setup Guide
-            </span>
-            <button type="button" onclick="toggleCloudGuide()" id="btnToggleCloudGuide" style="background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; text-decoration: underline;">
-              Hide Guide
-            </button>
-          </div>
-          <div id="cloudGuideContent" style="display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.45;">
-            <div>
-              <b>1. Get GitHub Token:</b> Click <a href="#" onclick="openExternalDirect('https://github.com/settings/tokens/new?scopes=gist&description=DreamsLab%20Vault%20Sync'); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">Get Token (1-Click) ↗</a>, keep <code>gist</code> checked, click <i>Generate token</i> at the bottom, and paste your GitHub personal access token below.
-            </div>
-            <div>
-              <b>2. Get or Auto-Create Gist:</b> If you don't have a Gist ID, simply click <a href="#" onclick="autoCreatePrivateGist(); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">✨ Auto-Create Gist</a> or open <a href="#" onclick="openExternalDirect('https://gist.github.com/'); return false;" style="color: var(--google-blue); text-decoration: underline;">gist.github.com ↗</a> and copy the ID from your URL bar.
-            </div>
-            <div>
-              <b>3. Sync Across Devices:</b> Click <b>⬆ Push to Cloud</b> on your primary PC. On any other PC or incognito browser, enter the same Token & Gist ID and click <b>⬇ Pull from Cloud</b> to restore all your links!
-            </div>
-          </div>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-weight: 600; font-size: 13px; color: var(--google-green); margin-bottom: 4px;">🔒 Export Encrypted Vault Backup (Recommended)</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Downloads an AES-256 encrypted <code>.dlvault</code> file protected by your Master Password.</p>
+          <button class="btn-primary" style="width: 100%; justify-content: center; background: var(--google-green); border-color: var(--google-green);" onclick="exportEncryptedVault()">⬇ Export Encrypted Vault (.dlvault)</button>
         </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label class="form-label" style="margin: 0;">GitHub Token</label>
-            <a href="#" onclick="openExternalDirect('https://github.com/settings/tokens/new?scopes=gist&description=DreamsLab%20Vault%20Sync'); return false;" style="font-size: 11px; color: var(--google-blue); font-weight: 500; text-decoration: none;">
-              🔗 Get Token (1-Click) ↗
-            </a>
-          </div>
-          <div style="position: relative; width: 100%;">
-            <input type="password" id="cloudTokenInput" class="form-control" placeholder="GitHub Personal Access Token (classic)" style="padding-right: 40px;">
-            <button type="button" id="toggleCloudTokenBtn" class="password-toggle-btn" onclick="togglePasswordVisibility('cloudTokenInput', this)" title="View Token">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;">
-              <path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
-              <circle cx="12" cy="12" r="5.2" stroke="currentColor" stroke-width="2.2" fill="none"/>
-              <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
-              <circle cx="13.3" cy="10.7" r="0.9" fill="#ffffff"/>
-            </svg>
-          </button>
-          </div>
+        <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-weight: 600; font-size: 13px; color: #b45309; margin-bottom: 4px;">⚠️ Plaintext JSON Export (Insecure)</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Export unencrypted JSON. Requires security confirmation.</p>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; color: #b45309; border-color: #fde68a;" onclick="openPlaintextExportModal()">Export Plaintext JSON...</button>
         </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label class="form-label" style="margin: 0;">Gist ID</label>
-            <div style="display: flex; gap: 8px;">
-              <a href="#" onclick="autoCreatePrivateGist(); return false;" style="font-size: 11px; color: var(--google-blue); font-weight: 600; text-decoration: none;">
-                ✨ Auto-Create Gist
-              </a>
-              <a href="#" onclick="openExternalDirect('https://gist.github.com/'); return false;" style="font-size: 11px; color: var(--text-muted); text-decoration: none;">
-                Open Gist ↗
-              </a>
-            </div>
-          </div>
-          <input type="text" id="cloudGistIdInput" class="form-control" placeholder="e.g. 7f8a9b0c1d2e3f...">
+        <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-weight: 600; font-size: 13px; color: var(--google-purple); margin-bottom: 4px;">📥 Import Vault Backup</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Restore or merge links and profiles from an encrypted (<code>.dlvault</code>) or plaintext backup.</p>
+          <input type="file" id="localBackupFileInput" accept=".dlvault,.json" onchange="handleImportVaultFile(event)" style="display:none;">
+          <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('localBackupFileInput').click()">Choose Backup File (.dlvault / .json)</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px;">
-          <button class="btn-secondary" onclick="syncPullCloudVault()" style="justify-content: center; display: flex; align-items: center; gap: 4px; font-size: 12px; padding: 8px 10px;">
-            ⬇ Pull Cloud
-          </button>
-          <button class="btn-primary" style="justify-content: center; display: flex; align-items: center; gap: 4px; font-size: 12px; padding: 8px 10px;" onclick="syncPushCloudVault()">
-            ⬆ Push Cloud
-          </button>
-          <button class="btn-secondary" onclick="saveCloudCredentials()" style="justify-content: center; display: flex; align-items: center; gap: 4px; font-size: 12px; padding: 8px 10px;" title="Save Token and Gist ID to your account">
-            💾 Save Details
-          </button>
-        </div>
-        <div id="cloudSyncStatus"  style="font-size: 12px; min-height: 18px; text-align: center; font-weight: 500; margin-top: 8px;"></div>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 11px; color: var(--text-muted);">
-          🔒 Encrypted locally before uploading
-        </span>
-        <button class="btn-secondary" onclick="closeModal('cloudModal')">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOCAL SAVE MODAL -->
-  <div id="localSaveModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">Backup & Restore Vault</div>
-        <button class="modal-close-btn" onclick="closeModal('localSaveModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
-          <div style="font-weight: 600; font-size: 13px; color: var(--google-green); margin-bottom: 4px;">Export Vault Backup</div>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Downloads an encrypted <code>.json</code> file to store safely on your PC.</p>
-          <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="exportVaultJson()">Export JSON Backup</button>
-        </div>
         <div style="background: #fdf2f2; border: 1px solid #f5c2c7; border-radius: 8px; padding: 14px;">
-          <div style="font-weight: 600; font-size: 13px; color: var(--google-red); margin-bottom: 4px;">Reset Local Device</div>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Clear all local cache & stored data on this computer. (Cloud backup remains safe).</p>
-          <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="openResetDeviceModal(event)">🧹 Reset Local Vault</button>
+          <div style="font-weight: 600; font-size: 13px; color: var(--google-red); margin-bottom: 4px;">🧹 Reset Local Device</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Clear local cache and saved state on this computer (Cloud backup remains safe).</p>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="openResetDeviceModal(event)">🧹 Reset Local Device</button>
         </div>
-        <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
-          <div style="font-weight: 600; font-size: 13px; color: var(--google-purple); margin-bottom: 4px;">Import Vault Backup</div>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Restore all links and profiles from an existing backup.</p>
-          <input type="file" id="localBackupFileInput" accept=".json" onchange="handleImportJsonFile(event)" style="display:none;">
-          <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('localBackupFileInput').click()">Import JSON File</button>
-        </div>
-        <div id="localSaveStatus" style="font-size: 12px; text-align: center; min-height: 16px; font-weight: 500;"></div>
+        <div id="localSaveStatus" style="font-size: 12px; text-align: center; min-height: 16px; font-weight: 500; margin-top: 8px;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" onclick="closeModal('localSaveModal')">Close</button>
@@ -1788,7 +1694,7 @@
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
           <div style="font-size: 28px;">⚡</div>
           <div>
-            <div style="font-family: var(--font-google); font-size: 14px; font-weight: 600;">DreamsLab Cyber Launcher <span class="brand-version-badge" style="background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; font-size: 11px;">v1.0.7</span></div>
+            <div style="font-family: var(--font-google); font-size: 14px; font-weight: 600;">DreamsLab Cyber Launcher <span class="brand-version-badge" style="background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; font-size: 11px;">v1.0.9</span></div>
             <div style="font-size: 12px; color: var(--text-muted);">Hot-Update Engine & Cloud Vault Sync</div>
           </div>
         </div>
@@ -2476,7 +2382,7 @@
           vaultData = initialVault;
           const storageKey = getStorageKey(currentUserEmail);
           localStorage.setItem(storageKey, JSON.stringify(encryptedVault));
-          localStorage.setItem('dreamslab_session_key', JSON.stringify({ email: currentUserEmail, key: pass, token: cloudAuthToken || '' }));
+          // dreamslab_session_key purged for zero-knowledge security
           if (window.electronAPI && window.electronAPI.saveToDocuments) {
             window.electronAPI.saveToDocuments(JSON.stringify(encryptedVault));
           }
@@ -2566,7 +2472,7 @@
             // Account created on cloud but no vault stored yet
             currentPassword = pass;
             vaultData = { links: [], categories: [...DEFAULT_CATEGORIES], profiles: [], createdAt: new Date().toISOString() };
-            localStorage.setItem('dreamslab_session_key', JSON.stringify({ email: currentUserEmail, key: pass, token: cloudAuthToken || '' }));
+            // dreamslab_session_key purged for zero-knowledge security
             document.getElementById('lockScreen').style.display = 'none';
             errorEl.textContent = '';
             if (isDesktopApp) await refreshLocalChromeProfiles();
@@ -2590,7 +2496,7 @@
         // Cache payload locally under user email
         const storageKey = getStorageKey(currentUserEmail);
         localStorage.setItem(storageKey, typeof rawToDecrypt === 'string' ? rawToDecrypt : JSON.stringify(rawToDecrypt));
-        localStorage.setItem('dreamslab_session_key', JSON.stringify({ email: currentUserEmail, key: pass, token: cloudAuthToken || '' }));
+        // dreamslab_session_key purged for zero-knowledge security
 
         document.getElementById('lockScreen').style.display = 'none';
         errorEl.textContent = '';
@@ -2617,7 +2523,8 @@
 
     function lockVault() {
       currentPassword = null;
-      localStorage.removeItem('dreamslab_session_key');
+      // dreamslab_session_key removed
+      clearSecureSession();
       document.getElementById('lockScreen').style.display = 'flex';
       checkLockScreenState();
       showToast('🔒 Vault locked');
@@ -2630,7 +2537,8 @@
       vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
       activeProfileEmail = null;
       activeCategory = 'ALL';
-      localStorage.removeItem('dreamslab_session_key');
+      // dreamslab_session_key removed
+      clearSecureSession();
       sessionStorage.clear();
       setLockMode(false);
 
@@ -2655,15 +2563,12 @@
 
     async function tryAutoUnlock() {
       try {
-        const savedSession = localStorage.getItem('dreamslab_session_key');
-        if (!savedSession) return false;
-        const session = JSON.parse(savedSession);
-        if (!session || !session.email || !session.key) return false;
-
-        currentUserEmail = session.email;
-        if (session.token) {
-          cloudAuthToken = session.token;
-          sessionStorage.setItem('dreamslab_auth_token', session.token);
+        // SafeStorage Session Check
+        const savedSession = await retrieveSecureSession();
+        if (savedSession && savedSession.email && savedSession.token) {
+          currentUserEmail = savedSession.email;
+          cloudAuthToken = savedSession.token;
+          setCloudState('CLOUD_CONNECTED');
         }
 
         const storageKey = getStorageKey(session.email);
@@ -2704,7 +2609,8 @@
         return true;
       } catch (e) {
         console.warn('Auto-unlock notice:', e.message);
-        localStorage.removeItem('dreamslab_session_key');
+        // dreamslab_session_key removed
+      clearSecureSession();
         return false;
       }
     }
@@ -2865,51 +2771,95 @@
       return { name: name, shortName: name, color: color, letter: name.charAt(0).toUpperCase() };
     }
 
-    const DEFAULT_KNOWN_LOCAL_EMAILS = [
-      'idigitalfun@gmail.com',
-      'r.abdullah.artist@gmail.com',
-      'abdullahinayat24@gmail.com',
-      'rana.abdullah.inayat@gmail.com',
-      'sligo@esquirescoffee.ie'
-    ];
-
+    
+    // ZERO-FALLBACK STRICT LOCAL PC CHROME DETECTION (Requirement 1)
     function getLocalEmailsSet() {
       const set = new Set();
-      if (Array.isArray(localDetectedProfiles) && localDetectedProfiles.length > 0) {
+      if (Array.isArray(localDetectedProfiles)) {
         localDetectedProfiles.forEach(lp => {
           const email = (lp.email || '').toLowerCase().trim();
           if (email) set.add(email);
         });
       }
-      if (set.size === 0) {
-        const customLocal = localStorage.getItem('dreamslab_local_emails');
-        if (customLocal) {
-          try {
-            const arr = JSON.parse(customLocal);
-            if (Array.isArray(arr)) arr.forEach(e => { if (e) set.add(String(e).toLowerCase().trim()); });
-          } catch(e) {}
-        }
-      }
-      if (set.size === 0) {
-        DEFAULT_KNOWN_LOCAL_EMAILS.forEach(e => set.add(e.toLowerCase().trim()));
-      }
       return set;
     }
 
+
     // ZERO-FALLBACK PROFILES VIEW FILTER
-    function getDisplayProfiles() {
-      if (filterToLocalOnly) {
-        const localEmails = getLocalEmailsSet();
-        const filtered = (vaultData.profiles || []).filter(p => {
-          const email = (p.email || '').toLowerCase().trim();
-          return email && localEmails.has(email);
-        });
-        if (filtered.length > 0) return filtered;
-        if (Array.isArray(localDetectedProfiles) && localDetectedProfiles.length > 0) return localDetectedProfiles;
-        return [];
-      }
-      return vaultData.profiles || [];
+    
+    let sidebarProfileFilter = 'ALL'; // 'ALL' | 'STARRED' | 'PINNED'
+
+    function setSidebarProfileFilter(filter) {
+      sidebarProfileFilter = filter;
+      ['All', 'Starred', 'Pinned'].forEach(tab => {
+        const btn = document.getElementById('btnFilterProf' + tab);
+        if (btn) btn.classList.toggle('active', tab.toUpperCase() === filter);
+      });
+      renderSidebarProfiles();
     }
+
+    function sortAndFilterProfiles(profiles, filter = 'ALL', activeScopeEmails = null) {
+      if (!Array.isArray(profiles)) return [];
+
+      let list = profiles.filter(p => {
+        if (!p) return false;
+        if (activeScopeEmails !== null) {
+          const email = (p.email || '').toLowerCase().trim();
+          if (!email || !activeScopeEmails.has(email)) return false;
+        }
+        return true;
+      });
+
+      if (filter === 'STARRED') {
+        list = list.filter(p => !!p.starred);
+      } else if (filter === 'PINNED') {
+        list = list.filter(p => !!p.pinned);
+      }
+
+      return list.sort((a, b) => {
+        const aPinned = a.pinned ? 1 : 0;
+        const bPinned = b.pinned ? 1 : 0;
+        if (aPinned !== bPinned) return bPinned - aPinned;
+
+        const aStarred = a.starred ? 1 : 0;
+        const bStarred = b.starred ? 1 : 0;
+        if (aStarred !== bStarred) return bStarred - aStarred;
+
+        const aName = (a.name || a.email || '').toLowerCase();
+        const bName = (b.name || b.email || '').toLowerCase();
+        return aName.localeCompare(bName);
+      });
+    }
+
+    function getDisplayProfiles() {
+      const scopeEmails = filterToLocalOnly ? getLocalEmailsSet() : null;
+      return sortAndFilterProfiles(vaultData.profiles || [], sidebarProfileFilter, scopeEmails);
+    }
+
+    async function toggleProfileStar(profileIdOrEmail, event) {
+      if (event) event.stopPropagation();
+      const p = (vaultData.profiles || []).find(prof => prof.id === profileIdOrEmail || prof.email === profileIdOrEmail);
+      if (p) {
+        p.starred = !p.starred;
+        p.updatedAt = new Date().toISOString();
+        await saveVault();
+        renderSidebarProfiles();
+        showToast(p.starred ? '⭐ Starred ' + (p.name || p.email) : 'Unstarred ' + (p.name || p.email));
+      }
+    }
+
+    async function toggleProfilePin(profileIdOrEmail, event) {
+      if (event) event.stopPropagation();
+      const p = (vaultData.profiles || []).find(prof => prof.id === profileIdOrEmail || prof.email === profileIdOrEmail);
+      if (p) {
+        p.pinned = !p.pinned;
+        p.updatedAt = new Date().toISOString();
+        await saveVault();
+        renderSidebarProfiles();
+        showToast(p.pinned ? '📌 Pinned ' + (p.name || p.email) + ' to top' : 'Unpinned ' + (p.name || p.email));
+      }
+    }
+
 
     // Returns detected Chrome profiles on this computer not yet linked in Link Launcher cloud vault
     function getUnlinkedLocalProfiles() {
@@ -3088,6 +3038,7 @@
       if (elLow) elLow.textContent = links.filter(l => l.priority === 'low').length;
     }
 
+    
     function renderSidebarProfiles() {
       const container = document.getElementById('sidebarProfilesList');
       if (!container) return;
@@ -3097,27 +3048,26 @@
       if (btnScope) {
         btnScope.style.display = 'inline-block';
         btnScope.textContent = filterToLocalOnly ? '💻 Local' : '☁️ Cloud';
-        btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view all Cloud)' : 'Viewing all cloud profiles (Click to scope to this PC)';
+        btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view Cloud)' : 'Viewing all cloud profiles (Click for Local)';
       }
 
       const displayProfiles = getDisplayProfiles();
 
       // Diagnostic message when 0 profiles displayed on desktop
       if (filterToLocalOnly && displayProfiles.length === 0) {
-        let reason = 'No Chrome profiles matching this computer.';
+        let reason = 'No Chrome profiles matching this computer were detected.';
         if (chromeDetectionStatus === 'CHROME_NOT_INSTALLED') reason = 'Chrome is not installed on this PC.';
         else if (chromeDetectionStatus === 'NO_PROFILES_DIR') reason = 'Chrome User Data directory not found.';
         else if (chromeDetectionStatus === 'NO_PROFILES') reason = 'No Chrome user profiles found.';
         else if (chromeDetectionStatus === 'NO_EMAILS') reason = 'No signed-in Google accounts found in Chrome.';
         else if (chromeDetectionStatus === 'DETECTION_FAILED') reason = 'Chrome detection error: ' + (chromeDetectionError || 'Could not read profile data.');
-        else if (chromeDetectionStatus === 'PROFILES_FOUND') reason = 'Chrome profiles were detected on this PC, but none match your cloud account.';
 
         html += `
           <div style="padding: 10px 12px; background: #f8f9fa; border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); font-size: 11px; color: var(--text-muted); margin: 6px 0;">
-            <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: 2px;">No Local Matches</div>
+            <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: 2px;">No Local Accounts</div>
             ${reason}
             <div style="margin-top: 6px; display: flex; gap: 4px;">
-              <button class="btn-link-optin" style="font-size: 10px; padding: 2px 6px;" onclick="retryChromeDetection()">🔄 Retry</button>
+              <button class="btn-link-optin" style="font-size: 10px; padding: 2px 6px;" onclick="refreshLocalChromeProfiles()">🔄 Detect</button>
               <button class="btn-link-optin" style="font-size: 10px; padding: 2px 6px;" onclick="toggleProfileScope()">☁️ View Cloud</button>
             </div>
           </div>
@@ -3138,6 +3088,9 @@
           (p.id && activeProfileEmail === p.id)
         );
 
+        const starActive = !!p.starred;
+        const pinActive = !!p.pinned;
+
         html += `
           <div class="account-item ${isActive ? 'active' : ''}" onclick="selectProfileFilter('${escapeHtml(p.email || p.id)}')">
             <div style="display:flex; align-items:center; min-width:0; flex:1;">
@@ -3145,14 +3098,16 @@
               <div class="account-info">
                 <div class="account-name" style="font-weight:600; display:flex; align-items:center; gap:4px;">
                   <span>${escapeHtml(meta.name)}</span>
-                  ${isLocalInstalled ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038; flex-shrink:0;"></span>' : '<span title="Cloud profile (Not on this PC)" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#9aa0a6; flex-shrink:0;"></span>'}
+                  ${isLocalInstalled ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038; flex-shrink:0;"></span>' : '<span title="Cloud profile" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#9aa0a6; flex-shrink:0;"></span>'}
                 </div>
                 <div class="account-email">${escapeHtml(p.email || 'Default')}</div>
               </div>
             </div>
-            <div class="account-item-right">
+            <div class="account-item-right" style="display:flex; align-items:center; gap:3px;">
+              <button type="button" class="btn-profile-action ${pinActive ? 'active' : ''}" onclick="toggleProfilePin('${escapeHtml(p.id || p.email)}', event)" title="${pinActive ? 'Unpin account' : 'Pin account to top'}">${pinActive ? '📌' : '📍'}</button>
+              <button type="button" class="btn-profile-action ${starActive ? 'active' : ''}" onclick="toggleProfileStar('${escapeHtml(p.id || p.email)}', event)" title="${starActive ? 'Unstar account' : 'Star account'}">${starActive ? '⭐' : '☆'}</button>
               <span class="nav-badge">${count}</span>
-              <button type="button" class="btn-profile-del" onclick="deleteProfile('${escapeHtml(p.id || p.email)}', event)" title="Remove this profile from account">✕</button>
+              <button type="button" class="btn-profile-del" onclick="deleteProfile('${escapeHtml(p.id || p.email)}', event)" title="Remove this profile">✕</button>
             </div>
           </div>
         `;
@@ -3188,6 +3143,7 @@
 
       container.innerHTML = html;
     }
+
 
     function renderSidebarCategories() {
       const container = document.getElementById('sidebarCategoriesList');
@@ -4497,7 +4453,7 @@
         }
       } else {
         if (statusEl) {
-          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.8). Always fresh via GitHub Pages!</span>';
+          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.9). Always fresh via GitHub Pages!</span>';
         }
         showToast('Web version is always up to date');
       }
