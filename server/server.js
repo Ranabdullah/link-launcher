@@ -119,6 +119,10 @@ if (process.env.DATABASE_URL) {
   console.log('Notice: DATABASE_URL not set, running in local file-store mode.');
 }
 
+// Track database readiness
+let dbReady = false;
+let dbUnavailableReason = '';
+
 async function initDatabase() {
   if (pool) {
     try {
@@ -135,6 +139,7 @@ async function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       `);
       console.log('PostgreSQL table "users" and index verified/created successfully.');
+      dbReady = true;
 
       // Auto-migration check: If users table is empty and vaults.json has records, seed postgres
       try {
@@ -167,11 +172,24 @@ async function initDatabase() {
         console.warn('Initial seed migration notice:', migErr.message);
       }
     } catch (err) {
-      console.error('PostgreSQL table init notice, falling back to file store:', err.message);
+      console.error('PostgreSQL table init error:', err.message);
       pool = null;
+      dbReady = false;
+      dbUnavailableReason = err.message;
+      if (isProduction) {
+        console.error('WARNING: Database unavailable in production. All /api/ routes will return 503 until database is connected.');
+      }
     }
   } else {
-    console.log('Zero-Knowledge File-Store database initialized.');
+    if (isProduction) {
+      dbUnavailableReason = 'DATABASE_URL environment variable is not set.';
+      console.error('WARNING: ' + dbUnavailableReason);
+      console.error('Set DATABASE_URL in your Render environment variables to enable cloud vault storage.');
+      console.error('Server will start and serve the static HTML. All /api/ routes return 503 until configured.');
+    } else {
+      dbReady = true; // File-store is always "ready" in development
+      console.log('Zero-Knowledge File-Store database initialized (development mode).');
+    }
   }
 }
 
@@ -485,12 +503,26 @@ app.get('/api/health', async (req, res) => {
   return res.status(statusCode).json({
     status: isHealthy ? 'ok' : 'degraded',
     service: 'DreamsLab Cloud Vault Service',
-    version: '1.0.7',
-    storage: pool ? 'postgres' : (isProduction ? 'postgres (disconnected)' : 'file'),
+    version: '1.0.9',
+    storage: pool ? 'postgres' : (isProduction ? 'postgres (not configured)' : 'file'),
     databaseConnected: dbConnected,
     schemaReady: schemaReady,
+    dbAvailable: dbReady,
+    dbUnavailableReason: dbReady ? undefined : dbUnavailableReason,
     time: new Date().toISOString()
   });
+});
+
+// DB availability gate — all /api/ routes below this point return 503 if no DB in production
+app.use('/api', (req, res, next) => {
+  if (isProduction && !dbReady && req.path !== '/health') {
+    return res.status(503).json({
+      error: 'Cloud Vault database is not configured. Please set DATABASE_URL in Render environment variables.',
+      code: 'DB_UNAVAILABLE',
+      detail: dbUnavailableReason
+    });
+  }
+  next();
 });
 
 // 2. Register Account
