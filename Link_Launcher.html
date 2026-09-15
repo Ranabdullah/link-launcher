@@ -1833,7 +1833,7 @@
     let searchQuery = '';
     let selectedLinkIds = new Set();
     let currentDrawerLinkId = null;
-    let filterToLocalOnly = isDesktopApp; // Desktop defaults to local-only
+    let filterToLocalOnly = localStorage.getItem('dreamslab_filter_scope') !== 'cloud'; // Defaults to Local View (showing only the 5 PC accounts)
 
     function handleFaviconError(img) {
       if (!img) return;
@@ -2865,29 +2865,48 @@
       return { name: name, shortName: name, color: color, letter: name.charAt(0).toUpperCase() };
     }
 
+    const DEFAULT_KNOWN_LOCAL_EMAILS = [
+      'idigitalfun@gmail.com',
+      'r.abdullah.artist@gmail.com',
+      'abdullahinayat24@gmail.com',
+      'rana.abdullah.inayat@gmail.com',
+      'sligo@esquirescoffee.ie'
+    ];
+
     function getLocalEmailsSet() {
       const set = new Set();
-      (localDetectedProfiles || []).forEach(lp => {
-        const email = (lp.email || '').toLowerCase().trim();
-        if (email) set.add(email);
-      });
+      if (Array.isArray(localDetectedProfiles) && localDetectedProfiles.length > 0) {
+        localDetectedProfiles.forEach(lp => {
+          const email = (lp.email || '').toLowerCase().trim();
+          if (email) set.add(email);
+        });
+      }
+      if (set.size === 0) {
+        const customLocal = localStorage.getItem('dreamslab_local_emails');
+        if (customLocal) {
+          try {
+            const arr = JSON.parse(customLocal);
+            if (Array.isArray(arr)) arr.forEach(e => { if (e) set.add(String(e).toLowerCase().trim()); });
+          } catch(e) {}
+        }
+      }
+      if (set.size === 0) {
+        DEFAULT_KNOWN_LOCAL_EMAILS.forEach(e => set.add(e.toLowerCase().trim()));
+      }
       return set;
     }
 
     // ZERO-FALLBACK PROFILES VIEW FILTER
     function getDisplayProfiles() {
-      if (filterToLocalOnly && isDesktopApp) {
-        if (chromeDetectionStatus === 'PROFILES_FOUND' && localDetectedProfiles && localDetectedProfiles.length > 0) {
-          const localEmails = getLocalEmailsSet();
-          return (vaultData.profiles || []).filter(p => {
-            const email = (p.email || '').toLowerCase().trim();
-            return email && localEmails.has(email);
-          });
-        } else if (chromeDetectionStatus === 'INITIALIZING') {
-          return vaultData.profiles || [];
-        } else {
-          return [];
-        }
+      if (filterToLocalOnly) {
+        const localEmails = getLocalEmailsSet();
+        const filtered = (vaultData.profiles || []).filter(p => {
+          const email = (p.email || '').toLowerCase().trim();
+          return email && localEmails.has(email);
+        });
+        if (filtered.length > 0) return filtered;
+        if (Array.isArray(localDetectedProfiles) && localDetectedProfiles.length > 0) return localDetectedProfiles;
+        return [];
       }
       return vaultData.profiles || [];
     }
@@ -2910,14 +2929,9 @@
     function getScopedLinks() {
       const allActiveLinks = (vaultData.links || []).filter(l => !l.deleted);
 
-      if (!isDesktopApp || !filterToLocalOnly) {
-        // Online mode or user toggled to view all cloud links
+      if (!filterToLocalOnly) {
+        // User toggled to view all cloud links across the account
         return allActiveLinks;
-      }
-
-      // Desktop App: ZERO FALLBACK RULE
-      if (chromeDetectionStatus !== 'PROFILES_FOUND' || !localDetectedProfiles || localDetectedProfiles.length === 0) {
-        return [];
       }
 
       const localEmails = getLocalEmailsSet();
@@ -2935,19 +2949,21 @@
     }
 
     function toggleProfileScope() {
-      if (!isDesktopApp) {
-        showToast('ℹ️ Local PC detection requires the DreamsLab Cyber Launcher desktop app.');
-        return;
-      }
       filterToLocalOnly = !filterToLocalOnly;
-      if (filterToLocalOnly && (!localDetectedProfiles || localDetectedProfiles.length === 0)) {
+      localStorage.setItem('dreamslab_filter_scope', filterToLocalOnly ? 'local' : 'cloud');
+      if (isDesktopApp && filterToLocalOnly && (!localDetectedProfiles || localDetectedProfiles.length === 0)) {
         refreshLocalChromeProfiles();
       }
       renderApp();
-      if (!filterToLocalOnly && !cloudAuthToken && (!vaultData.cloudConfig || !vaultData.cloudConfig.gistId)) {
-        showToast('☁️ Cloud View: Showing all profiles in vault. Connect a Cloud ID in Cloud Sync anytime!');
+      if (!filterToLocalOnly) {
+        if (!cloudAuthToken && (!vaultData.cloudConfig || !vaultData.cloudConfig.gistId)) {
+          showToast('☁️ Cloud View: Showing all accounts in vault. Connect Cloud Sync anytime!');
+        } else {
+          showToast('☁️ Cloud View: Showing all cloud accounts in vault');
+        }
       } else {
-        showToast(filterToLocalOnly ? '💻 Showing profiles installed on this PC' : '☁️ Showing all cloud profiles in account');
+        const count = getDisplayProfiles().length;
+        showToast(`💻 Local View: Showing ${count} accounts on this PC`);
       }
     }
 
@@ -3079,22 +3095,16 @@
 
       const btnScope = document.getElementById('btnToggleScope');
       if (btnScope) {
-        if (isDesktopApp) {
-          btnScope.style.display = 'inline-block';
-          btnScope.textContent = filterToLocalOnly ? '💻 Local' : '☁️ Cloud';
-          btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view all Cloud)' : 'Viewing all cloud profiles (Click to scope to this PC)';
-        } else {
-          btnScope.style.display = 'inline-block';
-          btnScope.textContent = '☁️ Cloud';
-          btnScope.title = 'Running in web browser (Showing all cloud profiles)';
-        }
+        btnScope.style.display = 'inline-block';
+        btnScope.textContent = filterToLocalOnly ? '💻 Local' : '☁️ Cloud';
+        btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view all Cloud)' : 'Viewing all cloud profiles (Click to scope to this PC)';
       }
 
       const displayProfiles = getDisplayProfiles();
 
       // Diagnostic message when 0 profiles displayed on desktop
-      if (isDesktopApp && filterToLocalOnly && displayProfiles.length === 0) {
-        let reason = 'No Chrome profiles detected on this computer.';
+      if (filterToLocalOnly && displayProfiles.length === 0) {
+        let reason = 'No Chrome profiles matching this computer.';
         if (chromeDetectionStatus === 'CHROME_NOT_INSTALLED') reason = 'Chrome is not installed on this PC.';
         else if (chromeDetectionStatus === 'NO_PROFILES_DIR') reason = 'Chrome User Data directory not found.';
         else if (chromeDetectionStatus === 'NO_PROFILES') reason = 'No Chrome user profiles found.';
@@ -3117,7 +3127,7 @@
       // Render Active / Matching Profiles
       displayProfiles.forEach(p => {
         const meta = getProfileMeta(p.email, p.name);
-        const isLocalInstalled = isDesktopApp && p.email && getLocalEmailsSet().has(p.email.toLowerCase().trim());
+        const isLocalInstalled = p.email && getLocalEmailsSet().has(p.email.toLowerCase().trim());
         const count = getScopedLinks().filter(l => {
           const lp = getProfileForLink(l);
           return (p.email && lp.email && lp.email.toLowerCase() === p.email.toLowerCase()) || (p.id && lp.id === p.id);
@@ -3135,7 +3145,7 @@
               <div class="account-info">
                 <div class="account-name" style="font-weight:600; display:flex; align-items:center; gap:4px;">
                   <span>${escapeHtml(meta.name)}</span>
-                  ${isDesktopApp ? (isLocalInstalled ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038; flex-shrink:0;"></span>' : '<span title="Cloud profile (Not on this PC)" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#9aa0a6; flex-shrink:0;"></span>') : ''}
+                  ${isLocalInstalled ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038; flex-shrink:0;"></span>' : '<span title="Cloud profile (Not on this PC)" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#9aa0a6; flex-shrink:0;"></span>'}
                 </div>
                 <div class="account-email">${escapeHtml(p.email || 'Default')}</div>
               </div>
