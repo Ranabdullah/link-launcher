@@ -1643,13 +1643,41 @@
 
   <!-- ADD LINK MODAL -->
   <div id="addLinkModal" class="modal-overlay">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width: 520px;">
       <div class="modal-header">
         <div class="modal-title">Add New Link</div>
         <button class="modal-close-btn" onclick="closeModal('addLinkModal')">&times;</button>
       </div>
       <form onsubmit="saveNewLinkItem(event)">
-        
+        <div class="modal-body">
+          <label class="field-label" for="newLinkUrl">Website address</label>
+          <input id="newLinkUrl" class="input-google" type="url" required placeholder="https://example.com" oninput="autoFetchTitleForNew(this.value)">
+          <label class="field-label" for="newLinkTitle" style="margin-top:12px;">Name</label>
+          <input id="newLinkTitle" class="input-google" type="text" placeholder="Example">
+          <label class="field-label" for="newLinkProfileSelect" style="margin-top:12px;">Chrome account</label>
+          <select id="newLinkProfileSelect" class="input-google"></select>
+          <label class="field-label" for="newLinkCategory" style="margin-top:12px;">Category</label>
+          <input id="newLinkCategory" class="input-google" list="drawerCategoryDatalist" placeholder="General">
+          <label class="field-label" for="newLinkPriority" style="margin-top:12px;">Priority</label>
+          <select id="newLinkPriority" class="input-google"><option value="normal">Normal</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+          <label class="field-label" for="newLinkNotes" style="margin-top:12px;">Notes</label>
+          <textarea id="newLinkNotes" class="input-google" rows="3" placeholder="Optional notes"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('addLinkModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Add Link</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOCAL BACKUP MODAL -->
+  <div id="localSaveModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Backup & Restore</div>
+        <button class="modal-close-btn" onclick="closeModal('localSaveModal')">&times;</button>
+      </div>
       <div class="modal-body">
         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
           <div style="font-weight: 600; font-size: 13px; color: var(--google-green); margin-bottom: 4px;">🔒 Export Encrypted Vault Backup (Recommended)</div>
@@ -4392,31 +4420,73 @@
       openModal('localSaveModal');
     }
 
-    function exportVaultJson() {
-      const blob = new Blob([JSON.stringify(vaultData, null, 2)], { type: 'application/json' });
+    function downloadVaultBackup(payload, filename, type) {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: type || 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `DreamsLab_Vault_Backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('💾 Backup exported');
     }
 
-    async function handleImportJsonFile(e) {
+    async function exportEncryptedVault() {
+      if (!currentPassword) {
+        showToast('⚠️ Unlock your vault before exporting a backup.');
+        return;
+      }
+      try {
+        const payload = await encryptData(vaultData, currentPassword);
+        downloadVaultBackup({ format: 'dreamslab-vault', version: 1, encrypted: true, exportedAt: new Date().toISOString(), payload }, `DreamsLab_Vault_Backup_${new Date().toISOString().slice(0, 10)}.dlvault`);
+        showToast('🔒 Encrypted backup exported');
+      } catch (err) {
+        showToast('❌ Backup export failed: ' + err.message);
+      }
+    }
+
+    function exportVaultJson() {
+      downloadVaultBackup(vaultData, `DreamsLab_Vault_PLAINTEXT_${new Date().toISOString().slice(0, 10)}.json`);
+      showToast('⚠️ Plaintext backup exported');
+    }
+
+    function openPlaintextExportModal() {
+      if (confirm('Plaintext backups expose all links, emails, and notes to anyone who can open the file. Continue only if you understand this risk.')) {
+        exportVaultJson();
+      }
+    }
+
+    function validateImportedVault(vault) {
+      if (!vault || typeof vault !== 'object' || !Array.isArray(vault.links) || !Array.isArray(vault.profiles)) {
+        throw new Error('Backup does not contain a valid vault.');
+      }
+      if (vault.links.length > 50000 || vault.profiles.length > 5000) {
+        throw new Error('Backup exceeds supported size limits.');
+      }
+      return vault;
+    }
+
+    async function handleImportVaultFile(e) {
       const file = e.target.files[0];
       if (!file) return;
       const statusEl = document.getElementById('localSaveStatus');
       try {
+        if (file.size > 15 * 1024 * 1024) throw new Error('Backup exceeds the 15 MB limit.');
         const text = await file.text();
         const parsed = JSON.parse(text);
-        if (parsed.salt && parsed.iv && parsed.data) {
-          vaultData = await decryptData(parsed, currentPassword);
+        let imported;
+        if (parsed.format === 'dreamslab-vault' && parsed.encrypted && parsed.payload) {
+          if (!currentPassword) throw new Error('Unlock your vault before importing an encrypted backup.');
+          imported = await decryptData(parsed.payload, currentPassword);
+        } else if (parsed.salt && parsed.iv && parsed.data) {
+          if (!currentPassword) throw new Error('Unlock your vault before importing an encrypted backup.');
+          imported = await decryptData(parsed, currentPassword);
         } else if (parsed.links && parsed.profiles) {
-          vaultData = parsed;
+          if (!confirm('This is a plaintext backup. It will replace the current local vault. Continue?')) return;
+          imported = parsed;
         } else {
           throw new Error('Unrecognized file format');
         }
+        vaultData = validateImportedVault(imported);
         normalizeVaultLinks();
         await saveVault();
         renderApp();
@@ -4429,6 +4499,9 @@
       }
       e.target.value = '';
     }
+
+    // Backward-compatible entry point used by older saved pages.
+    async function handleImportJsonFile(e) { return handleImportVaultFile(e); }
 
     /* SOFTWARE UPDATES */
     function handleCheckUpdate() {
@@ -4468,7 +4541,7 @@
             }
             showToast('Update check failed');
           } else {
-            const ver = (res && res.version) ? String(res.version).replace(/^v+/i, '') : '1.0.7';
+            const ver = (res && res.version) ? String(res.version).replace(/^v+/i, '') : '1.0.9';
             if (statusEl) {
               statusEl.innerHTML = '<span style="color: #188038; font-weight: 500;">✅ You are running the latest version of DreamsLab Launcher (v' + escapeHtml(ver) + ').</span>';
             }
@@ -4521,7 +4594,7 @@
         window.electronAPI.onUpdateAvailable((info) => {
           const dot = document.getElementById('updateDot');
           if (dot) dot.style.display = 'block';
-          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.8';
+          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.9';
           showToast('⚡ New update available (v' + updateVer + ')! Click Update to install.');
         });
       }

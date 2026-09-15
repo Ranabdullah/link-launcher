@@ -4541,7 +4541,7 @@
             }
             showToast('Update check failed');
           } else {
-            const ver = (res && res.version) ? String(res.version).replace(/^v+/i, '') : '1.0.7';
+            const ver = (res && res.version) ? String(res.version).replace(/^v+/i, '') : '1.0.9';
             if (statusEl) {
               statusEl.innerHTML = '<span style="color: #188038; font-weight: 500;">✅ You are running the latest version of DreamsLab Launcher (v' + escapeHtml(ver) + ').</span>';
             }
@@ -4594,7 +4594,7 @@
         window.electronAPI.onUpdateAvailable((info) => {
           const dot = document.getElementById('updateDot');
           if (dot) dot.style.display = 'block';
-          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.8';
+          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.9';
           showToast('⚡ New update available (v' + updateVer + ')! Click Update to install.');
         });
       }
