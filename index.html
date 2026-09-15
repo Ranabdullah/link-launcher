@@ -1223,7 +1223,7 @@
       <div class="brand-title-wrap">
         <div class="brand-name">
           DreamsLab
-          <span class="brand-version-badge">v1.0.7</span>
+          <span class="brand-version-badge">v1.0.8</span>
           <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
         </div>
       </div>
@@ -1248,7 +1248,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Backup
       </button>
-      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.7)" style="position: relative;">
+      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.8)" style="position: relative;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
         Update
         <span id="updateDot" style="display:none;width:7px;height:7px;background:#f59e0b;border-radius:50%;position:absolute;top:4px;right:4px;"></span>
@@ -2476,6 +2476,7 @@
           vaultData = initialVault;
           const storageKey = getStorageKey(currentUserEmail);
           localStorage.setItem(storageKey, JSON.stringify(encryptedVault));
+          localStorage.setItem('dreamslab_session_key', JSON.stringify({ email: currentUserEmail, key: pass, token: cloudAuthToken || '' }));
           if (window.electronAPI && window.electronAPI.saveToDocuments) {
             window.electronAPI.saveToDocuments(JSON.stringify(encryptedVault));
           }
@@ -2565,6 +2566,7 @@
             // Account created on cloud but no vault stored yet
             currentPassword = pass;
             vaultData = { links: [], categories: [...DEFAULT_CATEGORIES], profiles: [], createdAt: new Date().toISOString() };
+            localStorage.setItem('dreamslab_session_key', JSON.stringify({ email: currentUserEmail, key: pass, token: cloudAuthToken || '' }));
             document.getElementById('lockScreen').style.display = 'none';
             errorEl.textContent = '';
             if (isDesktopApp) await refreshLocalChromeProfiles();
@@ -2588,6 +2590,7 @@
         // Cache payload locally under user email
         const storageKey = getStorageKey(currentUserEmail);
         localStorage.setItem(storageKey, typeof rawToDecrypt === 'string' ? rawToDecrypt : JSON.stringify(rawToDecrypt));
+        localStorage.setItem('dreamslab_session_key', JSON.stringify({ email: currentUserEmail, key: pass, token: cloudAuthToken || '' }));
 
         document.getElementById('lockScreen').style.display = 'none';
         errorEl.textContent = '';
@@ -2614,6 +2617,7 @@
 
     function lockVault() {
       currentPassword = null;
+      localStorage.removeItem('dreamslab_session_key');
       document.getElementById('lockScreen').style.display = 'flex';
       checkLockScreenState();
       showToast('🔒 Vault locked');
@@ -2626,6 +2630,7 @@
       vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
       activeProfileEmail = null;
       activeCategory = 'ALL';
+      localStorage.removeItem('dreamslab_session_key');
       sessionStorage.clear();
       setLockMode(false);
 
@@ -2639,13 +2644,69 @@
       // Clear active DOM stream
       const linksContainer = document.getElementById('linksListContainer');
       if (linksContainer) linksContainer.innerHTML = '';
-      const profileContainer = document.getElementById('profileNavList');
+      const profileContainer = document.getElementById('sidebarProfilesList');
       if (profileContainer) profileContainer.innerHTML = '';
 
       document.getElementById('lockScreen').style.display = 'flex';
       checkLockScreenState();
       setTimeout(() => { if (emailInput) emailInput.focus(); }, 50);
       showToast('🔒 Logged out successfully');
+    }
+
+    async function tryAutoUnlock() {
+      try {
+        const savedSession = localStorage.getItem('dreamslab_session_key');
+        if (!savedSession) return false;
+        const session = JSON.parse(savedSession);
+        if (!session || !session.email || !session.key) return false;
+
+        currentUserEmail = session.email;
+        if (session.token) {
+          cloudAuthToken = session.token;
+          sessionStorage.setItem('dreamslab_auth_token', session.token);
+        }
+
+        const storageKey = getStorageKey(session.email);
+        let rawToDecrypt = localStorage.getItem(storageKey);
+        if (!rawToDecrypt) {
+          rawToDecrypt = localStorage.getItem('dreamslab_cyber_vault_v1');
+        }
+        if (!rawToDecrypt && window.electronAPI && window.electronAPI.restoreFromDocuments) {
+          try {
+            const docRes = await window.electronAPI.restoreFromDocuments();
+            if (docRes && docRes.success && docRes.content) {
+              rawToDecrypt = docRes.content;
+            }
+          } catch(e) {}
+        }
+
+        if (!rawToDecrypt) return false;
+
+        let parsedEncrypted = typeof rawToDecrypt === 'object' ? rawToDecrypt : JSON.parse(rawToDecrypt);
+        const decrypted = await decryptData(parsedEncrypted, session.key);
+        if (!decrypted || typeof decrypted !== 'object') {
+          return false;
+        }
+
+        currentPassword = session.key;
+        vaultData = decrypted;
+        normalizeVaultLinks();
+
+        const lockScreenEl = document.getElementById('lockScreen');
+        if (lockScreenEl) lockScreenEl.style.display = 'none';
+
+        if (isDesktopApp) {
+          await refreshLocalChromeProfiles();
+        }
+
+        renderApp();
+        console.log('DreamsLab: Restored active session for', session.email);
+        return true;
+      } catch (e) {
+        console.warn('Auto-unlock notice:', e.message);
+        localStorage.removeItem('dreamslab_session_key');
+        return false;
+      }
     }
 
     /* ==========================================================================
@@ -2883,7 +2944,11 @@
         refreshLocalChromeProfiles();
       }
       renderApp();
-      showToast(filterToLocalOnly ? '💻 Showing profiles on this PC' : '☁️ Showing all cloud profiles');
+      if (!filterToLocalOnly && !cloudAuthToken && (!vaultData.cloudConfig || !vaultData.cloudConfig.gistId)) {
+        showToast('☁️ Cloud View: Showing all profiles in vault. Connect a Cloud ID in Cloud Sync anytime!');
+      } else {
+        showToast(filterToLocalOnly ? '💻 Showing profiles installed on this PC' : '☁️ Showing all cloud profiles in account');
+      }
     }
 
     async function deleteProfile(profileIdOrEmail, e) {
@@ -3884,6 +3949,8 @@
       if (statusEl) statusEl.textContent = '';
       const emailEl = document.getElementById('cloudAccountEmail');
       if (emailEl) emailEl.textContent = currentUserEmail || 'Not signed in';
+      const emailDescEl = document.getElementById('cloudAccountEmailDesc');
+      if (emailDescEl) emailDescEl.textContent = currentUserEmail || 'Not signed in';
       const serverInput = document.getElementById('cloudServerUrlInput');
       if (serverInput) serverInput.value = cloudApiUrl;
       const modalSync = document.getElementById('cloudModalSyncStatus');
@@ -4315,7 +4382,7 @@
         }
 
         renderApp();
-        const activeCount = getDisplayLinks().length;
+        const activeCount = getScopedLinks().length;
         statusEl.style.color = '#188038';
         statusEl.textContent = '✅ Pulled vault (' + vaultData.links.filter(l => !l.deleted).length + ' total links in account, ' + activeCount + ' displayed)';
         showToast('☁️ Cloud Vault synchronized!');
@@ -4420,7 +4487,7 @@
         }
       } else {
         if (statusEl) {
-          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.7). Always fresh via GitHub Pages!</span>';
+          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.8). Always fresh via GitHub Pages!</span>';
         }
         showToast('Web version is always up to date');
       }
@@ -4447,8 +4514,12 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
     window.addEventListener('DOMContentLoaded', async () => {
-      checkLockScreenState();
+      const autoUnlocked = await tryAutoUnlock();
+      if (!autoUnlocked) {
+        checkLockScreenState();
+      }
       if (isDesktopApp) {
         await refreshLocalChromeProfiles();
       }
@@ -4456,7 +4527,7 @@
         window.electronAPI.onUpdateAvailable((info) => {
           const dot = document.getElementById('updateDot');
           if (dot) dot.style.display = 'block';
-          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.7';
+          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.8';
           showToast('⚡ New update available (v' + updateVer + ')! Click Update to install.');
         });
       }

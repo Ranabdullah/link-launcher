@@ -138,7 +138,7 @@ function createWindow() {
   });
 }
 
-const CURRENT_APP_VERSION = '1.0.7';
+const CURRENT_APP_VERSION = '1.0.8';
 
 function checkBackgroundUpdate() {
   const manifestUrl = 'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/version.json?t=' + Date.now();

@@ -1,7 +1,7 @@
 {
   "name": "dreamslab-cyber-launcher",
   "productName": "DreamsLab Cyber Launcher",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Futuristic Glass Chrome Link Launcher by DreamsLabStudio",
   "main": "main.js",
   "scripts": {
