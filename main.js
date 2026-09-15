@@ -140,32 +140,59 @@ function createWindow() {
 
 const CURRENT_APP_VERSION = '1.0.8';
 
-function checkBackgroundUpdate() {
-  const manifestUrl = 'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/version.json?t=' + Date.now();
-  https.get(manifestUrl, (res) => {
-    if (res.statusCode !== 200) return;
-    let rawData = '';
-    res.on('data', chunk => rawData += chunk);
-    res.on('end', () => {
-      try {
-        const manifest = JSON.parse(rawData);
-        if (manifest && manifest.version && manifest.version !== CURRENT_APP_VERSION) {
-          console.log(`[Update] New version ${manifest.version} available (current: ${CURRENT_APP_VERSION})`);
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('update-available', {
-              currentVersion: CURRENT_APP_VERSION,
-              latestVersion: manifest.version,
-              releaseNotes: manifest.releaseNotes || ''
-            });
-          }
+function fetchTextWithFallback(urlList, onData, onError) {
+  let index = 0;
+  function attempt() {
+    if (index >= urlList.length) {
+      return onError(new Error('All update download mirrors failed (DNS / Network)'));
+    }
+    const targetUrl = urlList[index];
+    index++;
+    https.get(targetUrl, (res) => {
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        if (res.headers.location) {
+          https.get(res.headers.location, (redirRes) => {
+            if (redirRes.statusCode !== 200) return attempt();
+            let rawData = '';
+            redirRes.on('data', chunk => rawData += chunk);
+            redirRes.on('end', () => onData(rawData));
+          }).on('error', () => attempt());
+          return;
         }
-      } catch (e) {
-        console.warn('Background update check notice:', e.message);
       }
-    });
-  }).on('error', (err) => {
-    // Non-blocking offline resilience: do nothing if GitHub is unreachable
-    console.log('[Update] Offline or GitHub unavailable, skipping background update check.');
+      if (res.statusCode !== 200) return attempt();
+      let rawData = '';
+      res.on('data', chunk => rawData += chunk);
+      res.on('end', () => onData(rawData));
+    }).on('error', () => attempt());
+  }
+  attempt();
+}
+
+function checkBackgroundUpdate() {
+  const candidateManifests = [
+    'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/version.json?t=' + Date.now(),
+    'https://cdn.jsdelivr.net/gh/abdullahinayat24-lang/link-launcher@main/version.json?t=' + Date.now(),
+    'https://fastly.jsdelivr.net/gh/abdullahinayat24-lang/link-launcher@main/version.json?t=' + Date.now()
+  ];
+  fetchTextWithFallback(candidateManifests, (rawData) => {
+    try {
+      const manifest = JSON.parse(rawData);
+      if (manifest && manifest.version && manifest.version !== CURRENT_APP_VERSION) {
+        console.log(`[Update] New version ${manifest.version} available (current: ${CURRENT_APP_VERSION})`);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('update-available', {
+            currentVersion: CURRENT_APP_VERSION,
+            latestVersion: manifest.version,
+            releaseNotes: manifest.releaseNotes || ''
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Background update check notice:', e.message);
+    }
+  }, (err) => {
+    console.log('[Update] All update servers unreachable, skipping background update check.');
   });
 }
 
@@ -466,84 +493,78 @@ ipcMain.handle('detect-local-chrome-profiles', async () => {
 // IPC: Live Self-Updating from GitHub with Version Manifest & Integrity Verification
 ipcMain.handle('check-and-apply-update', async () => {
   return new Promise((resolve) => {
-    const manifestUrl = 'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/version.json?t=' + Date.now();
-    https.get(manifestUrl, (mRes) => {
-      if (mRes.statusCode !== 200) {
-        return resolve({ success: false, error: 'Could not fetch update manifest from GitHub (HTTP ' + mRes.statusCode + ')' });
+    const candidateManifests = [
+      'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/version.json?t=' + Date.now(),
+      'https://cdn.jsdelivr.net/gh/abdullahinayat24-lang/link-launcher@main/version.json?t=' + Date.now(),
+      'https://fastly.jsdelivr.net/gh/abdullahinayat24-lang/link-launcher@main/version.json?t=' + Date.now()
+    ];
+
+    fetchTextWithFallback(candidateManifests, (manifestRaw) => {
+      let manifest;
+      try {
+        manifest = JSON.parse(manifestRaw);
+      } catch(e) {
+        return resolve({ success: false, error: 'Invalid update manifest format' });
       }
-      let manifestRaw = '';
-      mRes.on('data', chunk => manifestRaw += chunk);
-      mRes.on('end', () => {
-        let manifest;
-        try {
-          manifest = JSON.parse(manifestRaw);
-        } catch(e) {
-          return resolve({ success: false, error: 'Invalid update manifest format' });
-        }
 
-        if (!manifest || !manifest.version) {
-          return resolve({ success: false, error: 'Manifest missing version number' });
-        }
+      if (!manifest || !manifest.version) {
+        return resolve({ success: false, error: 'Manifest missing version number' });
+      }
 
-        if (manifest.version === CURRENT_APP_VERSION) {
-          return resolve({
-            success: true,
-            updated: false,
-            version: CURRENT_APP_VERSION,
-            message: `You are already running the latest verified version (v${CURRENT_APP_VERSION}).`
-          });
-        }
-
-        // Fetch the update package HTML
-        const htmlUrl = 'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/index.html?t=' + Date.now();
-        https.get(htmlUrl, (res) => {
-          if (res.statusCode !== 200) {
-            return resolve({ success: false, error: 'Failed to download update package (HTTP ' + res.statusCode + ')' });
-          }
-          let rawData = '';
-          res.on('data', chunk => rawData += chunk);
-          res.on('end', () => {
-            try {
-              if (!isValidHtmlPackage(rawData)) {
-                return resolve({ success: false, error: 'Downloaded package failed integrity checks' });
-              }
-
-              // Check SHA-256 if manifest provides it
-              if (manifest.sha256) {
-                const computedSha = crypto.createHash('sha256').update(rawData).digest('hex');
-                if (computedSha.toLowerCase() !== manifest.sha256.toLowerCase()) {
-                  return resolve({ success: false, error: 'Package checksum verification failed. Update discarded.' });
-                }
-              }
-
-              const updateDir = path.join(app.getPath('userData'), 'update');
-              if (!fs.existsSync(updateDir)) fs.mkdirSync(updateDir, { recursive: true });
-              const userHtmlPath = path.join(updateDir, 'index.html');
-              const backupPath = path.join(updateDir, 'index.html.backup');
-
-              // Backup previous working version
-              if (fs.existsSync(userHtmlPath)) {
-                try { fs.copyFileSync(userHtmlPath, backupPath); } catch(e) {}
-              }
-
-              fs.writeFileSync(userHtmlPath, rawData, 'utf8');
-              fs.writeFileSync(path.join(updateDir, 'version.json'), JSON.stringify(manifest, null, 2), 'utf8');
-
-              resolve({
-                success: true,
-                updated: true,
-                version: manifest.version,
-                message: `Successfully verified and installed v${manifest.version}! Please restart DreamsLab to apply.`
-              });
-            } catch (e) {
-              resolve({ success: false, error: e.message });
-            }
-          });
-        }).on('error', (err) => {
-          resolve({ success: false, error: 'Network error downloading update: ' + err.message });
+      if (manifest.version === CURRENT_APP_VERSION) {
+        return resolve({
+          success: true,
+          updated: false,
+          version: CURRENT_APP_VERSION,
+          message: `You are already running the latest verified version (v${CURRENT_APP_VERSION}).`
         });
+      }
+
+      const candidateHtmls = [
+        'https://raw.githubusercontent.com/abdullahinayat24-lang/link-launcher/main/index.html?t=' + Date.now(),
+        'https://cdn.jsdelivr.net/gh/abdullahinayat24-lang/link-launcher@main/index.html?t=' + Date.now(),
+        'https://fastly.jsdelivr.net/gh/abdullahinayat24-lang/link-launcher@main/index.html?t=' + Date.now()
+      ];
+
+      fetchTextWithFallback(candidateHtmls, (rawData) => {
+        try {
+          if (!isValidHtmlPackage(rawData)) {
+            return resolve({ success: false, error: 'Downloaded package failed integrity checks' });
+          }
+
+          if (manifest.sha256) {
+            const computedSha = crypto.createHash('sha256').update(rawData).digest('hex');
+            if (computedSha.toLowerCase() !== manifest.sha256.toLowerCase()) {
+              return resolve({ success: false, error: 'Package checksum verification failed. Update discarded.' });
+            }
+          }
+
+          const updateDir = path.join(app.getPath('userData'), 'update');
+          if (!fs.existsSync(updateDir)) fs.mkdirSync(updateDir, { recursive: true });
+          const userHtmlPath = path.join(updateDir, 'index.html');
+          const backupPath = path.join(updateDir, 'index.html.backup');
+
+          // Backup previous working version
+          if (fs.existsSync(userHtmlPath)) {
+            try { fs.copyFileSync(userHtmlPath, backupPath); } catch(e) {}
+          }
+
+          fs.writeFileSync(userHtmlPath, rawData, 'utf8');
+          fs.writeFileSync(path.join(updateDir, 'version.json'), JSON.stringify(manifest, null, 2), 'utf8');
+
+          resolve({
+            success: true,
+            updated: true,
+            version: manifest.version,
+            message: `Successfully verified and installed v${manifest.version}! Please restart DreamsLab to apply.`
+          });
+        } catch (e) {
+          resolve({ success: false, error: e.message });
+        }
+      }, (dlErr) => {
+        resolve({ success: false, error: 'Download error: ' + dlErr.message });
       });
-    }).on('error', (err) => {
+    }, (err) => {
       resolve({ success: false, error: 'Network error checking manifest: ' + err.message });
     });
   });
