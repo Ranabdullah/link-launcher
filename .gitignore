@@ -1,6 +1,11 @@
 node_modules/
 dist/
 dist_installer/
+build_dist/
+clean_build/
+inno_out/
+DreamsLab-Cyber-Launcher-Setup.exe
+DreamsLab-Cyber-Launcher-Portable.zip
 .env
 *.log
 secure_session.dat
