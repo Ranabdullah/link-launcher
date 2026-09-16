@@ -2324,6 +2324,40 @@
       showToast('🧹 Device cache reset complete. Ready to sign in or create account.');
     }
 
+    // Remember credentials only through the desktop OS-encrypted storage bridge.
+    async function storeSecureSession(email, key, token) {
+      const api = window.electronAPI;
+      if (!api || !api.secureStoreSession) return false;
+      try {
+        const result = await api.secureStoreSession({ email, key, token, updatedAt: new Date().toISOString() });
+        if (result && result.success) return true;
+      } catch (_) {}
+      showToast('Signed in, but this PC could not securely remember your session.', 5000);
+      return false;
+    }
+
+    async function retrieveSecureSession() {
+      const api = window.electronAPI;
+      if (!api || !api.secureRetrieveSession) return null;
+      try {
+        const result = await api.secureRetrieveSession();
+        return result && result.success ? result.session : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function clearSecureSession() {
+      const api = window.electronAPI;
+      if (!api || !api.secureClearSession) return true;
+      try {
+        const result = await api.secureClearSession();
+        if (result && result.success) return true;
+      } catch (_) {}
+      showToast('Could not remove the remembered session from this PC.', 5000);
+      return false;
+    }
+
     async function handleUnlock(e) {
       if (e) e.preventDefault();
       const emailInput = document.getElementById('userEmailInput');
@@ -2413,6 +2447,8 @@
           const rememberCheck = document.getElementById('rememberSessionCheck');
           if (!rememberCheck || rememberCheck.checked) {
             await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
+          } else {
+            await clearSecureSession();
           }
           if (window.electronAPI && window.electronAPI.saveToDocuments) {
             window.electronAPI.saveToDocuments(JSON.stringify(encryptedVault));
@@ -2506,6 +2542,8 @@
             const rememberCheck = document.getElementById('rememberSessionCheck');
           if (!rememberCheck || rememberCheck.checked) {
             await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
+          } else {
+            await clearSecureSession();
           }
             document.getElementById('lockScreen').style.display = 'none';
             errorEl.textContent = '';
@@ -2533,6 +2571,8 @@
         const rememberCheck = document.getElementById('rememberSessionCheck');
           if (!rememberCheck || rememberCheck.checked) {
             await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
+          } else {
+            await clearSecureSession();
           }
 
         document.getElementById('lockScreen').style.display = 'none';
