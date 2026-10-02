@@ -4,10 +4,13 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DreamsLab Link Launcher // Multi-Profile Chrome Vault</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>DreamsLab Link Launcher</title>
+  <meta name="description" content="Organise and sync links across computers and phones. Install as an app and manage saved links offline.">
+  <meta name="theme-color" content="#0b57d0">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script src="cloud-config.js"></script>
+  <script src="cloud-client.js"></script>
   <style>
     :root {
       --bg-app: #f6f8fc;
@@ -16,13 +19,13 @@
       --bg-hover: #eaedf5;
       --bg-active: #d3e3fd;
       --text-active: #041e49;
-      
+
       --text-primary: #1f1f1f;
       --text-secondary: #444746;
       --text-muted: #72777a;
       --border-subtle: #e0e2ec;
       --border-hover: #c4c7c5;
-      
+
       --google-blue: #0b57d0;
       --google-blue-hover: #0842a0;
       --google-blue-light: #c2e7ff;
@@ -30,17 +33,17 @@
       --google-yellow: #f29900;
       --google-green: #188038;
       --google-purple: #9334e6;
-      
+
       --font-google: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-mono: 'Roboto Mono', monospace;
-      
+
       --radius-xs: 4px;
       --radius-sm: 8px;
       --radius-md: 16px;
       --radius-lg: 24px;
       --radius-full: 9999px;
-      
+
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
       --shadow-md: 0 4px 12px rgba(60, 64, 67, 0.12);
       --shadow-lg: 0 8px 24px rgba(60, 64, 67, 0.15);
@@ -891,7 +894,7 @@
 
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-label { font-family: var(--font-google); font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-    
+
     .form-control {
       width: 100%;
       padding: 10px 14px;
@@ -1066,7 +1069,7 @@
       object-fit: cover;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-  
+
     /* Password Visibility Toggle */
     .password-toggle-btn {
       position: absolute;
@@ -1268,8 +1271,9 @@
     .dot-green { background: #1e8e3e; }
     .dot-yellow { background: #f9ab00; }
     .dot-red { background: #d93025; }
-  
+
   </style>
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
 
@@ -1278,12 +1282,12 @@
        ======================================================================== -->
   <div id="lockScreen">
     <div class="lock-card" style="max-width: 420px; padding: 28px 24px;">
-      <img src="data:image/png;base64,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" onerror="this.src='app_icon.png'" class="lock-logo" alt="DreamsLab Cyber Launcher Logo">
+      <img src="icons/icon-192.png" width="64" height="64" alt="DreamsLab Link Launcher">
       <div id="lockTitle" style="font-family: var(--font-google); font-size: 20px; font-weight: 700; color: var(--text-primary);">
         Create Vault Account
       </div>
       <p id="lockSubtitle" style="font-size: 12px; color: var(--text-muted); margin-top: -4px;">
-        AES-256 Multi-Profile Chrome Link Launcher
+        Your encrypted links on computers and phones
       </p>
 
       <!-- MODE TABS: Create Account / Sign In -->
@@ -1295,12 +1299,12 @@
       <form id="unlockForm" onsubmit="handleUnlock(event)" style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
         <!-- EMAIL INPUT -->
         <div style="width: 100%;">
-          <input type="email" id="userEmailInput" class="form-control" placeholder="Email Address (identifies your vault)" required autofocus style="font-size: 14px; padding: 10px 14px;">
+          <input type="email" id="userEmailInput" aria-label="Account email" autocomplete="username" class="form-control" placeholder="Email Address (identifies your vault)" required autofocus style="font-size: 14px; padding: 10px 14px;">
         </div>
 
         <!-- MASTER PASSWORD INPUT -->
         <div style="position: relative; width: 100%;">
-          <input type="password" id="masterPasswordInput" class="form-control" placeholder="Choose Master Password" required style="font-size: 14px; padding: 10px 42px 10px 14px;">
+          <input type="password" id="masterPasswordInput" aria-label="Master password" autocomplete="current-password" class="form-control" placeholder="Choose Master Password" required style="font-size: 14px; padding: 10px 42px 10px 14px;">
           <button type="button" id="togglePasswordBtn" class="password-toggle-btn" onclick="togglePasswordVisibility('masterPasswordInput', this)" title="View Password">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;">
               <path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
@@ -1313,7 +1317,7 @@
 
         <!-- CONFIRM PASSWORD INPUT (Create Mode) -->
         <div id="confirmPasswordGroup" style="position: relative; width: 100%; display: block;">
-          <input type="password" id="confirmPasswordInput" class="form-control" placeholder="Confirm Master Password" style="font-size: 14px; padding: 10px 42px 10px 14px;">
+          <input type="password" id="confirmPasswordInput" aria-label="Confirm master password" autocomplete="new-password" class="form-control" placeholder="Confirm Master Password" style="font-size: 14px; padding: 10px 42px 10px 14px;">
           <button type="button" id="toggleConfirmPasswordBtn" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPasswordInput', this)" title="View Password">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;">
               <path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
@@ -1330,29 +1334,24 @@
           <button type="button" id="toggleCloudConnectBtn" style="display: none;"></button>
         </div>
 
-        
+
         <!-- KEEP ME SIGNED IN ON THIS PC -->
-        <div id="rememberSessionGroup" style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-          <input type="checkbox" id="rememberSessionCheck" checked style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--google-blue);">
-          <label for="rememberSessionCheck" style="cursor: pointer; user-select: none;">Keep me signed in on this PC (SafeStorage DPAPI)</label>
-        </div>
-  
+<p style="font-size:12px;color:var(--text-muted)">Your master password stays in this browser while unlocked. You need it when reopening the app; encrypted links cannot be recovered without it.</p>
+
         <button type="submit" id="unlockSubmitBtn" class="btn-primary" style="width: 100%; justify-content: center; height: 42px; font-size: 14px; margin-top: 4px;">
           Create Account & Open
         </button>
       </form>
 
-      <div id="unlockError" style="color: var(--google-red); font-size: 12px; font-weight: 500; min-height: 18px; text-align: center; margin-top: 4px;"></div>
+      <button type="button" class="btn-secondary" onclick="openOfflineVault()" style="margin-top:8px">Open / create local-only vault</button>
+      <div id="unlockError" role="status" style="color: var(--google-red); font-size: 12px; font-weight: 500; min-height: 18px; text-align: center; margin-top: 4px;"></div>
 
       <div id="lockFooterText" style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); width: 100%; padding-top: 12px; margin-top: 6px;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span id="lockFooterToggle">Have an account? <a href="#" onclick="setLockMode(false); return false;" style="color: var(--google-blue); text-decoration: underline; cursor: pointer; font-weight: 500;">Sign In</a></span>
           <a href="#" onclick="openResetDeviceModal(event); return false;" style="color: var(--google-red); text-decoration: underline; cursor: pointer; font-weight: 500;">🧹 Reset this device</a>
         </div>
-        <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-          <a href="#" onclick="openUpdateModal(); return false;" style="color: var(--google-blue); text-decoration: underline; font-size: 11px; cursor: pointer; font-weight: 500;">🔄 Check for Updates</a>
-          <a href="#" onclick="openServerConfigModal(); return false;" style="color: var(--text-muted); text-decoration: underline; font-size: 11px; cursor: pointer;">⚙️ Cloud Server: <span id="lockServerUrlText">https://dreamslab-cloud-vault.onrender.com</span></a>
-        </div>
+<p style="margin-top:8px">Install using your browser menu → Install app / Add to Home Screen.</p>
       </div>
     </div>
   </div>
@@ -1361,12 +1360,13 @@
        TOP HEADER
        ======================================================================== -->
   <header class="app-header">
+    <button id="mobileMenu" class="web-menu" onclick="toggleMobileNavigation()" aria-label="Open navigation" aria-expanded="false">☰</button>
     <div class="header-brand">
-      <img src="data:image/png;base64,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" onerror="this.src='app_icon.png'" class="brand-logo-img" alt="DreamsLab Logo">
+      <img src="icons/icon-192.png" class="brand-logo-img" alt="DreamsLab Link Launcher">
       <div class="brand-title-wrap">
         <div class="brand-name">
           DreamsLab
-          <span class="brand-version-badge">v1.0.9</span>
+          <span class="brand-version-badge">v2.0.0</span>
           <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
         </div>
       </div>
@@ -1377,25 +1377,20 @@
       <span class="search-icon-left">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </span>
-      <input type="text" id="globalSearchInput" class="header-search-box" placeholder="Search in links, emails, categories, notes..." oninput="handleSearch(this.value)">
+      <input type="text" id="globalSearchInput" aria-label="Search links" class="header-search-box" placeholder="Search in links, emails, categories, notes..." oninput="handleSearch(this.value)">
       <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()">&times;</button>
     </div>
 
     <!-- CONTROLS -->
     <div class="header-actions">
-      <button class="btn-header btn-sync" onclick="openCloudModal()" title="Cloud Vault Sync">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-        Cloud Sync
-      </button>
+      <button id="cloudSyncBadge" class="btn-header" onclick="openCloudModal()">Offline</button>
+      <button id="installApp" class="btn-header" onclick="installWebApp()" hidden>Install app</button>
+
       <button class="btn-header" onclick="openLocalSaveModal()" title="Export / Import JSON Backup">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Backup
       </button>
-      <button id="headerUpdateBtn" class="btn-header btn-update" onclick="openUpdateModal()" title="Check for Updates (v1.0.9)" style="position: relative;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-        Update
-        <span id="updateDot" style="display:none;width:7px;height:7px;background:#f59e0b;border-radius:50%;position:absolute;top:4px;right:4px;"></span>
-      </button>
+
       <button class="btn-header btn-lock" onclick="lockVault()" title="Lock Vault">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Lock
@@ -1406,6 +1401,9 @@
       </button>
     </div>
   </header>
+  <div id="webStatus" class="web-status" hidden></div>
+  <button class="nav-scrim" onclick="toggleMobileNavigation()" aria-label="Close navigation"></button>
+  <button class="mobile-compose" onclick="openAddLinkModal()">＋ Add link</button>
   <div id="desktopDiagnosticBanner" class="diagnostic-banner" style="display: none;"></div>
     <!-- CONCURRENCY CONFLICT BANNER -->
     <div id="conflictBanner" style="display:none; padding: 10px 16px; background: #fef2f2; border: 1px solid #f87171; border-radius: 8px; margin: 10px 16px; align-items: center; justify-content: space-between; color: #991b1b; font-size: 12.5px;">
@@ -1467,14 +1465,14 @@
         <span class="nav-badge" id="countLow">0</span>
       </div>
 
-      
+
       <!-- CHROME ACCOUNTS / EMAILS -->
       <div class="nav-section-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
         <span style="display: flex; align-items: center; gap: 6px;">
           <span>Accounts</span>
-          <button type="button" onclick="toggleProfileScope()" id="btnToggleScope" title="Toggle This PC vs All Cloud" style="background: #eaf1fb; border: 1px solid #d3e3fd; border-radius: 10px; font-size: 10px; cursor: pointer; color: var(--google-blue); font-weight: 600; padding: 1px 6px;">💻 Local</button>
+          <button type="button" onclick="toggleProfileScope()" id="btnToggleScope" title="Switch this device / all account links" style="background: #eaf1fb; border: 1px solid #d3e3fd; border-radius: 10px; font-size: 10px; cursor: pointer; color: var(--google-blue); font-weight: 600; padding: 1px 6px;">💻 Local</button>
         </span>
-        <button class="btn-add-mini" onclick="openAddProfileModal()" title="Add Chrome Profile">+</button>
+        <button class="btn-add-mini" onclick="openAddProfileModal()" title="Add Account label">+</button>
       </div>
       <!-- PROFILE FILTER TABS -->
       <div id="profileFilterTabs" style="display: flex; gap: 4px; padding: 2px 0 6px 0;">
@@ -1504,15 +1502,14 @@
         </div>
 
         <div class="toolbar-right">
-          <button class="btn-tool" onclick="syncLocalChromeProfiles()" title="Pull/Refresh Chrome Profiles from this PC">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          </button>
+
           <button class="btn-tool" onclick="toggleTaskPanel()" title="Toggle Tasks Side Panel">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           </button>
         </div>
       </div>
 
+      <div id="selectionToolbar" class="selection-toolbar" hidden style="display:none"><span id="selectionCount"></span><button onclick="bulkLinks('star')">Star</button><button onclick="bulkLinks('device')">Add to this device</button><button onclick="bulkLinks('delete')">Delete</button><button onclick="selectedLinkIds.clear(); updateSelectionToolbar()">Clear</button></div>
       <!-- LINKS STREAM -->
       <div class="links-stream" id="linksListContainer">
         <!-- Dynamic Link Rows -->
@@ -1576,8 +1573,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Assigned Chrome Profile / Google Account *</label>
-          <select id="drawerProfileSelect" class="form-control" required></select>
+          <label class="form-label">Account label (optional)</label>
+          <select id="drawerProfileSelect" class="form-control"></select>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -1599,8 +1596,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Account Context & Credentials Notes</label>
-          <textarea id="drawerNotesInput" class="form-control" placeholder="e.g. Primary KDP account, logged in via entertaindo@gmail.com"></textarea>
+          <label class="form-label">Notes</label>
+          <textarea id="drawerNotesInput" class="form-control" placeholder="Optional context for this link"></textarea>
         </div>
 
         <div class="form-group">
@@ -1626,7 +1623,7 @@
         </button>
         <div style="display: flex; gap: 8px;">
           <button type="button" class="btn-secondary" onclick="launchCurrentDrawerLink()">
-            ▶ Run Chrome
+            Open link
           </button>
           <button type="button" class="btn-primary" onclick="document.getElementById('drawerForm').requestSubmit()">
             Save Changes
@@ -1654,7 +1651,7 @@
           <input id="newLinkUrl" class="input-google" type="url" required placeholder="https://example.com" oninput="autoFetchTitleForNew(this.value)">
           <label class="field-label" for="newLinkTitle" style="margin-top:12px;">Name</label>
           <input id="newLinkTitle" class="input-google" type="text" placeholder="Example">
-          <label class="field-label" for="newLinkProfileSelect" style="margin-top:12px;">Chrome account</label>
+          <label class="field-label" for="newLinkProfileSelect" style="margin-top:12px;">Account label</label>
           <select id="newLinkProfileSelect" class="input-google"></select>
           <label class="field-label" for="newLinkCategory" style="margin-top:12px;">Category</label>
           <input id="newLinkCategory" class="input-google" list="drawerCategoryDatalist" placeholder="General">
@@ -1693,7 +1690,7 @@
 
         <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 12px;">
           <div style="font-weight: 600; font-size: 13px; color: var(--google-purple); margin-bottom: 4px;">📥 Import Vault Backup</div>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Restore or merge links and profiles from an encrypted (<code>.dlvault</code>) or plaintext backup.</p>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Replace this account’s links and labels with a backup. Export your current vault first.</p>
           <input type="file" id="localBackupFileInput" accept=".dlvault,.json" onchange="handleImportVaultFile(event)" style="display:none;">
           <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('localBackupFileInput').click()">Choose Backup File (.dlvault / .json)</button>
         </div>
@@ -1711,31 +1708,9 @@
     </div>
   </div>
 
-  <!-- UPDATE MODAL -->
-  <div id="updateModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 440px;">
-      <div class="modal-header">
-        <div class="modal-title" style="display: flex; align-items: center; gap: 6px;">🔄 Software Updates</div>
-        <button class="modal-close-btn" onclick="closeModal('updateModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-          <div style="font-size: 28px;">⚡</div>
-          <div>
-            <div style="font-family: var(--font-google); font-size: 14px; font-weight: 600;">DreamsLab Cyber Launcher <span class="brand-version-badge" style="background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; font-size: 11px;">v1.0.9</span></div>
-            <div style="font-size: 12px; color: var(--text-muted);">Hot-Update Engine & Cloud Vault Sync</div>
-          </div>
-        </div>
-        <div id="updateStatusText" style="font-size: 12px; color: var(--text-secondary); padding: 12px; background: #f8fafd; border-radius: 8px; border: 1px solid var(--border-subtle); min-height: 48px; line-height: 1.5; display: flex; align-items: center;">
-          Click the button below to check GitHub for the latest updates.
-        </div>
-        <button id="btnTriggerUpdate" class="btn-primary" style="justify-content: center; width: 100%; margin-top: 12px; height: 38px;" onclick="checkLiveUpdates()">🔄 Check & Apply Latest Update</button>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
-        <button class="btn-secondary" onclick="closeModal('updateModal')">Close</button>
-      </div>
-    </div>
-  </div>
+
+  <div id="cloudModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Cloud account</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('cloudModal')">×</button></div><div class="modal-body"><p id="cloudAccountEmail"></p><p id="cloudServerLabel"></p><p id="cloudSyncStatus" role="status"></p><p>Every account link is encrypted before syncing. This device shows links saved or assigned here. New browsers start with their own device view.</p><button class="btn-primary" onclick="forceCloudSync()">Sync now</button><button class="btn-secondary" onclick="pullLatestFromCloud()">Reload cloud vault</button><button class="btn-secondary" onclick="deleteCloudAccount()">Delete cloud account</button></div></div></div>
+  <div id="addProfileModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Add account label</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('addProfileModal')">×</button></div><form onsubmit="saveNewProfileItem(event)"><div class="modal-body"><label class="field-label" for="newProfName">Name</label><input id="newProfName" class="input-google" required maxlength="100"><label class="field-label" for="newProfEmail">Email (optional label)</label><input id="newProfEmail" class="input-google" type="email" maxlength="254"><p>This organises links. It does not sign you into that Google account.</p></div><div class="modal-footer"><button class="btn-primary" type="submit">Add label</button></div></form></div></div>
 
   <!-- TOAST NOTIFICATION -->
   <div id="appToast" class="toast-msg"></div>
@@ -1750,14 +1725,10 @@
 
     let currentPassword = null;
     let currentUserEmail = '';
-    const isDesktopApp = !!(window.electronAPI && window.electronAPI.isDesktop);
-    let localDetectedProfiles = []; // [{ folder, name, email, avatarIcon }]
-    let chromeDetectionStatus = isDesktopApp ? 'INITIALIZING' : 'ONLINE';
-    let chromeDetectionError = '';
 
     // Cloud Backend Configuration
-    let cloudApiUrl = localStorage.getItem('dreamslab_cloud_api_url') || 'https://dreamslab-cloud-vault.onrender.com';
-    let cloudAuthToken = sessionStorage.getItem('dreamslab_auth_token') || null;
+    let cloudApiUrl = window.LINK_LAUNCHER_CLOUD.apiUrl || (location.hostname.endsWith('github.io') ? 'https://dreamslab-cloud-vault.onrender.com' : location.origin);
+    let cloudAuthToken = null;
     let cloudVaultVersion = 1;
     let syncStatusState = 'synced'; // 'synced', 'syncing', 'offline'
 
@@ -1767,7 +1738,7 @@
     let searchQuery = '';
     let selectedLinkIds = new Set();
     let currentDrawerLinkId = null;
-    let filterToLocalOnly = localStorage.getItem('dreamslab_filter_scope') !== 'cloud'; // Defaults to Local View (showing only the 5 PC accounts)
+    let filterToLocalOnly = localStorage.getItem('dreamslab_filter_scope') !== 'cloud';
 
     function handleFaviconError(img) {
       if (!img) return;
@@ -1800,7 +1771,7 @@
       links: [],
       categories: [...DEFAULT_CATEGORIES],
       profiles: [],
-      cloudConfig: { gistId: '', gistToken: '' }
+
     };
 
     let isCreatePasswordMode = false;
@@ -1930,6 +1901,7 @@
     }
 
     async function pullLatestFromCloud() {
+      if (syncMeta().dirty && !confirm('Replace unsynced local changes with the cloud version? Export a backup first to keep them.')) return;
       if (!cloudAuthToken || !currentPassword) {
         showToast('⚠️ Please Sign In to pull cloud data.');
         return;
@@ -1937,7 +1909,7 @@
       showToast('🔄 Fetching latest data from cloud...');
       updateSyncBadge('syncing');
       try {
-        const res = await fetch(cloudApiUrl + '/api/vault', {
+        const res = await cloudFetch(cloudApiUrl + '/api/vault', {
           headers: {
             'Authorization': 'Bearer ' + cloudAuthToken
           }
@@ -1950,6 +1922,7 @@
             vaultData = decrypted;
             normalizeVaultLinks();
             cloudVaultVersion = data.version || 1;
+            saveSyncMeta({ version: cloudVaultVersion, dirty: false });
             const key = getStorageKey(currentUserEmail);
             localStorage.setItem(key, JSON.stringify(data.encryptedVault));
             hideConflictBanner();
@@ -1978,7 +1951,7 @@
       return {
         salt: btoa(String.fromCharCode(...salt)),
         iv: btoa(String.fromCharCode(...iv)),
-        data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+        data: bytesToBase64(new Uint8Array(ciphertext))
       };
     }
 
@@ -2038,81 +2011,31 @@
     }
 
     async function saveVault() {
-      if (!currentPassword) return { success: false, error: 'No active session' };
+      if (!currentPassword) return { success: false, error: 'Unlock your vault first.' };
+      const email = currentUserEmail, pass = currentPassword;
+      let localSaved = false;
       try {
         normalizeVaultLinks();
-        // Guarantee cloud profiles are completely decoupled from local hardware folders:
-        if (Array.isArray(vaultData.profiles)) {
-          vaultData.profiles.forEach(p => {
-            delete p.folder;
-          });
-        }
-        const encrypted = await encryptData(vaultData, currentPassword);
-        const key = getStorageKey(currentUserEmail);
-        localStorage.setItem(key, JSON.stringify(encrypted));
-        if (window.electronAPI && window.electronAPI.saveToDocuments) {
-          window.electronAPI.saveToDocuments(JSON.stringify(encrypted));
-        }
-
-        // Automatic Cloud Sync
-        if (cloudAuthToken) {
-          updateSyncBadge('syncing');
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-            const res = await fetch(cloudApiUrl + '/api/vault', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + cloudAuthToken
-              },
-              body: JSON.stringify({
-                encryptedVault: encrypted,
-                version: cloudVaultVersion,
-                updatedAt: new Date().toISOString()
-              }),
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (res.status === 200) {
-              const resData = await res.json();
-              if (resData && resData.success) {
-                cloudVaultVersion = resData.version || (cloudVaultVersion + 1);
-                updateSyncBadge('synced');
-                hideConflictBanner();
-                return { success: true, version: cloudVaultVersion };
-              }
-              updateSyncBadge('error');
-              return { success: false, error: 'Malformed response' };
-            } else if (res.status === 409) {
-              // Optimistic Concurrency Conflict: Data changed on another device!
-              const errData = await res.json().catch(() => ({}));
-              updateSyncBadge('conflict');
-              showConflictBanner(errData.cloudVersion || 'newer', cloudVaultVersion);
-              showToast('⚠️ Cloud data changed on another device. Please reload.', 6000);
-              return { success: false, status: 409, error: 'Concurrency conflict' };
-            } else if (res.status === 401 || res.status === 403) {
-              updateSyncBadge('offline');
-              showToast('⚠️ Cloud session expired. Please sign in again.', 5000);
-              return { success: false, status: res.status, error: 'Session expired' };
-            } else {
-              updateSyncBadge('error');
-              showToast('⚠️ Cloud save failed (HTTP ' + res.status + '). Changes kept locally.', 4000);
-              return { success: false, status: res.status, error: 'HTTP ' + res.status };
-            }
-          } catch (netErr) {
-            updateSyncBadge('error');
-            const isTimeout = netErr.name === 'AbortError';
-            console.warn('Cloud save notice:', isTimeout ? 'Timeout' : netErr.message);
-            showToast(isTimeout ? '⚠️ Cloud sync timed out. Changes kept locally.' : '⚠️ Cloud sync offline. Changes kept locally.', 4000);
-            return { success: false, error: netErr.message };
-          }
-        }
-        return { success: true, localOnly: true };
+        const snapshot = JSON.parse(JSON.stringify(vaultData));
+        snapshot.profiles.forEach(p => delete p.folder);
+        delete snapshot.cloudConfig;
+        const encrypted = await encryptData(snapshot, pass);
+        localStorage.setItem(getStorageKey(email), JSON.stringify(encrypted));
+        localSaved = true;
+        saveSyncMeta({ version: cloudVaultVersion, dirty: true }, email);
+        if (!cloudAuthToken || !navigator.onLine) { updateSyncBadge('offline'); return { success: true, localOnly: true }; }
+        updateSyncBadge('syncing');
+        const res = await cloudFetch(cloudApiUrl + '/api/vault', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + cloudAuthToken }, body: JSON.stringify({ encryptedVault: encrypted, version: cloudVaultVersion }) });
+        const data = await res.json();
+        if (email !== currentUserEmail || pass !== currentPassword) return { success: false, error: 'Session changed' };
+        if (res.status === 409) { showConflictBanner(data.cloudVersion, cloudVaultVersion); updateSyncBadge('conflict'); return { success: false, localSaved: true, status: 409, error: 'Cloud conflict. Local changes are safe.' }; }
+        if (!res.ok || !data.success) { updateSyncBadge('error'); return { success: false, localSaved: true, error: data.error || 'Cloud save failed. Local changes are safe.' }; }
+        cloudVaultVersion = data.version;
+        saveSyncMeta({ version: cloudVaultVersion, dirty: false }, email);
+        hideConflictBanner(); updateSyncBadge('synced'); return { success: true };
       } catch (err) {
-        console.error('Error saving vault:', err);
-        return { success: false, error: err.message };
+        updateSyncBadge('error'); showToast('Save failed: ' + err.message);
+        return { success: false, localSaved, error: err.message };
       }
     }
 
@@ -2185,98 +2108,44 @@
       if (serverLabel) serverLabel.textContent = cloudApiUrl;
     }
 
-    function openServerConfigModal() {
-      const input = document.getElementById('configServerUrlInput');
-      if (input) input.value = cloudApiUrl;
-      const statusEl = document.getElementById('serverConfigStatus');
-      if (statusEl) statusEl.innerHTML = '';
-      openModal('serverConfigModal');
-    }
 
-    async function saveServerConfigUrl() {
-      const input = document.getElementById('configServerUrlInput');
-      const statusEl = document.getElementById('serverConfigStatus');
-      if (!input) return;
-      let url = input.value.trim();
-      if (url.endsWith('/')) url = url.slice(0, -1);
-      if (!url) url = 'https://dreamslab-cloud-vault.onrender.com';
 
-      statusEl.innerHTML = '<span style="color: var(--google-blue);">⏳ Testing connection...</span>';
-      try {
-        const res = await fetch(url + '/api/health');
-        if (res.ok) {
-          cloudApiUrl = url;
-          localStorage.setItem('dreamslab_cloud_api_url', url);
-          statusEl.innerHTML = '<span style="color: var(--google-green);">✅ Connected successfully!</span>';
-          const label = document.getElementById('lockServerUrlText');
-          if (label) label.textContent = url;
-          const modalInput = document.getElementById('cloudServerUrlInput');
-          if (modalInput) modalInput.value = url;
-          setTimeout(() => closeModal('serverConfigModal'), 800);
-          showToast('Cloud server updated: ' + url);
-          return;
-        }
-      } catch(e) {}
 
-      cloudApiUrl = url;
-      localStorage.setItem('dreamslab_cloud_api_url', url);
-      statusEl.innerHTML = '<span style="color: var(--google-yellow);">⚠️ URL saved (server is currently offline/unreachable).</span>';
-      const label = document.getElementById('lockServerUrlText');
-      if (label) label.textContent = url;
-      setTimeout(() => closeModal('serverConfigModal'), 1500);
-    }
 
     function checkLockScreenState() {
-      const lastEmail = localStorage.getItem('dreamslab_last_email') || '';
-      const emailInput = document.getElementById('userEmailInput');
-      if (emailInput && lastEmail) {
-        emailInput.value = lastEmail;
-      }
-
-      const key = getStorageKey(lastEmail);
-      const hasAccountVault = !!localStorage.getItem(key);
-      const hasLegacyVault = !!localStorage.getItem('dreamslab_cyber_vault_v1');
-
-      if (hasAccountVault || hasLegacyVault || lastEmail) {
-        setLockMode(false); // Sign In mode
-      } else {
-        setLockMode(true);  // First-time Create Account mode
-      }
+      document.getElementById('userEmailInput').value = localStorage.getItem('dreamslab_last_email') || '';
+      setLockMode(false);
     }
 
-    function resetLocalVault(e) {
-      openResetDeviceModal(e);
-    }
 
-    function openResetDeviceModal(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      openModal('resetDeviceModal');
+
+    function openResetDeviceModal(event) {
+      if (event) event.preventDefault();
+      if (confirm('Remove cached vaults from this browser? Unsynced local-only links will be lost. Export a backup first. Cloud accounts are preserved.')) confirmResetLocalVault();
     }
 
     async function confirmResetLocalVault() {
-      closeModal('resetDeviceModal');
+      await saveQueue;
+      await clearCloudSession();
       document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
 
       // Clear all local cache and vault keys from localStorage
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith('dreamslab_') || k.startsWith('dl_') || k.includes('vault'))) {
+        if (k && (k.startsWith('dreamslab_') || k.startsWith('dl_'))) {
           keysToRemove.push(k);
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k));
+      currentDeviceId = getDeviceId();
       const key = getStorageKey(currentUserEmail);
       if (key) localStorage.removeItem(key);
       localStorage.removeItem('dreamslab_cyber_vault_v1');
       localStorage.removeItem('dreamslab_last_email');
       sessionStorage.clear();
 
-      if (window.electronAPI && window.electronAPI.resetLocalVault) {
-        try {
-          await window.electronAPI.resetLocalVault();
-        } catch(err) {}
-      }
+
 
       currentPassword = null;
       currentUserEmail = '';
@@ -2288,7 +2157,7 @@
       // Clear main app DOM
       const linksContainer = document.getElementById('linksListContainer');
       if (linksContainer) linksContainer.innerHTML = '';
-      const profileContainer = document.getElementById('profileNavList');
+      const profileContainer = document.getElementById('sidebarProfilesList');
       if (profileContainer) profileContainer.innerHTML = '';
 
       // Force lock screen visible
@@ -2324,281 +2193,83 @@
       showToast('🧹 Device cache reset complete. Ready to sign in or create account.');
     }
 
-    // Remember credentials only through the desktop OS-encrypted storage bridge.
-    async function storeSecureSession(email, key, token) {
-      const api = window.electronAPI;
-      if (!api || !api.secureStoreSession) return false;
-      try {
-        const result = await api.secureStoreSession({ email, key, token, updatedAt: new Date().toISOString() });
-        if (result && result.success) return true;
-      } catch (_) {}
-      showToast('Signed in, but this PC could not securely remember your session.', 5000);
-      return false;
-    }
 
-    async function retrieveSecureSession() {
-      const api = window.electronAPI;
-      if (!api || !api.secureRetrieveSession) return null;
-      try {
-        const result = await api.secureRetrieveSession();
-        return result && result.success ? result.session : null;
-      } catch (_) {
-        return null;
+
+
+
+
+
+
+    async function handleUnlock(event) {
+      if (event) event.preventDefault();
+      const email = document.getElementById('userEmailInput').value.trim().toLowerCase();
+      const pass = document.getElementById('masterPasswordInput').value;
+      const error = document.getElementById('unlockError');
+      const button = document.getElementById('unlockSubmitBtn');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !pass) { error.textContent = 'Enter your email and master password.'; return; }
+      if (isCreatePasswordMode && (pass.length < 12 || pass !== document.getElementById('confirmPasswordInput').value)) {
+        error.textContent = 'Choose at least 12 characters and confirm the same password.'; return;
       }
-    }
-
-    async function clearSecureSession() {
-      const api = window.electronAPI;
-      if (!api || !api.secureClearSession) return true;
-      try {
-        const result = await api.secureClearSession();
-        if (result && result.success) return true;
-      } catch (_) {}
-      showToast('Could not remove the remembered session from this PC.', 5000);
-      return false;
-    }
-
-    async function handleUnlock(e) {
-      if (e) e.preventDefault();
-      const emailInput = document.getElementById('userEmailInput');
-      const passInput = document.getElementById('masterPasswordInput');
-      const confirmInput = document.getElementById('confirmPasswordInput');
-      const errorEl = document.getElementById('unlockError');
-      const email = (emailInput ? emailInput.value : '').trim().toLowerCase();
-      const pass = passInput ? passInput.value.trim() : '';
-
-      if (!email || !email.includes('@')) {
-        errorEl.textContent = 'Please enter a valid email address';
-        if (emailInput) emailInput.focus();
-        return;
-      }
-      if (!pass) {
-        errorEl.textContent = 'Please enter your master password';
-        if (passInput) passInput.focus();
-        return;
-      }
-
-      currentUserEmail = email;
-      localStorage.setItem('dreamslab_last_email', currentUserEmail);
-
-      // ----------------------------------------------------------------------
-      // 1. CREATE ACCOUNT MODE
-      // ----------------------------------------------------------------------
-      if (isCreatePasswordMode) {
-        const confirmPass = confirmInput ? confirmInput.value.trim() : '';
-        if (!confirmPass) {
-          errorEl.textContent = 'Please confirm your master password';
-          if (confirmInput) confirmInput.focus();
-          return;
-        }
-        if (pass !== confirmPass) {
-          errorEl.textContent = '❌ Passwords do not match. Please re-enter.';
-          if (confirmInput) confirmInput.focus();
-          return;
-        }
-        if (pass.length < 12) {
-          errorEl.textContent = 'Master password must be at least 12 characters for secure protection.';
-          if (passInput) passInput.focus();
-          return;
-        }
-
-        errorEl.innerHTML = '<span style="color: var(--google-blue);">⏳ Creating cloud account...</span>';
-
-        try {
-          const authVerifier = await deriveAuthVerifier(email, pass);
-          const initialVault = {
-            links: [],
-            categories: [...DEFAULT_CATEGORIES],
-            profiles: [],
-            cloudConfig: {},
-            createdAt: new Date().toISOString()
-          };
-          const encryptedVault = await encryptData(initialVault, pass);
-
-          // Call Cloud Register API
-          let cloudRegistered = false;
-          try {
-            const regRes = await fetch(cloudApiUrl + '/api/auth/register', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, authVerifier, encryptedVault })
-            });
-
-            if (regRes.status === 409) {
-              errorEl.innerHTML = 'An account with this email already exists. <a href="#" onclick="setLockMode(false); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">Sign In instead</a>.';
-              return;
-            }
-
-            if (regRes.ok) {
-              const regData = await regRes.json();
-              cloudAuthToken = regData.token;
-              cloudVaultVersion = regData.version || 1;
-              sessionStorage.setItem('dreamslab_auth_token', regData.token);
-              cloudRegistered = true;
-            }
-          } catch(netErr) {
-            console.warn('Cloud register network notice:', netErr.message);
-          }
-
-          currentPassword = pass;
-          vaultData = initialVault;
-          const storageKey = getStorageKey(currentUserEmail);
-          localStorage.setItem(storageKey, JSON.stringify(encryptedVault));
-          const rememberCheck = document.getElementById('rememberSessionCheck');
-          if (!rememberCheck || rememberCheck.checked) {
-            await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
-          } else {
-            await clearSecureSession();
-          }
-          if (window.electronAPI && window.electronAPI.saveToDocuments) {
-            window.electronAPI.saveToDocuments(JSON.stringify(encryptedVault));
-          }
-
-          document.getElementById('lockScreen').style.display = 'none';
-          errorEl.textContent = '';
-          if (isDesktopApp) {
-            await refreshLocalChromeProfiles();
-          }
-          renderApp();
-          showToast(cloudRegistered ? '🎉 Cloud Account created! Welcome to DreamsLab.' : '⚠️ Account created locally (Cloud offline).');
-        } catch (err) {
-          errorEl.textContent = 'Failed to create account: ' + err.message;
-        }
-        return;
-      }
-
-      // ----------------------------------------------------------------------
-      // 2. SIGN IN MODE
-      // ----------------------------------------------------------------------
-      errorEl.innerHTML = '<span style="color: var(--google-blue);">⏳ Authenticating Link Launcher account...</span>';
-
+      button.disabled = true;
+      error.textContent = isCreatePasswordMode ? 'Creating your account…' : 'Signing in…';
+      await saveQueue;
+      cloudAuthToken = null;
+      const key = getStorageKey(email), cached = localStorage.getItem(key), meta = syncMeta(email);
       try {
         const authVerifier = await deriveAuthVerifier(email, pass);
-        let cloudSuccess = false;
-        let cloudPayload = null;
-
-        // Step 2a: Attempt Cloud Login
-        try {
-          const loginRes = await fetch(cloudApiUrl + '/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, authVerifier })
-          });
-
-          if (loginRes.status === 401) {
-            errorEl.textContent = '❌ Incorrect master password for this account.';
-            return;
-          }
-
-          if (loginRes.status === 404) {
-            const localCached = localStorage.getItem(getStorageKey(email));
-            if (!localCached) {
-              errorEl.innerHTML = 'Account not found for <b>' + escapeHtml(email) + '</b> on the cloud server. <a href="#" onclick="setLockMode(true); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">Create Account</a> to register.';
-              return;
-            }
-          }
-
-          if (loginRes.ok) {
-            const loginData = await loginRes.json();
-            cloudAuthToken = loginData.token;
-            cloudVaultVersion = loginData.version || 1;
-            sessionStorage.setItem('dreamslab_auth_token', loginData.token);
-            cloudPayload = loginData.encryptedVault;
-            cloudSuccess = true;
-          }
-        } catch(netErr) {
-          console.warn('Cloud login network warning, checking offline cache:', netErr.message);
-        }
-
-        // Step 2b: Decrypt Vault Payload
-        let rawToDecrypt = cloudPayload;
-        let isOfflineFallback = false;
-
-        if (!rawToDecrypt) {
-          // Check local cached vault
-          const storageKey = getStorageKey(email);
-          rawToDecrypt = localStorage.getItem(storageKey);
-          if (!rawToDecrypt) {
-            rawToDecrypt = localStorage.getItem('dreamslab_cyber_vault_v1');
-          }
-          if (!rawToDecrypt && window.electronAPI && window.electronAPI.restoreFromDocuments) {
-            try {
-              const docRes = await window.electronAPI.restoreFromDocuments();
-              if (docRes && docRes.success && docRes.content) {
-                rawToDecrypt = docRes.content;
-              }
-            } catch(e) {}
-          }
-          if (rawToDecrypt) isOfflineFallback = true;
-        }
-
-        if (!rawToDecrypt) {
-          if (!cloudSuccess) {
-            errorEl.innerHTML = '❌ Cloud server at <code>' + escapeHtml(cloudApiUrl) + '</code> is unreachable and no offline cache exists for this email.<br><a href="#" onclick="openServerConfigModal(); return false;" style="color: var(--google-blue); font-weight: 600; text-decoration: underline;">⚙️ Configure Cloud Server URL</a>';
-          } else {
-            // Account created on cloud but no vault stored yet
-            currentPassword = pass;
-            vaultData = { links: [], categories: [...DEFAULT_CATEGORIES], profiles: [], createdAt: new Date().toISOString() };
-            const rememberCheck = document.getElementById('rememberSessionCheck');
-          if (!rememberCheck || rememberCheck.checked) {
-            await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
-          } else {
-            await clearSecureSession();
-          }
-            document.getElementById('lockScreen').style.display = 'none';
-            errorEl.textContent = '';
-            if (isDesktopApp) await refreshLocalChromeProfiles();
-            renderApp();
-            showToast('☁️ Cloud account opened (empty vault).');
-          }
-          return;
-        }
-
-        // Decrypt payload
-        let parsedEncrypted = typeof rawToDecrypt === 'object' ? rawToDecrypt : JSON.parse(rawToDecrypt);
-        const decrypted = await decryptData(parsedEncrypted, pass);
-        if (!decrypted || typeof decrypted !== 'object') {
-          throw new Error('Invalid vault contents');
-        }
-
-        currentPassword = pass;
-        vaultData = decrypted;
-        normalizeVaultLinks();
-
-        // Cache payload locally under user email
-        const storageKey = getStorageKey(currentUserEmail);
-        localStorage.setItem(storageKey, typeof rawToDecrypt === 'string' ? rawToDecrypt : JSON.stringify(rawToDecrypt));
-        const rememberCheck = document.getElementById('rememberSessionCheck');
-          if (!rememberCheck || rememberCheck.checked) {
-            await storeSecureSession(currentUserEmail, pass, cloudAuthToken);
-          } else {
-            await clearSecureSession();
-          }
-
-        document.getElementById('lockScreen').style.display = 'none';
-        errorEl.textContent = '';
-
-        if (isDesktopApp) {
-          await refreshLocalChromeProfiles();
-        }
-
-        renderApp();
-        showToast(cloudSuccess ? '☁️ Cloud account loaded successfully!' : '📡 Offline Mode: Using local cache.');
-
-        // If local had unsynced data and cloud was empty, push now
-        if (cloudSuccess && !cloudPayload && vaultData.links && vaultData.links.length > 0) {
-          await saveVault();
-        }
-      } catch (decryptErr) {
-        if (decryptErr.message && (decryptErr.message.includes('operation failed') || decryptErr.message.includes('mac') || decryptErr.message.includes('tag'))) {
-          errorEl.textContent = '❌ Incorrect master password for this account.';
+        let encrypted, version, token = null, conflict = false;
+        if (isCreatePasswordMode) {
+          const initial = cached ? validateImportedVault(await decryptData(JSON.parse(cached), pass)) : { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+          encrypted = await encryptData(initial, pass);
+          const res = await cloudFetch(cloudApiUrl + '/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, authVerifier, encryptedVault: encrypted }) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Account creation failed.');
+          token = data.token; version = data.version;
         } else {
-          errorEl.textContent = '❌ Decryption failed: ' + decryptErr.message;
+          let res;
+          try { res = await cloudFetch(cloudApiUrl + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, authVerifier }) }); }
+          catch { if (!cached) throw new Error('Cloud unavailable and no offline vault exists here.'); }
+          if (res && res.status !== 503 && res.status !== 502 && res.status !== 504) {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Sign-in failed.');
+            token = data.token; version = data.version; encrypted = data.encryptedVault;
+            if (meta.dirty && cached) {
+              encrypted = JSON.parse(cached);
+              conflict = !!meta.version && meta.version !== version;
+              if (conflict) showConflictBanner(version, meta.version);
+              version = meta.version || version;
+            }
+          } else if (!cached) throw new Error('Cloud unavailable and no offline vault exists here.');
+          if (!token) { encrypted = JSON.parse(cached); version = meta.version || 1; }
         }
-      }
+        if (!token && isCreatePasswordMode) throw new Error('No cloud account created. Use the local-only button while offline.');
+        const decoded = encrypted ? validateImportedVault(await decryptData(encrypted, pass)) : { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+        currentUserEmail = email; currentPassword = pass; vaultData = decoded;
+        cloudAuthToken = token; cloudVaultVersion = version || 1;
+        normalizeVaultLinks();
+        if (encrypted) localStorage.setItem(key, JSON.stringify(encrypted));
+        localStorage.setItem('dreamslab_last_email', email);
+        saveSyncMeta({ version: cloudVaultVersion, dirty: !isCreatePasswordMode && !!meta.dirty }, email);
+        document.getElementById('masterPasswordInput').value = '';
+        document.getElementById('confirmPasswordInput').value = '';
+        document.getElementById('lockScreen').style.display = 'none';
+        selectedLinkIds.clear(); activeProfileEmail = null; activeCategory = 'ALL'; searchQuery = '';
+        renderApp(); error.textContent = '';
+        updateSyncBadge(conflict ? 'conflict' : token ? 'synced' : 'offline');
+        showToast(token ? 'Cloud account opened.' : 'Offline: using this device’s encrypted cache.');
+        if (token && meta.dirty && !conflict) await saveVault();
+      } catch (err) {
+        currentPassword = null; cloudAuthToken = null;
+        error.textContent = err.name === 'OperationError' ? 'Incorrect master password or damaged backup.' : err.message;
+      } finally { button.disabled = false; }
     }
 
     function lockVault() {
+      vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+      selectedLinkIds.clear(); renderApp(); closeDetailDrawer();
+      document.getElementById('drawerForm').reset();
+      document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
+      document.getElementById('confirmPasswordInput').value = '';
       currentPassword = null;
       // Note: Lock does NOT delete secure_session.dat - it only locks the screen
       const emailInput = document.getElementById('userEmailInput');
@@ -2620,6 +2291,8 @@
     }
 
     async function handleLogout() {
+      await saveQueue;
+      await clearCloudSession();
       currentPassword = null;
       currentUserEmail = '';
       cloudAuthToken = null;
@@ -2628,7 +2301,7 @@
       activeCategory = 'ALL';
 
       // Full logout completely deletes the remembered session and clears all inputs
-      await clearSecureSession();
+
       sessionStorage.clear();
 
       // Clear active DOM stream
@@ -2650,165 +2323,21 @@
       document.getElementById('lockScreen').style.display = 'flex';
       setTimeout(() => { if (emailInput) emailInput.focus(); }, 50);
       showToast('🚪 Logged out — session cleared');
+      selectedLinkIds.clear(); renderApp(); closeDetailDrawer(); hideConflictBanner();
+      document.getElementById('drawerForm').reset();
+      document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
     }
 
-    async function tryAutoUnlock() {
-      try {
-        const savedSession = await retrieveSecureSession();
-        if (!savedSession || !savedSession.email || !savedSession.key) {
-          return false;
-        }
 
-        currentUserEmail = savedSession.email;
-        cloudAuthToken = savedSession.token || null;
-        currentPassword = savedSession.key;
-
-        const storageKey = getStorageKey(currentUserEmail);
-        let rawToDecrypt = localStorage.getItem(storageKey);
-        if (!rawToDecrypt) {
-          rawToDecrypt = localStorage.getItem('dreamslab_cyber_vault_v1');
-        }
-        if (!rawToDecrypt && window.electronAPI && window.electronAPI.restoreFromDocuments) {
-          try {
-            const docRes = await window.electronAPI.restoreFromDocuments();
-            if (docRes && docRes.success && docRes.content) {
-              rawToDecrypt = docRes.content;
-            }
-          } catch(e) {}
-        }
-
-        if (!rawToDecrypt) return false;
-
-        let parsedEncrypted = typeof rawToDecrypt === 'object' ? rawToDecrypt : JSON.parse(rawToDecrypt);
-        const decrypted = await decryptData(parsedEncrypted, currentPassword);
-        if (!decrypted || typeof decrypted !== 'object') {
-          return false;
-        }
-
-        vaultData = decrypted;
-        normalizeVaultLinks();
-
-        const lockScreenEl = document.getElementById('lockScreen');
-        if (lockScreenEl) lockScreenEl.style.display = 'none';
-
-        if (isDesktopApp) {
-          await refreshLocalChromeProfiles();
-        }
-
-        renderApp();
-        if (cloudAuthToken) {
-          setCloudState('CLOUD_CONNECTED');
-          syncWithCloudVault(false);
-        } else {
-          setCloudState('LOCAL_ONLY');
-        }
-
-        console.log('DreamsLab: Restored active session for', currentUserEmail);
-        return true;
-      } catch (e) {
-        console.warn('Auto-unlock notice:', e.message);
-        return false;
-      }
-    }
 
     /* ==========================================================================
        DESKTOP CHROME DETECTION & DIAGNOSTICS ENGINE
        ========================================================================== */
-    async function refreshLocalChromeProfiles() {
-      if (!isDesktopApp || !window.electronAPI || !window.electronAPI.detectLocalChromeProfiles) {
-        chromeDetectionStatus = 'ONLINE';
-        return;
-      }
 
-      try {
-        const res = await window.electronAPI.detectLocalChromeProfiles();
-        if (res && res.success) {
-          chromeDetectionStatus = res.status;
-          localDetectedProfiles = Array.isArray(res.profiles) ? res.profiles : [];
-          chromeDetectionError = res.error || '';
-        } else {
-          chromeDetectionStatus = (res && res.status) || 'DETECTION_FAILED';
-          chromeDetectionError = (res && res.error) || 'Detection failed';
-          localDetectedProfiles = (res && Array.isArray(res.profiles)) ? res.profiles : [];
-        }
-      } catch (err) {
-        chromeDetectionStatus = 'DETECTION_FAILED';
-        chromeDetectionError = err.message || 'Error communicating with Chrome detector';
-        localDetectedProfiles = [];
-      }
 
-      renderDesktopDiagnostics();
-      renderSidebarProfiles();
-      renderLinksStream();
-    }
 
-    async function retryChromeDetection() {
-      showToast('🔄 Detecting local Chrome profiles...');
-      await refreshLocalChromeProfiles();
-      renderApp();
-    }
 
-    function renderDesktopDiagnostics() {
-      const banner = document.getElementById('desktopDiagnosticBanner');
-      const envBadge = document.getElementById('envModeBadge');
 
-      if (!isDesktopApp) {
-        if (envBadge) {
-          envBadge.className = 'env-mode-badge online';
-          envBadge.textContent = '🌐 Online Mode';
-          envBadge.title = 'Running in Web Browser — showing all cloud profiles';
-        }
-        if (banner) banner.style.display = 'none';
-        return;
-      }
-
-      // Desktop Mode Environment Badge
-      if (envBadge) {
-        envBadge.className = 'env-mode-badge desktop';
-        envBadge.textContent = '💻 Desktop Mode';
-        envBadge.title = 'Running as Desktop Application — scoped to local Chrome profiles';
-      }
-
-      if (!banner) return;
-
-      if (chromeDetectionStatus === 'CHROME_NOT_INSTALLED') {
-        banner.className = 'diagnostic-banner warning';
-        banner.style.display = 'flex';
-        banner.innerHTML = `
-          <span>⚠️ <b>Google Chrome is not installed on this computer.</b> Link Launcher requires Google Chrome to launch profiles.</span>
-          <div style="display:flex; gap:8px;">
-            <button class="btn-link-optin" onclick="openExternalDirect('https://www.google.com/chrome/')">Download Chrome ↗</button>
-            <button class="btn-link-optin" onclick="retryChromeDetection()">🔄 Retry</button>
-          </div>`;
-      } else if (chromeDetectionStatus === 'NO_PROFILES_DIR') {
-        banner.className = 'diagnostic-banner warning';
-        banner.style.display = 'flex';
-        banner.innerHTML = `
-          <span>⚠️ <b>Chrome User Data directory not found.</b> Link Launcher could not locate the Chrome data folder on this computer.</span>
-          <button class="btn-link-optin" onclick="retryChromeDetection()">🔄 Retry</button>`;
-      } else if (chromeDetectionStatus === 'NO_PROFILES') {
-        banner.className = 'diagnostic-banner info';
-        banner.style.display = 'flex';
-        banner.innerHTML = `
-          <span>ℹ️ <b>No Chrome profiles found.</b> Google Chrome is installed, but no user profile directories were found.</span>
-          <button class="btn-link-optin" onclick="retryChromeDetection()">🔄 Retry</button>`;
-      } else if (chromeDetectionStatus === 'NO_EMAILS') {
-        banner.className = 'diagnostic-banner info';
-        banner.style.display = 'flex';
-        banner.innerHTML = `
-          <span>ℹ️ <b>No Google Accounts signed into Chrome.</b> Profiles were detected, but none are signed into a Google Account.</span>
-          <button class="btn-link-optin" onclick="retryChromeDetection()">🔄 Retry</button>`;
-      } else if (chromeDetectionStatus === 'DETECTION_FAILED') {
-        banner.className = 'diagnostic-banner error';
-        banner.style.display = 'flex';
-        banner.innerHTML = `
-          <span>⚠️ <b>Chrome profile detection error:</b> ${escapeHtml(chromeDetectionError)}</span>
-          <button class="btn-link-optin" onclick="retryChromeDetection()">🔄 Retry</button>`;
-      } else {
-        // PROFILES_FOUND
-        banner.style.display = 'none';
-      }
-    }
 
     /* ==========================================================================
        DATA SCOPING & ZERO-FALLBACK VIEW LAYER
@@ -2817,8 +2346,21 @@
       if (!Array.isArray(vaultData.links)) vaultData.links = [];
       if (!Array.isArray(vaultData.profiles)) vaultData.profiles = [];
       if (!Array.isArray(vaultData.categories)) vaultData.categories = [...DEFAULT_CATEGORIES];
+      vaultData.categories = vaultData.categories.filter(c => typeof c === 'string');
+      vaultData.profiles = vaultData.profiles.filter(p => p && typeof p === 'object').map(p => ({
+        id: typeof p.id === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(p.id) ? p.id : 'prof_' + crypto.randomUUID(),
+        name: typeof p.name === 'string' ? p.name : '', email: typeof p.email === 'string' ? p.email : '',
+        pinned: !!p.pinned, starred: !!p.starred, updatedAt: p.updatedAt || new Date().toISOString()
+      }));
+      vaultData.links = vaultData.links.filter(l => l && typeof l === 'object');
 
-      vaultData.links.forEach(l => {
+      vaultData.links.forEach((l, index) => {
+        if (typeof l.id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(l.id)) l.id = 'link_' + crypto.randomUUID();
+        if (!Number.isFinite(l.order)) l.order = index;
+        if (!Array.isArray(l.deviceIds)) l.deviceIds = [];
+        if (typeof l.url !== 'string' || !safeLinkUrl(l.url)) l.url = '';
+        for (const key of ['title','notes','category','profileEmail','profileName']) l[key] = typeof l[key] === 'string' ? l[key] : '';
+        if (!['normal','high','medium','low'].includes(l.priority)) l.priority = 'normal';
         if (!l.id) l.id = 'link_' + Math.random().toString(36).substr(2, 9);
         if (!l.priority) l.priority = 'normal';
         if (l.starred === undefined) l.starred = false;
@@ -2829,60 +2371,21 @@
       });
     }
 
-    const PROFILE_CONFIGS = {
-      'comicsexplainedinhindi@gmail.com': { name: 'Entertaindo', shortName: 'Entertaindo', color: '#1a73e8', letter: 'E' },
-      'r.abdullah.artist@gmail.com': { name: 'Your Chrome', shortName: 'Your Chrome', color: '#8e24aa', letter: 'Y' },
-      'abdullahinayat24@gmail.com': { name: 'Rana (abdullahinayat24)', shortName: 'Rana (abdullahinayat24)', color: '#188038', letter: 'R' },
-      'rana.abdullah.inayat@gmail.com': { name: 'Rana (rana.abdullah.inayat)', shortName: 'Rana (rana.abdullah.inayat)', color: '#f29900', letter: 'R' },
-      'demoghal786@gmail.com': { name: 'Asghar', shortName: 'Asghar', color: '#00897b', letter: 'A' },
-      'sara.jane.1529@gmail.com': { name: 'Sara', shortName: 'Sara', color: '#e91e63', letter: 'S' },
-      'sumaiyan913@gmail.com': { name: 'Sumaiya', shortName: 'Sumaiya', color: '#9c27b0', letter: 'S' },
-      'airah.abdullah.26@gmail.com': { name: 'Airah', shortName: 'Airah', color: '#ec407a', letter: 'A' },
-      'mythos.tester1@gmail.com': { name: 'Mythos1', shortName: 'Mythos1', color: '#ff5722', letter: 'M' },
-      'mythos.tester2@gmail.com': { name: 'Mythos2', shortName: 'Mythos2', color: '#0288d1', letter: 'M' },
-      'mythos.tester3@gmail.com': { name: 'Mythos3', shortName: 'Mythos3', color: '#d32f2f', letter: 'M' },
-      'mythos.tester4@gmail.com': { name: 'Mythos4', shortName: 'Mythos4', color: '#2e7d32', letter: 'M' },
-      'mythos.tester5@gmail.com': { name: 'Mythos5', shortName: 'Mythos5', color: '#f57c00', letter: 'M' },
-      'idigitalfun@gmail.com': { name: 'i Digital Fun', shortName: 'i Digital Fun', color: '#00acc1', letter: 'i' },
-      'idflmobile@gmail.com': { name: 'Work', shortName: 'Work', color: '#3949ab', letter: 'W' },
-      'sligo@esquirescoffee.ie': { name: 'Esquires Coffee', shortName: 'Esquires Coffee', color: '#6d4c41', letter: 'E' },
-      'abdullahdublinbranding@gmail.com': { name: 'Dublin Branding', shortName: 'Dublin Branding', color: '#00695c', letter: 'D' }
-    };
 
-    function getProfileMeta(emailOrFolder, fallbackName) {
-      const email = (emailOrFolder || '').toLowerCase().trim();
-      if (email && PROFILE_CONFIGS[email]) {
-        return PROFILE_CONFIGS[email];
-      }
-      for (const [k, cfg] of Object.entries(PROFILE_CONFIGS)) {
-        if ((email && email.includes(k)) || (fallbackName && fallbackName.toLowerCase() === cfg.name.toLowerCase()) || (fallbackName && fallbackName.toLowerCase() === cfg.shortName.toLowerCase())) {
-          return cfg;
-        }
-      }
+
+    function getProfileMeta(email, name) {
+      const text = name || email || 'Unassigned';
       let hash = 0;
-      const strForHash = email || fallbackName || 'Default';
-      for (let i = 0; i < strForHash.length; i++) hash = strForHash.charCodeAt(i) + ((hash << 5) - hash);
-      const color = GOOGLE_AVATAR_COLORS[Math.abs(hash) % GOOGLE_AVATAR_COLORS.length];
-      const name = fallbackName || (email ? email.split('@')[0] : 'Default');
-      return { name: name, shortName: name, color: color, letter: name.charAt(0).toUpperCase() };
+      for (const ch of text) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
+      return { name: text, shortName: text, color: GOOGLE_AVATAR_COLORS[Math.abs(hash) % GOOGLE_AVATAR_COLORS.length], letter: text.charAt(0).toUpperCase() };
     }
 
-    
-    // ZERO-FALLBACK STRICT LOCAL PC CHROME DETECTION (Requirement 1)
-    function getLocalEmailsSet() {
-      const set = new Set();
-      if (Array.isArray(localDetectedProfiles)) {
-        localDetectedProfiles.forEach(lp => {
-          const email = (lp.email || '').toLowerCase().trim();
-          if (email) set.add(email);
-        });
-      }
-      return set;
-    }
+
+
 
 
     // ZERO-FALLBACK PROFILES VIEW FILTER
-    
+
     let sidebarProfileFilter = 'ALL'; // 'ALL' | 'STARRED' | 'PINNED'
 
     function setSidebarProfileFilter(filter) {
@@ -2928,7 +2431,7 @@
     }
 
     function getDisplayProfiles() {
-      const scopeEmails = filterToLocalOnly ? getLocalEmailsSet() : null;
+      const scopeEmails = null;
       return sortAndFilterProfiles(vaultData.profiles || [], sidebarProfileFilter, scopeEmails);
     }
 
@@ -2957,60 +2460,19 @@
     }
 
 
-    // Returns detected Chrome profiles on this computer not yet linked in Link Launcher cloud vault
-    function getUnlinkedLocalProfiles() {
-      if (!isDesktopApp || chromeDetectionStatus !== 'PROFILES_FOUND') return [];
-      const cloudEmails = new Set(
-        (vaultData.profiles || [])
-          .map(p => (p.email || '').toLowerCase().trim())
-          .filter(Boolean)
-      );
-      return (localDetectedProfiles || []).filter(lp => {
-        const email = (lp.email || '').toLowerCase().trim();
-        return email && !cloudEmails.has(email);
-      });
-    }
+    // Returns detected account labels on this computer not yet linked in Link Launcher cloud vault
+
 
     // ZERO-FALLBACK LINKS VIEW FILTER
     function getScopedLinks() {
-      const allActiveLinks = (vaultData.links || []).filter(l => !l.deleted);
-
-      if (!filterToLocalOnly) {
-        // User toggled to view all cloud links across the account
-        return allActiveLinks;
-      }
-
-      const localEmails = getLocalEmailsSet();
-      return allActiveLinks.filter(l => {
-        let lEmail = (l.profileEmail || '').toLowerCase().trim();
-        if (!lEmail && l.profileId) {
-          const matchedProfile = (vaultData.profiles || []).find(p => p.id === l.profileId);
-          if (matchedProfile && matchedProfile.email) {
-            lEmail = matchedProfile.email.toLowerCase().trim();
-          }
-        }
-        if (!lEmail) return false;
-        return localEmails.has(lEmail);
-      });
+      const links = (vaultData.links || []).filter(l => !l.deleted);
+      return filterToLocalOnly ? links.filter(l => (l.deviceIds || []).includes(currentDeviceId)) : links;
     }
 
     function toggleProfileScope() {
       filterToLocalOnly = !filterToLocalOnly;
       localStorage.setItem('dreamslab_filter_scope', filterToLocalOnly ? 'local' : 'cloud');
-      if (isDesktopApp && filterToLocalOnly && (!localDetectedProfiles || localDetectedProfiles.length === 0)) {
-        refreshLocalChromeProfiles();
-      }
-      renderApp();
-      if (!filterToLocalOnly) {
-        if (!cloudAuthToken && (!vaultData.cloudConfig || !vaultData.cloudConfig.gistId)) {
-          showToast('☁️ Cloud View: Showing all accounts in vault. Connect Cloud Sync anytime!');
-        } else {
-          showToast('☁️ Cloud View: Showing all cloud accounts in vault');
-        }
-      } else {
-        const count = getDisplayProfiles().length;
-        showToast(`💻 Local View: Showing ${count} accounts on this PC`);
-      }
+      activeProfileEmail = null; selectedLinkIds.clear(); renderApp();
     }
 
     async function deleteProfile(profileIdOrEmail, e) {
@@ -3045,73 +2507,19 @@
 
     // Dynamic folder & metadata resolution
     function getProfileForLink(link) {
-      if (!link) {
-        const meta = getProfileMeta('', 'Default');
-        return { name: 'Default', email: '', folder: 'Default', color: meta.color, letter: meta.letter, isLocal: false };
-      }
-      const linkEmail = (link.profileEmail || '').toLowerCase().trim();
-
-      // Look up folder dynamically from local detected profiles on THIS computer
-      const localMatch = (localDetectedProfiles || []).find(lp =>
-        (linkEmail && lp.email && lp.email.toLowerCase().trim() === linkEmail) ||
-        (!linkEmail && link.profileName && lp.name && lp.name.toLowerCase() === link.profileName.toLowerCase())
-      );
-
-      let p = null;
-      if (linkEmail) {
-        p = (vaultData.profiles || []).find(x => x.email && x.email.toLowerCase().trim() === linkEmail);
-      }
-      if (!p && link.profileId) {
-        p = (vaultData.profiles || []).find(x => x.id === link.profileId);
-      }
-
-      const meta = getProfileMeta(linkEmail || (p && p.email) || '', (p && p.name) || link.profileName || 'Default');
-
-      return {
-        id: p ? p.id : (link.profileId || ''),
-        name: meta.name || (p && p.name) || link.profileName || 'Default',
-        email: linkEmail || (p && p.email) || '',
-        folder: localMatch ? localMatch.folder : 'Default',
-        color: meta.color,
-        letter: meta.letter,
-        isLocal: !!localMatch
-      };
+      return (vaultData.profiles || []).find(p => (link.profileId && p.id === link.profileId) || (link.profileEmail && p.email === link.profileEmail)) || { name: link.profileName || 'Unassigned', email: link.profileEmail || '', id: '' };
     }
 
-    // Explicit opt-in to link a local detected Chrome profile to the user's cloud account
-    async function linkLocalProfileToAccount(email, name) {
-      if (!email) return;
-      const normEmail = email.toLowerCase().trim();
-      const exists = (vaultData.profiles || []).some(p => (p.email || '').toLowerCase().trim() === normEmail);
-      if (exists) {
-        showToast('Profile already linked to account');
-        return;
-      }
-      const meta = getProfileMeta(normEmail, name);
-      vaultData.profiles.push({
-        id: 'prof_' + Math.random().toString(36).substr(2, 9),
-        name: meta.name || name || normEmail.split('@')[0],
-        email: normEmail,
-        color: meta.color,
-        letter: meta.letter,
-        notes: '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      await saveVault();
-      renderApp();
-      showToast('✅ Linked ' + (meta.name || normEmail) + ' to your account!');
-    }
+    // Explicit opt-in to link a local detected account label to the user's cloud account
 
-    async function syncLocalChromeProfiles() {
-      await retryChromeDetection();
-    }
+
+
 
     /* ==========================================================================
        MAIN RENDER ENGINE
        ========================================================================== */
     function renderApp() {
-      renderDesktopDiagnostics();
+
       updateNavigationCounts();
       renderSidebarProfiles();
       renderSidebarCategories();
@@ -3134,110 +2542,17 @@
       if (elLow) elLow.textContent = links.filter(l => l.priority === 'low').length;
     }
 
-    
+
     function renderSidebarProfiles() {
-      const container = document.getElementById('sidebarProfilesList');
-      if (!container) return;
-      let html = '';
-
-      const btnScope = document.getElementById('btnToggleScope');
-      if (btnScope) {
-        btnScope.style.display = 'inline-block';
-        btnScope.textContent = filterToLocalOnly ? '💻 Local' : '☁️ Cloud';
-        btnScope.title = filterToLocalOnly ? 'Viewing profiles on this PC (Click to view Cloud)' : 'Viewing all cloud profiles (Click for Local)';
-      }
-
-      const displayProfiles = getDisplayProfiles();
-
-      // Diagnostic message when 0 profiles displayed on desktop
-      if (filterToLocalOnly && displayProfiles.length === 0) {
-        let reason = 'No Chrome profiles matching this computer were detected.';
-        if (chromeDetectionStatus === 'CHROME_NOT_INSTALLED') reason = 'Chrome is not installed on this PC.';
-        else if (chromeDetectionStatus === 'NO_PROFILES_DIR') reason = 'Chrome User Data directory not found.';
-        else if (chromeDetectionStatus === 'NO_PROFILES') reason = 'No Chrome user profiles found.';
-        else if (chromeDetectionStatus === 'NO_EMAILS') reason = 'No signed-in Google accounts found in Chrome.';
-        else if (chromeDetectionStatus === 'DETECTION_FAILED') reason = 'Chrome detection error: ' + (chromeDetectionError || 'Could not read profile data.');
-
-        html += `
-          <div style="padding: 10px 12px; background: #f8f9fa; border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); font-size: 11px; color: var(--text-muted); margin: 6px 0;">
-            <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: 2px;">No Local Accounts</div>
-            ${reason}
-            <div style="margin-top: 6px; display: flex; gap: 4px;">
-              <button class="btn-link-optin" style="font-size: 10px; padding: 2px 6px;" onclick="refreshLocalChromeProfiles()">🔄 Detect</button>
-              <button class="btn-link-optin" style="font-size: 10px; padding: 2px 6px;" onclick="toggleProfileScope()">☁️ View Cloud</button>
-            </div>
-          </div>
-        `;
-      }
-
-      // Render Active / Matching Profiles
-      displayProfiles.forEach(p => {
-        const meta = getProfileMeta(p.email, p.name);
-        const isLocalInstalled = p.email && getLocalEmailsSet().has(p.email.toLowerCase().trim());
-        const count = getScopedLinks().filter(l => {
-          const lp = getProfileForLink(l);
-          return (p.email && lp.email && lp.email.toLowerCase() === p.email.toLowerCase()) || (p.id && lp.id === p.id);
-        }).length;
-
-        const isActive = activeProfileEmail && (
-          (p.email && activeProfileEmail.toLowerCase() === p.email.toLowerCase()) ||
-          (p.id && activeProfileEmail === p.id)
-        );
-
-        const starActive = !!p.starred;
-        const pinActive = !!p.pinned;
-
-        html += `
-          <div class="account-item ${isActive ? 'active' : ''}" onclick="selectProfileFilter('${escapeHtml(p.email || p.id)}')">
-            <div style="display:flex; align-items:center; min-width:0; flex:1;">
-              <div class="account-avatar" style="background: ${meta.color}; color:#fff; font-weight:700;">${meta.letter}</div>
-              <div class="account-info">
-                <div class="account-name" style="font-weight:600; display:flex; align-items:center; gap:4px;">
-                  <span>${escapeHtml(meta.name)}</span>
-                  ${isLocalInstalled ? '<span title="Installed on this PC" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#188038; flex-shrink:0;"></span>' : '<span title="Cloud profile" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#9aa0a6; flex-shrink:0;"></span>'}
-                </div>
-                <div class="account-email">${escapeHtml(p.email || 'Default')}</div>
-              </div>
-            </div>
-            <div class="account-item-right" style="display:flex; align-items:center; gap:3px;">
-              <button type="button" class="btn-profile-action ${pinActive ? 'active' : ''}" onclick="toggleProfilePin('${escapeHtml(p.id || p.email)}', event)" title="${pinActive ? 'Unpin account' : 'Pin account to top'}">${pinActive ? '📌' : '📍'}</button>
-              <button type="button" class="btn-profile-action ${starActive ? 'active' : ''}" onclick="toggleProfileStar('${escapeHtml(p.id || p.email)}', event)" title="${starActive ? 'Unstar account' : 'Star account'}">${starActive ? '⭐' : '☆'}</button>
-              <span class="nav-badge">${count}</span>
-              <button type="button" class="btn-profile-del" onclick="deleteProfile('${escapeHtml(p.id || p.email)}', event)" title="Remove this profile">✕</button>
-            </div>
-          </div>
-        `;
-      });
-
-      // Unlinked Local Chrome Profiles (on desktop)
-      const unlinked = getUnlinkedLocalProfiles();
-      if (unlinked.length > 0) {
-        html += `
-          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
-            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;">
-              Detected on this PC (Unlinked)
-            </div>
-        `;
-
-        unlinked.forEach(ulp => {
-          const meta = getProfileMeta(ulp.email, ulp.name);
-          html += `
-            <div class="unlinked-profile-item">
-              <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1;">
-                <div class="account-avatar" style="width:20px; height:20px; font-size:10px; background:${meta.color}; color:#fff;">${meta.letter}</div>
-                <div style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                  <div style="font-weight:600; font-size:11px;">${escapeHtml(meta.name)}</div>
-                  <div style="font-size:10px; color:var(--text-muted);">${escapeHtml(ulp.email)}</div>
-                </div>
-              </div>
-              <button type="button" class="btn-link-optin" onclick="linkLocalProfileToAccount('${escapeHtml(ulp.email)}', '${escapeHtml(ulp.name)}')">+ Link</button>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      }
-
-      container.innerHTML = html;
+      const scope = document.getElementById('btnToggleScope');
+      scope.textContent = filterToLocalOnly ? 'This device' : 'All devices';
+      scope.title = 'Switch device links / every link in your account';
+      document.getElementById('sidebarProfilesList').innerHTML = getDisplayProfiles().map(p => {
+        const id = p.email || p.id, meta = getProfileMeta(p.email, p.name);
+        const arg = escapeHtml(JSON.stringify(id));
+        const count = getScopedLinks().filter(l => (p.email && l.profileEmail === p.email) || l.profileId === p.id).length;
+        return `<div class="account-item ${activeProfileEmail === id ? 'active' : ''}"><button class="account-label-button" onclick="selectProfileFilter(${arg})"><span class="account-avatar" style="background:${meta.color}">${escapeHtml(meta.letter)}</span><span class="account-info"><span class="account-name">${escapeHtml(meta.name)}</span><span class="account-email">${escapeHtml(p.email)}</span></span></button><button class="btn-profile-action" onclick="toggleProfilePin(${arg}, event)" title="Pin label">${p.pinned ? '📌' : '📍'}</button><button class="btn-profile-action" onclick="toggleProfileStar(${arg}, event)" title="Star label">${p.starred ? '★' : '☆'}</button><span class="nav-badge">${count}</span><button class="btn-profile-del" onclick="deleteProfile(${arg},event)" title="Delete label">×</button></div>`;
+      }).join('');
     }
 
 
@@ -3256,7 +2571,7 @@
         const isActive = activeCategory === cat;
 
         html += `
-          <div class="nav-item ${isActive ? 'active' : ''}" onclick="selectCategory('${escapeHtml(cat)}')">
+          <div class="nav-item ${isActive ? 'active' : ''}" onclick="selectCategory(${escapeHtml(JSON.stringify(cat))})">
             <div class="nav-item-left">
               <span class="chip-dot" style="background: ${color}; width:8px; height:8px; border-radius:50%;"></span>
               <span class="nav-label">${escapeHtml(cat)}</span>
@@ -3278,9 +2593,9 @@
         const isActive = activeCategory === cat;
         const count = cat === 'ALL' ? getScopedLinks().length : getScopedLinks().filter(l => l.category === cat).length;
         html += `
-          <div class="category-chip ${isActive ? 'active' : ''}" onclick="selectCategory('${escapeHtml(cat)}')">
+          <button type="button" class="category-chip ${isActive ? 'active' : ''}" onclick="selectCategory(${escapeHtml(JSON.stringify(cat))})">
             ${cat === 'ALL' ? 'All Items' : escapeHtml(cat)} (${count})
-          </div>
+          </button>
         `;
       });
       container.innerHTML = html;
@@ -3328,19 +2643,12 @@
       }
 
       // 5. Sort by Priority
-      const WEIGHTS = { high: 3, medium: 2, normal: 1, low: 0 };
-      filtered.sort((a, b) => {
-        if (a.starred !== b.starred) return b.starred ? 1 : -1;
-        return (WEIGHTS[b.priority || 'normal'] || 1) - (WEIGHTS[a.priority || 'normal'] || 1);
-      });
+      filtered.sort((a, b) => (a.order || 0) - (b.order || 0));
 
       if (filtered.length === 0) {
         let emptyTitle = 'No Links Found';
-        let emptyDesc = 'No bookmarks match your current view or filter.';
-        if (isDesktopApp && filterToLocalOnly && getDisplayProfiles().length === 0) {
-          emptyTitle = 'Desktop Scoped View';
-          emptyDesc = 'Only links belonging to Google accounts detected on this computer are shown here.';
-        }
+        let emptyDesc = filterToLocalOnly ? 'Save a link here, or switch to All devices and assign existing links to this device.' : 'No bookmarks match your current view or filter.';
+
 
         container.innerHTML = `
           <div class="empty-stream-state">
@@ -3349,7 +2657,7 @@
             <p style="font-size: 13px;">${emptyDesc}</p>
             <div style="margin-top: 10px; display:flex; gap:8px; justify-content:center;">
               <button class="btn-primary" onclick="openAddLinkModal()">+ Add Link</button>
-              ${isDesktopApp && filterToLocalOnly ? '<button class="btn-secondary" onclick="toggleProfileScope()">☁️ View All Cloud Links</button>' : ''}
+              ${filterToLocalOnly ? '<button class="btn-secondary" onclick="toggleProfileScope()">All devices</button>' : ''}
             </div>
           </div>
         `;
@@ -3360,7 +2668,7 @@
       filtered.forEach(l => {
         let domain = '';
         try { domain = new URL(l.url).hostname; } catch(e) { domain = l.url; }
-        const faviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=32';
+        const faviconUrl = 'favicon.png';
         const prof = getProfileForLink(l);
         const meta = getProfileMeta(prof.email || l.profileEmail || prof.folder, prof.name);
         const priority = l.priority || 'normal';
@@ -3370,7 +2678,7 @@
         html += `
           <div class="link-row" onclick="openDetailDrawer('${l.id}')">
             <!-- CHECKBOX -->
-            <input type="checkbox" class="link-checkbox" onclick="event.stopPropagation(); toggleSelectLink('${l.id}')">
+            <input type="checkbox" class="link-checkbox" data-id="${l.id}" aria-label="Select ${escapeHtml(l.title)}" onclick="event.stopPropagation(); toggleSelectLink('${l.id}')">
 
             <!-- STAR -->
             <button class="link-star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStarLink('${l.id}', event)" title="Star Link">
@@ -3381,8 +2689,8 @@
             <div class="prio-dot ${prioClass}" title="Priority: ${priority.toUpperCase()}"></div>
 
             <!-- PROFILE / SENDER -->
-            <div class="link-sender-col" title="${escapeHtml(meta.name)} (${escapeHtml(prof.email || prof.folder)})">
-              <span class="sender-avatar-badge" style="background: ${meta.color};">${meta.letter}</span>
+            <div class="link-sender-col" title="${escapeHtml(meta.name)} (${escapeHtml(prof.email || '')})">
+              <span class="sender-avatar-badge" style="background: ${meta.color};">${escapeHtml(meta.letter)}</span>
               <span class="sender-name-text">${escapeHtml(meta.name)}</span>
             </div>
 
@@ -3398,7 +2706,10 @@
 
             <!-- HOVER ACTIONS (ID DISPATCHED FOR SAFETY) -->
             <div class="link-row-actions" onclick="event.stopPropagation()">
-              <button class="btn-row-action btn-row-run" onclick="handleLinkRun('${l.id}')" title="Launch in Chrome (${escapeHtml(prof.name)})">
+              <button class="move-link" onclick="moveLink('${l.id}', -1)" title="Move up" aria-label="Move ${escapeHtml(l.title)} up">↑</button>
+              <button class="move-link" onclick="moveLink('${l.id}', 1)" title="Move down" aria-label="Move ${escapeHtml(l.title)} down">↓</button>
+              <button class="device-toggle" onclick="toggleLinkDevice('${l.id}')" title="Assign or remove from this device">${(l.deviceIds || []).includes(currentDeviceId) ? '✓ Device' : '+ Device'}</button>
+              <button class="btn-row-action btn-row-run" onclick="handleLinkRun('${l.id}')" title="Open link">
                 ▶ Run
               </button>
               <button class="btn-row-action" onclick="handleLinkOpen('${l.id}')" title="Open in default browser">
@@ -3478,8 +2789,7 @@
     function handleLinkRun(id) {
       const item = (vaultData.links || []).find(l => l.id === id);
       if (!item) return;
-      const prof = getProfileForLink(item);
-      launchChromeLink(item.url, prof.email || item.profileEmail || '', prof.folder || '');
+      openDirectTab(item.url);
     }
 
     function handleLinkOpen(id) {
@@ -3515,6 +2825,8 @@
       document.getElementById('drawerPrioritySelect').value = item.priority || 'normal';
       const elTask = document.getElementById('drawerTaskCheck');
       if (elTask) elTask.checked = !!item.isTask;
+      document.getElementById('drawerStarredCheck').checked = !!item.starred;
+      document.getElementById('drawerTagsInput').value = Array.isArray(item.tags) ? item.tags.join(', ') : '';
 
       populateProfileSelect('drawerProfileSelect', item.profileEmail || item.profileId);
       populateCategoryDatalist();
@@ -3527,34 +2839,41 @@
       currentDrawerLinkId = null;
     }
 
-    async function saveDrawerDetails() {
+    async function saveDrawerDetails(event) {
+      if (event) event.preventDefault();
+      const safeUrl = safeLinkUrl(document.getElementById('drawerUrlInput').value.trim());
+      if (!safeUrl) { showToast('Enter a valid HTTP or HTTPS link.'); return; }
       if (!currentDrawerLinkId) return;
       const item = (vaultData.links || []).find(l => l.id === currentDrawerLinkId);
       if (!item) return;
 
       item.title = document.getElementById('drawerTitleInput').value.trim() || item.title;
-      item.url = document.getElementById('drawerUrlInput').value.trim() || item.url;
+      item.url = safeUrl;
       item.category = document.getElementById('drawerCategoryInput').value.trim() || 'General';
       item.notes = document.getElementById('drawerNotesInput').value.trim();
+      item.tags = document.getElementById('drawerTagsInput').value.split(',').map(tag => tag.trim()).filter(Boolean);
+      item.starred = document.getElementById('drawerStarredCheck').checked;
       item.priority = document.getElementById('drawerPrioritySelect').value;
       const elTask = document.getElementById('drawerTaskCheck');
       if (elTask) item.isTask = elTask.checked;
 
       const profSelect = document.getElementById('drawerProfileSelect');
       const selectedEmail = profSelect.value;
-      const matchedProf = (vaultData.profiles || []).find(p => (p.email || '').toLowerCase() === selectedEmail.toLowerCase());
-      item.profileEmail = selectedEmail;
-      item.profileName = matchedProf ? matchedProf.name : (selectedEmail ? selectedEmail.split('@')[0] : 'Default');
+      const matchedProf = (vaultData.profiles || []).find(p => (p.email || p.id).toLowerCase() === selectedEmail.toLowerCase());
+      item.profileEmail = matchedProf?.email || '';
+      item.profileId = matchedProf?.id || '';
+      item.profileName = matchedProf ? matchedProf.name : (selectedEmail ? selectedEmail.split('@')[0] : 'Unassigned');
       item.updatedAt = new Date().toISOString();
 
       if (item.category && !vaultData.categories.includes(item.category)) {
         vaultData.categories.push(item.category);
       }
 
-      await saveVault();
+      const saved = await saveVault();
+      if (!saved.success && !saved.localSaved) return;
       renderApp();
       closeDetailDrawer();
-      showToast('💾 Link changes saved');
+      showToast(syncMeta().dirty && cloudAuthToken ? 'Saved here; cloud sync is pending.' : 'Link changes saved.');
     }
 
     function launchCurrentDrawerLink() {
@@ -3669,29 +2988,11 @@
     }
 
     function populateProfileSelect(selectId, selectedVal) {
-      const sel = document.getElementById(selectId);
-      if (!sel) return;
-      let html = '<option value="">Default Profile</option>';
-
-      // IF CLOUD MODE / WEB MODE:
-      //   populate selector with ALL vaultData.profiles.
-      // IF DESKTOP LOCAL MODE:
-      //   populate selector ONLY with getDisplayProfiles()
-      //   DO NOT append cloud-only profiles afterward.
-      const isDesktopLocal = isDesktopApp && filterToLocalOnly;
-      const targetProfiles = isDesktopLocal ? getDisplayProfiles() : (vaultData.profiles || []);
-
-      const addedEmails = new Set();
-      targetProfiles.forEach(p => {
-        const email = (p.email || '').toLowerCase().trim();
-        if (!email || addedEmails.has(email)) return;
-        addedEmails.add(email);
-        const meta = getProfileMeta(email, p.name);
-        const isSel = selectedVal && (selectedVal.toLowerCase() === email || selectedVal === p.id);
-        html += '<option value="' + escapeHtml(email) + '" ' + (isSel ? 'selected' : '') + '>' + escapeHtml(meta.name) + ' (' + escapeHtml(email) + ')</option>';
-      });
-
-      sel.innerHTML = html;
+      const select = document.getElementById(selectId);
+      select.innerHTML = '<option value="">Unassigned</option>' + (vaultData.profiles || []).map(p => {
+        const value = p.email || p.id;
+        return '<option value="' + escapeHtml(value) + '" ' + (value === selectedVal ? 'selected' : '') + '>' + escapeHtml(p.name || p.email) + '</option>';
+      }).join('');
     }
 
     function populateCategoryDatalist() {
@@ -3719,81 +3020,14 @@
     /* ==========================================================================
        LINK LAUNCHING & BROWSER DISPATCH
        ========================================================================== */
-    function showChromeLaunchErrorModal(url, email, errorMsg, folder) {
-      const modal = document.getElementById('chromeLaunchErrorModal');
-      const errEmailEl = document.getElementById('chromeLaunchErrorEmail');
-      const errDescEl = document.getElementById('chromeLaunchErrorDesc');
-      const retryBtn = document.getElementById('chromeLaunchRetryBtn');
 
-      if (errEmailEl) errEmailEl.textContent = email || folder || 'Default Profile';
-      if (errDescEl) errDescEl.textContent = errorMsg || 'Unable to launch Chrome profile.';
-      if (retryBtn) {
-        retryBtn.onclick = () => {
-          closeModal('chromeLaunchErrorModal');
-          launchChromeLink(url, email, folder);
-        };
-      }
-      openModal('chromeLaunchErrorModal');
-    }
 
-    async function launchChromeLink(url, email, folder) {
-      if (!url) return;
-      const targetEmail = (email || '').toLowerCase().trim();
-      const targetFolder = (folder || '').trim();
-
-      // Web Browser mode: Open directly in new browser tab
-      if (!isDesktopApp || !window.electronAPI || !window.electronAPI.launchChromeProfile) {
-        window.open(url, '_blank');
-        showToast('🌐 Opened in browser');
-        return;
-      }
-
-      // Desktop App mode: Resolve folder dynamically from local Chrome profiles on THIS computer
-      let localFolder = 'Default';
-      if (targetEmail) {
-        const localMatch = (localDetectedProfiles || []).find(lp =>
-          (lp.email || '').toLowerCase().trim() === targetEmail
-        );
-        if (localMatch && localMatch.folder) {
-          localFolder = localMatch.folder;
-        } else {
-          // Profile requested, but NOT present on this machine!
-          // NEVER silently fall back to default browser!
-          showChromeLaunchErrorModal(url, targetEmail, `The Chrome profile for "${targetEmail}" is not present on this computer.`, targetFolder);
-          return;
-        }
-      } else if (targetFolder && targetFolder !== 'Default') {
-        const localMatch = (localDetectedProfiles || []).find(lp =>
-          lp.folder && lp.folder.toLowerCase() === targetFolder.toLowerCase()
-        );
-        if (localMatch && localMatch.folder) {
-          localFolder = localMatch.folder;
-        } else {
-          showChromeLaunchErrorModal(url, targetFolder, `The Chrome profile folder "${targetFolder}" is not present on this computer.`, targetFolder);
-          return;
-        }
-      }
-
-      showToast('🚀 Launching Chrome (' + (targetEmail || localFolder) + ')...');
-      try {
-        const res = await window.electronAPI.launchChromeProfile(localFolder, url, targetEmail);
-        if (!res || !res.success) {
-          const errMsg = (res && res.error) || 'Failed to launch Google Chrome.';
-          showChromeLaunchErrorModal(url, targetEmail || localFolder, errMsg, targetFolder);
-        }
-      } catch (e) {
-        showChromeLaunchErrorModal(url, targetEmail || localFolder, e.message || 'Error communicating with Chrome launcher.', targetFolder);
-      }
-    }
 
     function openDirectTab(url) {
-      if (!url) return;
-      if (window.electronAPI && window.electronAPI.openExternal) {
-        window.electronAPI.openExternal(url);
-      } else {
-        window.open(url, '_blank');
-      }
-      showToast('🌐 Opened in browser');
+      url = safeLinkUrl(url);
+      if (!url) { showToast('Enter a valid HTTP or HTTPS link.'); return; }
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      showToast('Link opened in your browser.');
     }
 
     function copyLinkUrl(url) {
@@ -3865,10 +3099,12 @@
 
       let url = urlInput ? urlInput.value.trim() : '';
       if (!url) { showToast('⚠️ URL is required'); return; }
-      if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('chrome://')) {
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
       }
 
+      url = safeLinkUrl(url);
+      if (!url) { showToast('Enter a valid HTTP or HTTPS link.'); return; }
       let title = titleInput ? titleInput.value.trim() : '';
       if (!title) {
         try {
@@ -3883,10 +3119,12 @@
       const cat = (catInput ? catInput.value.trim() : '') || 'General';
       const prio = (prioInput ? prioInput.value : null) || 'normal';
       const selectedEmail = profSelect ? profSelect.value : '';
-      const matchedProf = (vaultData.profiles || []).find(p => (p.email || '').toLowerCase() === selectedEmail.toLowerCase());
+      const matchedProf = (vaultData.profiles || []).find(p => (p.email || p.id).toLowerCase() === selectedEmail.toLowerCase());
 
       const newLink = {
-        id: 'link_' + Math.random().toString(36).substr(2, 9),
+        id: 'link_' + crypto.randomUUID(),
+        deviceIds: [currentDeviceId],
+        order: Math.min(0, ...(vaultData.links || []).map(l => l.order || 0)) - 1,
         title: title,
         url: url,
         category: cat,
@@ -3895,8 +3133,9 @@
         isTask: (prio === 'high'),
         taskDone: false,
         starred: false,
-        profileEmail: selectedEmail || '',
-        profileName: matchedProf ? matchedProf.name : (selectedEmail ? selectedEmail.split('@')[0] : 'Default'),
+        profileEmail: matchedProf?.email || '',
+        profileId: matchedProf?.id || '',
+        profileName: matchedProf ? matchedProf.name : (selectedEmail ? selectedEmail.split('@')[0] : 'Unassigned'),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -3908,45 +3147,26 @@
         vaultData.categories.push(cat);
       }
 
-      await saveVault();
+      const saved = await saveVault();
+      if (!saved.success && !saved.localSaved) return;
       renderApp();
       closeModal('addLinkModal');
-      showToast('✅ Link added to vault!');
+      showToast(syncMeta().dirty && cloudAuthToken ? 'Link saved here; cloud sync is pending.' : 'Link added to vault.');
     }
 
     function openAddProfileModal() {
-      const elName = document.getElementById('newProfName');
-      const elEmail = document.getElementById('newProfEmail');
-      const elFolder = document.getElementById('newProfFolder');
-      if (elName) elName.value = '';
-      if (elEmail) elEmail.value = '';
-      if (elFolder) elFolder.value = '';
-
-      // Populate datalist of detected local Chrome accounts
-      let dl = document.getElementById('detectedChromeDatalist');
-      if (!dl) {
-        dl = document.createElement('datalist');
-        dl.id = 'detectedChromeDatalist';
-        document.body.appendChild(dl);
-      }
-      if (elEmail) elEmail.setAttribute('list', 'detectedChromeDatalist');
-      if (Array.isArray(localDetectedProfiles) && localDetectedProfiles.length > 0) {
-        dl.innerHTML = localDetectedProfiles.map(p => '<option value="' + escapeHtml(p.email) + '">' + escapeHtml(p.name || p.email) + '</option>').join('');
-      }
-
+      document.getElementById('newProfName').value = '';
+      document.getElementById('newProfEmail').value = '';
       openModal('addProfileModal');
-      if (elName) setTimeout(() => elName.focus(), 50);
     }
 
     async function saveNewProfileItem(e) {
       if (e && e.preventDefault) e.preventDefault();
       const elName = document.getElementById('newProfName');
       const elEmail = document.getElementById('newProfEmail');
-      const elFolder = document.getElementById('newProfFolder');
 
       const name = elName ? elName.value.trim() : '';
       const email = elEmail ? elEmail.value.trim().toLowerCase() : '';
-      const folder = elFolder ? elFolder.value.trim() : '';
 
       if (!name && !email) {
         showToast('⚠️ Please provide at least a Profile Name or Google Email');
@@ -3965,7 +3185,6 @@
         email: email,
         color: meta.color,
         letter: meta.letter,
-        folder: folder,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -3973,13 +3192,7 @@
       if (!Array.isArray(vaultData.profiles)) vaultData.profiles = [];
       vaultData.profiles.push(newProf);
 
-      // If user adds an email not on this PC while in local view, switch to cloud view so it is visible
-      if (isDesktopApp && filterToLocalOnly && email && !getLocalEmailsSet().has(email)) {
-        filterToLocalOnly = false;
-        showToast('✅ Profile added! (Showing in Cloud view)');
-      } else {
-        showToast('✅ Profile added to your account!');
-      }
+      showToast('Account label added.');
 
       await saveVault();
       renderApp();
@@ -3987,472 +3200,35 @@
     }
 
     /* ==========================================================================
-       CLOUD GIST SYNCHRONIZATION ENGINE
+       CLOUD ACCOUNT
        ========================================================================== */
-    function openExternalDirect(url) {
-      if (window.electronAPI && window.electronAPI.openExternal) {
-        window.electronAPI.openExternal(url);
-      } else {
-        window.open(url, '_blank');
-      }
-    }
+    function openExternalDirect(url) { openDirectTab(url); }
 
-    function toggleCloudGuide() {
-      const guide = document.getElementById('cloudGuideContent');
-      const toggleBtn = document.getElementById('btnToggleCloudGuide');
-      if (!guide) return;
-      const isHidden = guide.style.display === 'none';
-      guide.style.display = isHidden ? 'flex' : 'none';
-      if (toggleBtn) toggleBtn.textContent = isHidden ? 'Hide Guide' : 'Show Guide';
-    }
+
 
     function openCloudModal() {
-      const statusEl = document.getElementById('cloudSyncStatus');
-      if (statusEl) statusEl.textContent = '';
-      const emailEl = document.getElementById('cloudAccountEmail');
-      if (emailEl) emailEl.textContent = currentUserEmail || 'Not signed in';
-      const emailDescEl = document.getElementById('cloudAccountEmailDesc');
-      if (emailDescEl) emailDescEl.textContent = currentUserEmail || 'Not signed in';
-      const serverInput = document.getElementById('cloudServerUrlInput');
-      if (serverInput) serverInput.value = cloudApiUrl;
-      const modalSync = document.getElementById('cloudModalSyncStatus');
-      if (modalSync) {
-        modalSync.textContent = cloudAuthToken ? '🟢 Auto-Sync Active' : '📡 Offline Mode';
-        modalSync.style.color = cloudAuthToken ? '#188038' : 'var(--text-muted)';
-      }
-      const cfg = vaultData.cloudConfig || {};
-      const tokenInput = document.getElementById('cloudTokenInput');
-      if (tokenInput) tokenInput.value = cfg.gistToken || '';
-      const gistInput = document.getElementById('cloudGistIdInput');
-      if (gistInput) gistInput.value = cfg.gistId || '';
+      document.getElementById('cloudAccountEmail').textContent = currentUserEmail || 'Local vault';
+      document.getElementById('cloudServerLabel').textContent = cloudApiUrl;
+      document.getElementById('cloudSyncStatus').textContent = cloudAuthToken ? (syncMeta().dirty ? 'Local changes are waiting to sync.' : 'Account connected.') : 'Local-only / offline. Sign in online to connect this vault.';
       openModal('cloudModal');
     }
 
-    function saveCloudServerUrlFromModal() {
-      const input = document.getElementById('cloudServerUrlInput');
-      if (!input) return;
-      let url = input.value.trim();
-      if (url.endsWith('/')) url = url.slice(0, -1);
-      if (!url) url = 'https://dreamslab-cloud-vault.onrender.com';
-      cloudApiUrl = url;
-      localStorage.setItem('dreamslab_cloud_api_url', url);
-      const label = document.getElementById('lockServerUrlText');
-      if (label) label.textContent = url;
-      showToast('Cloud server URL saved: ' + url);
-    }
+
 
     async function forceCloudSync() {
-      const statusEl = document.getElementById('cloudSyncStatus');
-      if (statusEl) {
-        statusEl.style.color = 'var(--google-blue)';
-        statusEl.textContent = '⏳ Synchronizing with Cloud Server...';
-      }
-      const res = await saveVault();
-      if (res && res.success) {
-        if (statusEl) {
-          statusEl.style.color = '#188038';
-          statusEl.textContent = '✅ Cloud account fully synchronized!';
-        }
-        showToast('Cloud synchronized');
-      } else if (res && res.status === 409) {
-        if (statusEl) {
-          statusEl.style.color = '#f2994a';
-          statusEl.textContent = '⚠️ Version conflict: Cloud data changed on another device.';
-        }
-        showToast('⚠️ Cloud data conflict detected. Please reload.', 5000);
-      } else {
-        if (statusEl) {
-          statusEl.style.color = '#d93025';
-          statusEl.textContent = '❌ Cloud sync failed (' + (res && res.error ? res.error : 'Network/Server error') + ').';
-        }
-        showToast('⚠️ Cloud sync failed. Changes kept locally.', 4000);
-      }
+      const result = await saveVault();
+      document.getElementById('cloudSyncStatus').textContent = result.localOnly ? 'Saved on this device only. Sign in online to sync.' : result.success ? 'Cloud synced successfully.' : result.error;
     }
 
-    async function migrateFromGist() {
-      const token = (document.getElementById('cloudTokenInput').value || '').trim();
-      const gistId = (document.getElementById('cloudGistIdInput').value || '').trim();
-      const statusEl = document.getElementById('cloudSyncStatus');
 
-      if (!gistId && !token) {
-        if (statusEl) {
-          statusEl.style.color = '#d93025';
-          statusEl.textContent = 'Please enter your legacy Gist ID or Token.';
-        }
-        return;
-      }
 
-      if (statusEl) {
-        statusEl.style.color = 'var(--google-blue)';
-        statusEl.textContent = '⏳ Downloading & migrating links from GitHub Gist...';
-      }
 
-      try {
-        const cloudData = await fetchVaultFromCloud(gistId || token);
-        let decrypted = null;
-        try {
-          decrypted = await decryptData(cloudData, currentPassword);
-        } catch(e) {
-          const pass = prompt('Gist is encrypted with a previous master password.\nEnter password to decrypt and migrate:');
-          if (pass) {
-            decrypted = await decryptData(cloudData, pass.trim());
-          }
-        }
 
-        if (!decrypted || typeof decrypted !== 'object') {
-          throw new Error('Could not decrypt legacy Gist data.');
-        }
 
-        // Merge links
-        let importedLinksCount = 0;
-        const linkMap = new Map();
-        (vaultData.links || []).forEach(l => linkMap.set(l.id, l));
-        (decrypted.links || []).forEach(gl => {
-          if (!linkMap.has(gl.id)) {
-            linkMap.set(gl.id, gl);
-            importedLinksCount++;
-          }
-        });
-        vaultData.links = Array.from(linkMap.values());
 
-        // Merge profiles
-        (decrypted.profiles || []).forEach(gp => {
-          const email = (gp.email || '').toLowerCase().trim();
-          if (email && !(vaultData.profiles || []).some(p => (p.email || '').toLowerCase() === email)) {
-            delete gp.folder;
-            vaultData.profiles.push(gp);
-          }
-        });
 
-        // Merge categories
-        if (Array.isArray(decrypted.categories)) {
-          const set = new Set([...DEFAULT_CATEGORIES, ...(vaultData.categories || []), ...decrypted.categories]);
-          vaultData.categories = Array.from(set);
-        }
 
-        await saveVault();
-        renderApp();
 
-        if (statusEl) {
-          statusEl.style.color = '#188038';
-          statusEl.textContent = '🎉 Successfully migrated ' + importedLinksCount + ' links from Gist into your Cloud Account!';
-        }
-        showToast('Migrated ' + importedLinksCount + ' links from Gist!');
-      } catch(err) {
-        if (statusEl) {
-          statusEl.style.color = '#d93025';
-          statusEl.textContent = 'Migration failed: ' + err.message;
-        }
-      }
-    }
-
-    async function saveCloudCredentials() {
-      const token = document.getElementById('cloudTokenInput').value.trim();
-      const gistId = document.getElementById('cloudGistIdInput').value.trim();
-      if (!vaultData.cloudConfig) vaultData.cloudConfig = {};
-      vaultData.cloudConfig.gistToken = token;
-      vaultData.cloudConfig.gistId = gistId;
-      await saveVault();
-      const statusEl = document.getElementById('cloudSyncStatus');
-      statusEl.style.color = '#188038';
-      statusEl.textContent = '✅ Credentials saved in your encrypted local vault!';
-      showToast('Cloud credentials saved');
-    }
-
-    async function autoCreatePrivateGist() {
-      const token = document.getElementById('cloudTokenInput').value.trim();
-      const statusEl = document.getElementById('cloudSyncStatus');
-      if (!token) {
-        statusEl.style.color = '#d93025';
-        statusEl.textContent = 'Please enter your GitHub Personal Access Token above first.';
-        return;
-      }
-
-      statusEl.style.color = '#0b57d0';
-      statusEl.textContent = 'Creating secure private Gist on GitHub...';
-
-      try {
-        const payload = {
-          description: 'DreamsLab Multi-Profile Chrome Vault (AES-256 Encrypted)',
-          public: false,
-          files: {
-            'dreamslab_vault.json': {
-              content: JSON.stringify({ initialized: true, createdAt: new Date().toISOString() })
-            }
-          }
-        };
-
-        const res = await fetch('https://api.github.com/gists', {
-          method: 'POST',
-          headers: {
-            Authorization: 'token ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.message || 'HTTP ' + res.status);
-        }
-
-        const data = await res.json();
-        document.getElementById('cloudGistIdInput').value = data.id;
-        if (!vaultData.cloudConfig) vaultData.cloudConfig = {};
-        vaultData.cloudConfig.gistToken = token;
-        vaultData.cloudConfig.gistId = data.id;
-        await saveVault();
-
-        statusEl.style.color = '#188038';
-        statusEl.textContent = '🎉 Created private Gist (' + data.id + ')! Now click "Push / Upload Vault".';
-        showToast('Private Gist created successfully!');
-      } catch (err) {
-        statusEl.style.color = '#d93025';
-        statusEl.textContent = 'Gist creation failed: ' + err.message;
-      }
-    }
-
-    async function syncPushCloudVault() {
-      const token = document.getElementById('cloudTokenInput').value.trim() || (vaultData.cloudConfig && vaultData.cloudConfig.gistToken) || '';
-      const gistId = document.getElementById('cloudGistIdInput').value.trim() || (vaultData.cloudConfig && vaultData.cloudConfig.gistId) || '';
-      const statusEl = document.getElementById('cloudSyncStatus');
-      if (!token || !gistId) { 
-        statusEl.style.color = '#d93025'; 
-        statusEl.textContent = 'GitHub Token and Gist ID required'; 
-        return; 
-      }
-
-      try {
-        statusEl.style.color = '#0b57d0';
-        statusEl.textContent = 'Merging with cloud vault before push...';
-
-        // Step 1: Pre-push fetch & merge to preserve any edits made on other machines
-        let cloudLinks = [], cloudCategories = [], cloudProfiles = [];
-        try {
-          const cloudRes = await fetch('https://api.github.com/gists/' + gistId, {
-            headers: { Authorization: 'token ' + token }
-          });
-          if (cloudRes.ok) {
-            const cloudJson = await cloudRes.json();
-            const cloudFile = cloudJson.files && (cloudJson.files['dreamslab_vault.json'] || Object.values(cloudJson.files)[0]);
-            if (cloudFile && cloudFile.content) {
-              const cloudEncrypted = JSON.parse(cloudFile.content);
-              let cloudDecrypted = null;
-              try {
-                cloudDecrypted = await decryptData(cloudEncrypted, currentPassword);
-              } catch(e) {
-                const cloudPass = prompt('Cloud Vault is encrypted with a different master password.\nEnter the password to merge cloud data:');
-                if (cloudPass) {
-                  cloudDecrypted = await decryptData(cloudEncrypted, cloudPass.trim());
-                }
-              }
-              if (cloudDecrypted) {
-                cloudLinks = Array.isArray(cloudDecrypted.links) ? cloudDecrypted.links : [];
-                cloudCategories = Array.isArray(cloudDecrypted.categories) ? cloudDecrypted.categories : [];
-                cloudProfiles = Array.isArray(cloudDecrypted.profiles) ? cloudDecrypted.profiles : [];
-              }
-            }
-          }
-        } catch(fetchErr) {
-          console.warn('Pre-push fetch warning:', fetchErr.message);
-        }
-
-        // Step 2: Smart merge links with updatedAt and tombstones
-        const linkMap = new Map();
-        cloudLinks.forEach(cl => linkMap.set(cl.id, cl));
-        (vaultData.links || []).forEach(localLink => {
-          if (!linkMap.has(localLink.id)) {
-            linkMap.set(localLink.id, localLink);
-          } else {
-            const cl = linkMap.get(localLink.id);
-            const lTime = new Date(localLink.updatedAt || 0).getTime();
-            const cTime = new Date(cl.updatedAt || 0).getTime();
-            if (lTime >= cTime) {
-              linkMap.set(localLink.id, localLink);
-            }
-          }
-        });
-        const mergedLinks = Array.from(linkMap.values());
-
-        // Step 3: Merge profiles (strip local hardware folders)
-        const profMap = new Map();
-        cloudProfiles.forEach(cp => {
-          const email = (cp.email || '').toLowerCase().trim();
-          if (email) {
-            delete cp.folder;
-            profMap.set(email, cp);
-          }
-        });
-        (vaultData.profiles || []).forEach(lp => {
-          const email = (lp.email || '').toLowerCase().trim();
-          if (email) {
-            delete lp.folder;
-            if (!profMap.has(email)) {
-              profMap.set(email, lp);
-            } else {
-              profMap.set(email, Object.assign({}, profMap.get(email), lp));
-            }
-          }
-        });
-        const mergedProfiles = Array.from(profMap.values());
-
-        // Step 4: Merge categories
-        const catSet = new Set([...DEFAULT_CATEGORIES, ...cloudCategories, ...(vaultData.categories || [])]);
-        const mergedCategories = Array.from(catSet);
-
-        statusEl.textContent = 'Encrypting ' + mergedLinks.filter(l => !l.deleted).length + ' links & uploading to Gist...';
-
-        // Cloud payload NEVER stores GitHub tokens
-        const mergedVaultPayload = {
-          links: mergedLinks,
-          profiles: mergedProfiles,
-          categories: mergedCategories,
-          cloudConfig: { gistId: gistId }
-        };
-
-        const encrypted = await encryptData(mergedVaultPayload, currentPassword);
-        const payload = {
-          description: 'DreamsLab Multi-Profile Chrome Vault (AES-256 Encrypted)',
-          files: {
-            'dreamslab_vault.json': { content: JSON.stringify(encrypted) }
-          }
-        };
-
-        const pushRes = await fetch('https://api.github.com/gists/' + gistId, {
-          method: 'PATCH',
-          headers: {
-            Authorization: 'token ' + token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (pushRes.ok) {
-          vaultData.links = mergedLinks;
-          vaultData.profiles = mergedProfiles;
-          vaultData.categories = mergedCategories;
-          if (!vaultData.cloudConfig) vaultData.cloudConfig = {};
-          vaultData.cloudConfig.gistToken = token;
-          vaultData.cloudConfig.gistId = gistId;
-          await saveVault();
-          renderApp();
-          statusEl.style.color = '#188038';
-          statusEl.textContent = '✅ Synced ' + mergedLinks.filter(l => !l.deleted).length + ' links to Cloud!';
-          showToast('Cloud Vault updated! (' + mergedLinks.filter(l => !l.deleted).length + ' active links)');
-        } else {
-          throw new Error('Gist update failed (HTTP ' + pushRes.status + ')');
-        }
-      } catch (err) {
-        statusEl.style.color = '#d93025';
-        statusEl.textContent = 'Push failed: ' + err.message;
-      }
-    }
-
-    async function syncPullCloudVault() {
-      const token = document.getElementById('cloudTokenInput').value.trim() || (vaultData.cloudConfig && vaultData.cloudConfig.gistToken) || '';
-      const gistId = document.getElementById('cloudGistIdInput').value.trim() || (vaultData.cloudConfig && vaultData.cloudConfig.gistId) || '';
-      const statusEl = document.getElementById('cloudSyncStatus');
-      if (!token || !gistId) { 
-        statusEl.style.color = '#d93025'; 
-        statusEl.textContent = 'GitHub Token and Gist ID required'; 
-        return; 
-      }
-
-      try {
-        statusEl.style.color = '#0b57d0';
-        statusEl.textContent = 'Downloading encrypted vault from Gist...';
-        const res = await fetch('https://api.github.com/gists/' + gistId, {
-          headers: { Authorization: 'token ' + token }
-        });
-        if (!res.ok) throw new Error('Failed to fetch Gist (HTTP ' + res.status + ')');
-
-        const data = await res.json();
-        const file = data.files && (data.files['dreamslab_vault.json'] || Object.values(data.files)[0]);
-        if (!file || !file.content) throw new Error('Empty Gist file');
-
-        const cloudEncrypted = JSON.parse(file.content);
-        let decrypted = null;
-        try {
-          decrypted = await decryptData(cloudEncrypted, currentPassword);
-        } catch (decErr) {
-          const cloudPass = prompt('Cloud Vault was encrypted with a different password.\nEnter the master password for this cloud backup:');
-          if (cloudPass) {
-            decrypted = await decryptData(cloudEncrypted, cloudPass.trim());
-          } else {
-            throw new Error('Decryption cancelled or password incorrect');
-          }
-        }
-
-        if (!decrypted || !Array.isArray(decrypted.links)) {
-          throw new Error('Invalid cloud vault content');
-        }
-
-        // Merge links by ID and updatedAt with tombstones
-        const linkMap = new Map();
-        (vaultData.links || []).forEach(l => linkMap.set(l.id, l));
-        decrypted.links.forEach(cl => {
-          if (!linkMap.has(cl.id)) {
-            linkMap.set(cl.id, cl);
-          } else {
-            const local = linkMap.get(cl.id);
-            const lTime = new Date(local.updatedAt || 0).getTime();
-            const cTime = new Date(cl.updatedAt || 0).getTime();
-            if (cTime >= lTime) {
-              linkMap.set(cl.id, cl);
-            }
-          }
-        });
-        vaultData.links = Array.from(linkMap.values());
-
-        // Merge profiles (decouple local hardware folders)
-        const profMap = new Map();
-        (vaultData.profiles || []).forEach(p => {
-          const email = (p.email || '').toLowerCase().trim();
-          if (email) {
-            delete p.folder;
-            profMap.set(email, p);
-          }
-        });
-        (decrypted.profiles || []).forEach(p => {
-          const email = (p.email || '').toLowerCase().trim();
-          if (email) {
-            delete p.folder;
-            if (!profMap.has(email)) {
-              profMap.set(email, p);
-            } else {
-              profMap.set(email, Object.assign({}, profMap.get(email), p));
-            }
-          }
-        });
-        vaultData.profiles = Array.from(profMap.values());
-
-        // Merge categories
-        if (Array.isArray(decrypted.categories)) {
-          const catSet = new Set([...DEFAULT_CATEGORIES, ...(vaultData.categories || []), ...decrypted.categories]);
-          vaultData.categories = Array.from(catSet);
-        }
-
-        if (!vaultData.cloudConfig) vaultData.cloudConfig = {};
-        vaultData.cloudConfig.gistToken = token;
-        vaultData.cloudConfig.gistId = gistId;
-
-        normalizeVaultLinks();
-        await saveVault();
-
-        if (isDesktopApp) {
-          await refreshLocalChromeProfiles();
-        }
-
-        renderApp();
-        const activeCount = getScopedLinks().length;
-        statusEl.style.color = '#188038';
-        statusEl.textContent = '✅ Pulled vault (' + vaultData.links.filter(l => !l.deleted).length + ' total links in account, ' + activeCount + ' displayed)';
-        showToast('☁️ Cloud Vault synchronized!');
-      } catch (err) {
-        statusEl.style.color = '#d93025';
-        statusEl.textContent = 'Pull failed: ' + err.message;
-      }
-    }
 
 /* BACKUP EXPORT / IMPORT */
     function openLocalSaveModal() {
@@ -4490,9 +3266,7 @@
     }
 
     function openPlaintextExportModal() {
-      if (confirm('Plaintext backups expose all links, emails, and notes to anyone who can open the file. Continue only if you understand this risk.')) {
-        exportVaultJson();
-      }
+      if (confirm('Export readable links and notes? Anyone with this file can read them.')) exportVaultJson();
     }
 
     function validateImportedVault(vault) {
@@ -4526,6 +3300,7 @@
         } else {
           throw new Error('Unrecognized file format');
         }
+        if (!confirm('Replace your current account vault with this backup? This will sync the replacement online.')) return;
         vaultData = validateImportedVault(imported);
         normalizeVaultLinks();
         await saveVault();
@@ -4544,66 +3319,11 @@
     async function handleImportJsonFile(e) { return handleImportVaultFile(e); }
 
     /* SOFTWARE UPDATES */
-    function handleCheckUpdate() {
-      openUpdateModal();
-    }
 
-    function openUpdateModal() {
-      openModal('updateModal');
-      checkLiveUpdates();
-    }
 
-    async function checkLiveUpdates() {
-      const statusEl = document.getElementById('updateStatusText');
-      const triggerBtn = document.getElementById('btnTriggerUpdate');
-      if (triggerBtn) {
-        triggerBtn.disabled = true;
-        triggerBtn.textContent = '⏳ Checking for updates...';
-      }
-      if (statusEl) {
-        statusEl.innerHTML = '<span style="color: var(--google-blue);">📡 Connecting to DreamsLab GitHub release server...</span>';
-      }
 
-      if (window.electronAPI && window.electronAPI.checkAndApplyUpdate) {
-        try {
-          const res = await window.electronAPI.checkAndApplyUpdate();
-          if (res && res.updated) {
-            if (statusEl) {
-              statusEl.innerHTML = '<span style="color: #188038; font-weight: 600;">✅ Update installed successfully! Reloading in 2 seconds...</span>';
-            }
-            showToast('✅ Latest update installed! Reloading...');
-            setTimeout(() => {
-              location.reload();
-            }, 2000);
-          } else if (res && res.error) {
-            if (statusEl) {
-              statusEl.innerHTML = '<span style="color: #d93025;">⚠️ Update check error: ' + escapeHtml(res.error) + '</span>';
-            }
-            showToast('Update check failed');
-          } else {
-            const ver = (res && res.version) ? String(res.version).replace(/^v+/i, '') : '1.0.9';
-            if (statusEl) {
-              statusEl.innerHTML = '<span style="color: #188038; font-weight: 500;">✅ You are running the latest version of DreamsLab Launcher (v' + escapeHtml(ver) + ').</span>';
-            }
-            showToast('✅ App is up to date (v' + ver + ')');
-          }
-        } catch (e) {
-          if (statusEl) {
-            statusEl.innerHTML = '<span style="color: #d93025;">⚠️ Error: ' + escapeHtml(e.message) + '</span>';
-          }
-        }
-      } else {
-        if (statusEl) {
-          statusEl.innerHTML = '<span style="color: #188038;">🌐 Running latest Web Engine (v1.0.9). Always fresh via GitHub Pages!</span>';
-        }
-        showToast('Web version is always up to date');
-      }
 
-      if (triggerBtn) {
-        triggerBtn.disabled = false;
-        triggerBtn.textContent = '🔄 Check & Apply Latest Update';
-      }
-    }
+
 
     function showToast(msg) {
       const toast = document.getElementById('appToast');
@@ -4622,24 +3342,9 @@
         .replace(/'/g, '&#039;');
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const autoUnlocked = await tryAutoUnlock();
-      if (!autoUnlocked) {
-        checkLockScreenState();
-      }
-      if (isDesktopApp) {
-        await refreshLocalChromeProfiles();
-      }
-      if (window.electronAPI && window.electronAPI.onUpdateAvailable) {
-        window.electronAPI.onUpdateAvailable((info) => {
-          const dot = document.getElementById('updateDot');
-          if (dot) dot.style.display = 'block';
-          const updateVer = (info && info.latestVersion) ? String(info.latestVersion).replace(/^v+/i, '') : '1.0.9';
-          showToast('⚡ New update available (v' + updateVer + ')! Click Update to install.');
-        });
-      }
-    });
-  
+    window.addEventListener('DOMContentLoaded', checkLockScreenState);
+
 </script>
+<script src="web-app.js"></script>
 </body>
 </html>

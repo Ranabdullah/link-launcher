@@ -23,11 +23,16 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
+app.set('trust proxy', 1); // Render's reverse proxy; never trust arbitrary chains.
+app.disable('x-powered-by');
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Production Secrets Validation: Auto-generate secure random secret if not set in environment
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+if (isProduction && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
+  throw new Error('Production requires a stable JWT_SECRET of at least 32 characters.');
+}
 if (!process.env.JWT_SECRET) {
   console.log('Notice: JWT_SECRET not provided in environment, generated dynamic session secret.');
 }
@@ -37,6 +42,16 @@ const DB_FILE = path.join(DATA_DIR, 'vaults.json');
 
 // Middleware
 app.use(express.json({ limit: '15mb' }));
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+  if (isProduction) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 
 // CORS configuration - exact entries from ALLOWED_ORIGINS (no wildcards)
 const defaultAllowedOrigins = isProduction
@@ -61,8 +76,8 @@ app.use(cors({
     // Reject unknown browser origins
     return callback(null, false);
   },
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS']
 }));
 
 // Ensure data directory exists
@@ -71,13 +86,14 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 // In-Memory Database with persistence to DB_FILE (FILE-STORE FALLBACK)
-let db = { users: {} };
+let db = { users: {}, revokedTokens: {} };
 function loadDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
       db = JSON.parse(raw);
       if (!db.users) db.users = {};
+      if (!db.revokedTokens) db.revokedTokens = {};
     }
   } catch (err) {
     console.error('Warning: Could not load DB file, starting with empty store:', err.message);
@@ -95,6 +111,7 @@ function saveDatabase() {
     fs.renameSync(tempPath, DB_FILE);
   } catch (err) {
     console.error('Error persisting database:', err.message);
+    throw err;
   }
 }
 
@@ -108,7 +125,10 @@ if (process.env.DATABASE_URL) {
     const { Pool } = require('pg');
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false }
+      ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: true },
+      connectionTimeoutMillis: 10000,
+      query_timeout: 15000,
+      max: 5
     });
     console.log('PostgreSQL database pool initialized.');
   } catch (e) {
@@ -137,6 +157,7 @@ async function initDatabase() {
           created_at VARCHAR(64) NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+        CREATE TABLE IF NOT EXISTS revoked_tokens (token_id text PRIMARY KEY, expires_at bigint NOT NULL);
       `);
       console.log('PostgreSQL table "users" and index verified/created successfully.');
       dbReady = true;
@@ -242,12 +263,6 @@ async function insertUser(user) {
       await pool.query(`
         INSERT INTO users (email, salt, verifier_hash, encrypted_vault, updated_at, version, created_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (email) DO UPDATE SET
-          salt = EXCLUDED.salt,
-          verifier_hash = EXCLUDED.verifier_hash,
-          encrypted_vault = EXCLUDED.encrypted_vault,
-          updated_at = EXCLUDED.updated_at,
-          version = EXCLUDED.version
       `, [
         normalizedEmail,
         user.salt,
@@ -264,10 +279,12 @@ async function insertUser(user) {
       return user;
     } catch (err) {
       console.error('PostgreSQL insertUser error:', err.message);
+      if (err.code === '23505') { err.code = 'ACCOUNT_EXISTS'; throw err; }
       err.code = 'DB_ERROR';
       throw err;
     }
   }
+  if (db.users[normalizedEmail]) { const err = new Error('Account exists'); err.code = 'ACCOUNT_EXISTS'; throw err; }
   db.users[normalizedEmail] = user;
   saveDatabase();
   return user;
@@ -395,8 +412,22 @@ function clearRateLimit(key) {
 
 // Rate Limiting for Account Registration (Anti-Spam)
 const registerAttempts = new Map();
+const authRequests = new Map();
 const REG_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_REG_ATTEMPTS = 15;
+app.use('/api/auth', (req, res, next) => {
+  const key = req.ip;
+  const now = Date.now();
+  const entry = authRequests.get(key) || { count: 0, firstAttempt: now };
+  if (now - entry.firstAttempt > 60000) { entry.count = 0; entry.firstAttempt = now; }
+  entry.count += 1; authRequests.set(key, entry);
+  if (entry.count > 60) { res.setHeader('Retry-After', '60'); return res.status(429).json({ error: 'Too many authentication requests. Wait a minute and retry.' }); }
+  next();
+});
+setInterval(() => {
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  for (const map of [loginAttempts, registerAttempts, authRequests]) for (const [key, entry] of map) if (entry.firstAttempt < cutoff) map.delete(key);
+}, 5 * 60 * 1000).unref();
 
 function checkRegisterRateLimit(ip) {
   const now = Date.now();
@@ -431,10 +462,10 @@ function hashVerifier(authVerifier, saltHex) {
   return hash.toString('hex');
 }
 
-function generateToken(email) {
+function generateToken(email, accountCreatedAt) {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-  const exp = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days
-  const payload = Buffer.from(JSON.stringify({ email, exp })).toString('base64url');
+  const exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60);
+  const payload = Buffer.from(JSON.stringify({ email, exp, jti: crypto.randomUUID(), accountCreatedAt })).toString('base64url');
   const sig = crypto.createHmac('sha256', JWT_SECRET).update(header + '.' + payload).digest('base64url');
   return header + '.' + payload + '.' + sig;
 }
@@ -450,7 +481,7 @@ function verifyToken(token) {
       return null;
     }
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    if (data.exp && data.exp < Math.floor(Date.now() / 1000)) {
+    if (!data.jti || !Number.isFinite(data.exp) || data.exp <= Math.floor(Date.now() / 1000)) {
       return null; // Expired
     }
     return data;
@@ -459,7 +490,7 @@ function verifyToken(token) {
   }
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing or invalid Authorization header' });
@@ -470,29 +501,27 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired session token. Please log in again.' });
   }
   req.userEmail = decoded.email.toLowerCase().trim();
-  next();
+  req.authToken = decoded;
+  try {
+    const revoked = pool ? (await pool.query('SELECT 1 FROM revoked_tokens WHERE token_id = $1', [decoded.jti])).rowCount > 0 : !!db.revokedTokens?.[decoded.jti];
+    const account = await findUser(req.userEmail);
+    if (revoked || !account || decoded.accountCreatedAt !== account.createdAt) return res.status(401).json({ error: 'Session ended. Sign in again.' });
+    next();
+  } catch (err) { res.status(503).json({ error: 'Account storage temporarily unavailable.' }); }
 }
 
 // Root landing & web launcher
 app.get('/', (req, res) => {
-  const rootIndex = path.join(__dirname, '..', 'index.html');
+  const rootIndex = path.join(__dirname, '..', 'web-dist', 'index.html');
   if (fs.existsSync(rootIndex)) {
     return res.sendFile(rootIndex);
   }
   return res.json({
     service: 'DreamsLab Cloud Vault API',
-    version: '1.0.9',
+    version: '2.0.0',
     status: 'online',
     health: '/api/health'
   });
-});
-
-app.get('/version.json', (req, res) => {
-  const vPath = path.join(__dirname, '..', 'version.json');
-  if (fs.existsSync(vPath)) {
-    return res.sendFile(vPath);
-  }
-  return res.json({ version: '1.0.9' });
 });
 
 // 1. Health check
@@ -521,12 +550,11 @@ app.get('/api/health', async (req, res) => {
   return res.status(statusCode).json({
     status: isHealthy ? 'ok' : 'degraded',
     service: 'DreamsLab Cloud Vault Service',
-    version: '1.0.9',
+    version: '2.0.0',
     storage: pool ? 'postgres' : (isProduction ? 'postgres (not configured)' : 'file'),
     databaseConnected: dbConnected,
     schemaReady: schemaReady,
     dbAvailable: dbReady,
-    dbUnavailableReason: dbReady ? undefined : dbUnavailableReason,
     time: new Date().toISOString()
   });
 });
@@ -537,7 +565,6 @@ app.use('/api', (req, res, next) => {
     return res.status(503).json({
       error: 'Cloud Vault database is not configured. Please set DATABASE_URL in Render environment variables.',
       code: 'DB_UNAVAILABLE',
-      detail: dbUnavailableReason
     });
   }
   next();
@@ -552,7 +579,8 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     const { email, authVerifier, encryptedVault } = req.body;
-    if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+    if (!validEncryptedVault(encryptedVault)) return res.status(400).json({ error: 'Valid encrypted vault required.' });
+    if (!email || typeof email !== 'string' || email.length > 254 || !EMAIL_REGEX.test(email.trim())) {
       return res.status(400).json({ error: 'Valid email address is required.' });
     }
     if (!authVerifier || typeof authVerifier !== 'string' || !VERIFIER_REGEX.test(authVerifier)) {
@@ -582,7 +610,7 @@ app.post('/api/auth/register', async (req, res) => {
     };
     await insertUser(newUser);
 
-    const token = generateToken(normalizedEmail);
+    const token = generateToken(normalizedEmail, newUser.createdAt);
     return res.status(201).json({
       success: true,
       token,
@@ -593,6 +621,7 @@ app.post('/api/auth/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Register error:', err.message);
+    if (err.code === 'ACCOUNT_EXISTS') return res.status(409).json({ error: 'Account already exists. Sign in instead.' });
     if (err.code === 'DB_UNAVAILABLE' || err.code === 'DB_ERROR') {
       return res.status(503).json({ error: 'Database service is currently unavailable. Please try again later.', code: 'DB_UNAVAILABLE' });
     }
@@ -604,7 +633,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, authVerifier } = req.body;
-    if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+    if (!email || typeof email !== 'string' || email.length > 254 || !EMAIL_REGEX.test(email.trim())) {
       return res.status(400).json({ error: 'Valid email address is required.' });
     }
     if (!authVerifier || typeof authVerifier !== 'string' || !VERIFIER_REGEX.test(authVerifier)) {
@@ -637,7 +666,7 @@ app.post('/api/auth/login', async (req, res) => {
     // Success - clear failed attempts counter
     clearRateLimit(rateKey);
 
-    const token = generateToken(normalizedEmail);
+    const token = generateToken(normalizedEmail, user.createdAt);
     return res.json({
       success: true,
       token,
@@ -682,16 +711,16 @@ app.get('/api/vault', requireAuth, async (req, res) => {
 app.post('/api/vault', requireAuth, async (req, res) => {
   try {
     const { encryptedVault, version, updatedAt } = req.body;
-    if (!encryptedVault) {
+    if (!validEncryptedVault(encryptedVault)) {
       return res.status(400).json({ error: 'encryptedVault payload is required.' });
     }
-    if (version === undefined || version === null || isNaN(Number(version))) {
+    if (!Number.isSafeInteger(version) || version < 1) {
       return res.status(400).json({ error: 'version integer is required for optimistic concurrency.' });
     }
 
     const clientVersion = Number(version);
     const now = new Date().toISOString();
-    const finalUpdatedAt = updatedAt || now;
+    const finalUpdatedAt = now;
 
     const result = await atomicUpdateUserVault(req.userEmail, encryptedVault, finalUpdatedAt, clientVersion);
 
@@ -722,6 +751,45 @@ app.post('/api/vault', requireAuth, async (req, res) => {
   }
 });
 
+
+function validEncryptedVault(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const base64 = /^[A-Za-z0-9+/]+={0,2}$/;
+  return ['salt', 'iv', 'data'].every(key => typeof value[key] === 'string' && base64.test(value[key]))
+    && Buffer.from(value.salt, 'base64').length === 16
+    && Buffer.from(value.iv, 'base64').length === 12
+    && Buffer.from(value.data, 'base64').length >= 16;
+}
+
+app.post('/api/auth/logout', requireAuth, async (req, res) => {
+  try {
+    if (pool) {
+      await pool.query('DELETE FROM revoked_tokens WHERE expires_at < $1', [Math.floor(Date.now() / 1000)]);
+      await pool.query('INSERT INTO revoked_tokens(token_id, expires_at) VALUES($1, $2) ON CONFLICT DO NOTHING', [req.authToken.jti, req.authToken.exp]);
+    } else {
+      db.revokedTokens[req.authToken.jti] = req.authToken.exp; saveDatabase();
+    }
+    res.json({ success: true });
+  } catch { res.status(503).json({ error: 'Cloud logout unavailable.' }); }
+});
+app.delete('/api/account', requireAuth, async (req, res) => {
+  try {
+    if (pool) await pool.query('DELETE FROM users WHERE email = $1', [req.userEmail]);
+    else { delete db.users[req.userEmail]; saveDatabase(); }
+    res.json({ success: true });
+  } catch { res.status(503).json({ error: 'Account deletion unavailable.' }); }
+});
+
+// Serve only the reviewed web build, never the repository or private data.
+const publicRoot = path.join(__dirname, '..', 'web-dist');
+app.use(express.static(publicRoot, { dotfiles: 'deny', index: false, setHeaders(res, file) {
+  if (file.endsWith('sw.js') || file.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
+}}));
+app.use('/api', (req, res) => res.status(404).json({ error: 'Unknown API route' }));
+app.use((req, res) => res.status(404).type('html').send('<!doctype html><title>Page not found</title><h1>Page not found</h1><p><a href="/">Return to Link Launcher</a></p>'));
+app.use((err, req, res, next) => {
+  res.status(err.type === 'entity.too.large' ? 413 : 400).json({ error: 'Invalid request body.' });
+});
 
 async function startServer(port = PORT) {
   await initDatabase();

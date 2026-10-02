@@ -1,48 +1,21 @@
-# DreamsLab Link Launcher Cloud Vault Backend
+# Cloud Vault API
 
-Zero-Knowledge Authenticated Synchronization Service for **DreamsLab Link Launcher**.
+Web-only Node.js/Express service. It serves the reviewed `../web-dist` build and an authenticated encrypted-vault API.
 
----
+Run `npm ci && npm start` from this directory. Production requires `NODE_ENV=production`, a durable `DATABASE_URL` and a stable random `JWT_SECRET` of at least 32 characters. See the root README for Render deployment and backups.
 
-## 🔒 Zero-Knowledge Security Model
-- **No Passwords Stored**: The server never sees or receives user master passwords.
-- **Client-Side Encryption**: Vault data (links, categories, profiles) is encrypted locally on the user's device with AES-GCM 256-bit keys before reaching the network.
-- **Pure Blind Storage**: The backend acts solely as an authenticated blind storage vault for encrypted blobs.
+| Route | Behaviour |
+| --- | --- |
+| GET /api/health | Health/storage status; no secrets or database connection errors |
+| POST /api/auth/register | Create account using a derived authentication verifier and encrypted vault |
+| POST /api/auth/login | Authenticate and return token, encrypted vault and version |
+| POST /api/auth/logout | Revoke the current token |
+| GET /api/vault | Read only the signed-in account's vault |
+| POST /api/vault | Atomic version-checked update; stale version returns 409 |
+| DELETE /api/account | Delete the signed-in account and its encrypted cloud vault |
 
----
+Tokens expire after 24 hours, are tied to the account creation timestamp, and remain in browser memory. Logout revocations are persisted. Recreating a deleted email account does not restore validity to its old tokens.
 
-## 🚀 Instant Local Run
-```bash
-cd server
-npm install
-npm start
-```
-The API will start at `http://localhost:3000`.
+Client master passwords are never transmitted. Auth verifiers are hashed with a random server salt. TLS, backups and protecting the server environment remain necessary. There are no payments, emails, file uploads or analytics integrations.
 
----
-
-## ☁️ 1-Click Cloud Deployment (Free Tiers)
-
-### Option 1: Render.com (Recommended)
-1. Fork or push this repository to GitHub.
-2. Log into [Render.com](https://render.com) and click **New + Web Service**.
-3. Connect your repository and select root directory: `server`.
-4. Set Build Command: `npm install`
-5. Set Start Command: `node server.js`
-6. Add Environment Variables:
-   - `JWT_SECRET`: (Enter a random 32-character string)
-   - `ALLOWED_ORIGINS`: `https://abdullahinayat24-lang.github.io,http://localhost:3000`
-7. Click **Deploy**. Copy your Render URL (e.g., `https://dreamslab-vault.onrender.com`).
-8. In Link Launcher, open **Cloud Settings** and paste your URL.
-
-### Option 2: Railway.app / Fly.io
-Deploy the `server` directory directly using standard Node.js runtime.
-
----
-
-## 📡 API Reference
-- `GET  /api/health` - Health check
-- `POST /api/auth/register` - Register new zero-knowledge vault account
-- `POST /api/auth/login` - Authenticate and fetch encrypted vault
-- `GET  /api/vault` - Fetch encrypted vault (Bearer token auth)
-- `POST /api/vault` - Update encrypted vault (Bearer token auth)
+Production never falls back to filesystem data. Development file data is private and ignored by Git. All account lookup/write operations use parameterised PostgreSQL queries. Rate limits are per-process: suitable for the current single-instance deployment, with shared limiting needed before horizontal scaling.

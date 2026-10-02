@@ -1,64 +1,30 @@
 {
-  "name": "dreamslab-cyber-launcher",
-  "productName": "DreamsLab Cyber Launcher",
-  "version": "1.0.9",
-  "description": "Futuristic Glass Chrome Link Launcher by DreamsLabStudio",
-  "main": "main.js",
+  "name": "dreamslab-link-launcher",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Installable web-only link manager with encrypted offline storage and account sync",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node main.js",
-    "desktop": "electron .",
-    "start:server": "node server/server.js",
-    "package:win": "electron-packager . \"DreamsLab Cyber Launcher\" --platform=win32 --arch=x64 --out=dist --overwrite",
-    "package:installer": "electron-builder --win nsis --publish never",
-    "test": "node --test tests/renderer-session.test.js && node tests/run-all.js"
+    "start": "node scripts/build-web.cjs && node server/server.js",
+    "build": "node scripts/build-web.cjs",
+    "test": "node --test tests/web-api.test.cjs tests/cloudflare-api.test.cjs",
+    "test:web": "node tests/web-browser.test.cjs",
+    "test:cloudflare:web": "node tests/cloudflare-browser.cjs",
+    "cloudflare": "node scripts/cloudflare.cjs",
+    "cloudflare:check": "npm run build && node scripts/cloudflare.cjs deploy --dry-run --outdir .wrangler/dry-run",
+    "cloudflare:deploy": "npm run build && node scripts/cloudflare.cjs deploy"
   },
-  "keywords": [
-    "launcher",
-    "chrome",
-    "cyber",
-    "glassmorphic"
-  ],
-  "author": "DreamsLabStudio",
-  "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "pg": "^8.23.0"
   },
-  "devDependencies": {
-    "@electron/packager": "^18.4.1",
-    "electron": "^40.8.0",
-    "electron-builder": "^26.15.3"
+  "engines": {
+    "node": ">=22"
   },
-  "build": {
-    "appId": "com.dreamslabstudio.linklauncher",
-    "productName": "DreamsLab Cyber Launcher",
-    "artifactName": "DreamsLab-Cyber-Launcher-Setup-${version}.${ext}",
-    "asar": true,
-    "directories": {
-      "output": "dist_installer"
-    },
-    "files": [
-      "index.html",
-      "main.js",
-      "preload.js",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ]
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "DreamsLab Cyber Launcher",
-      "runAfterFinish": true,
-      "uninstallDisplayName": "DreamsLab Cyber Launcher"
-    }
+  "license": "MIT",
+  "devDependencies": {
+    "miniflare": "^5.20261001.0-alpha",
+    "wrangler": "^4.146.0"
   }
 }
