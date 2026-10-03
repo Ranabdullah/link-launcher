@@ -14,8 +14,10 @@ const { spawn } = require('node:child_process');
     const schema = fs.readFileSync('cloudflare/migrations/0001_vault.sql','utf8').replace(/--[^\n]*/g,'');
     await db.batch(schema.split(';').filter(s=>s.trim()).map(s=>db.prepare(s)));
     const origin=(await mf.ready).origin;
-    const child=spawn(process.execPath,['tests/web-browser.test.cjs'],{stdio:'inherit',env:{...process.env,LINK_LAUNCHER_TEST_ORIGIN:origin}});
-    const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve);});
-    if(code) process.exitCode=code;
+    for (const file of ['tests/web-browser.test.cjs', 'tests/device-profiles-browser.cjs']) {
+      const child=spawn(process.execPath,[file],{stdio:'inherit',env:{...process.env,LINK_LAUNCHER_TEST_ORIGIN:origin}});
+      const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve);});
+      if(code) { process.exitCode=code; break; }
+    }
   } finally { await mf.dispose(); }
 })().catch(err=>{console.error(err);process.exitCode=1;});

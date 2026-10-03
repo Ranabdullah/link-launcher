@@ -1,5 +1,5 @@
-const CACHE = 'link-launcher-web-v3';
-const SHELL = ['./', './index.html', './cloud-config.js', './cloud-client.js', './web-app.js', './responsive.css', './manifest.webmanifest', './favicon.png', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'];
+const CACHE = 'link-launcher-web-v10';
+const SHELL = ['./', './index.html', './cloud-config.js', './cloud-client.js', './web-app.js', './browser-session.js', './browser-routing.js', './profile-appearance.js', './responsive.css', './manifest.webmanifest', './favicon.png', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
 });

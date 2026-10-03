@@ -1,12 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "link-launcher",
-  "account_id": "2bd585fdb9252b0687c939a434d19886",
+  "account_id": "4dddb56c05af56a431914f2cb7f48eb4",
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "preview_urls": false,
-  "vars": { "MIGRATION_PENDING": "true" },
+  "vars": { "MIGRATION_PENDING": "false" },
   "assets": {
     "directory": "./web-dist",
     "binding": "ASSETS",
@@ -16,7 +16,7 @@
   "d1_databases": [{
     "binding": "DB",
     "database_name": "link-launcher-vault",
-    "database_id": "00000000-0000-0000-0000-000000000000",
+    "database_id": "2ea49342-0c59-4ce2-abc4-a671e5db0b75",
     "migrations_dir": "cloudflare/migrations"
   }],
   "ratelimits": [

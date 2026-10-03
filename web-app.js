@@ -66,6 +66,10 @@ async function bulkLinks(action) {
 async function toggleLinkDevice(id) {
   const link = vaultData.links.find(l => l.id === id);
   if (!link) return;
+  if (linkUsesDeviceProfile(link)) {
+    showToast('This link is shown through a chosen profile. Use Choose profiles for this device to change that selection.');
+    return;
+  }
   const ids = new Set(link.deviceIds || []);
   if (ids.has(currentDeviceId)) ids.delete(currentDeviceId); else ids.add(currentDeviceId);
   link.deviceIds = [...ids]; link.updatedAt = new Date().toISOString();
@@ -82,9 +86,9 @@ async function moveLink(id, direction) {
   visible.forEach((l, index) => { l.order = index; l.updatedAt = new Date().toISOString(); });
   await saveVault(); renderApp();
 }
-async function openOfflineVault() {
-  const email = document.getElementById('userEmailInput').value.trim().toLowerCase();
-  const pass = document.getElementById('masterPasswordInput').value;
+async function openOfflineVault(event, rememberedCredentials) {
+  const email = (rememberedCredentials?.email || document.getElementById('userEmailInput').value).trim().toLowerCase();
+  const pass = rememberedCredentials?.password || document.getElementById('masterPasswordInput').value;
   const error = document.getElementById('unlockError');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || pass.length < 12) {
     error.textContent = 'Enter your email and a master password of at least 12 characters.'; return;
@@ -100,11 +104,12 @@ async function openOfflineVault() {
     currentUserEmail = email; currentPassword = pass; vaultData = data;
     localStorage.setItem('dreamslab_last_email', email);
     cloudVaultVersion = syncMeta(email).version || 0;
-    normalizeVaultLinks();
+    normalizeVaultLinks(); restoreBrowserWorkspace();
     await saveVault();
     document.getElementById('lockScreen').style.display = 'none';
     renderApp(); error.textContent = '';
     showToast('Local vault opened. Cloud account sign-in is separate.');
+    try { await rememberedBrowser.save('local'); } catch { showToast('Opened. This browser could not remember the unlock.'); }
   } catch { error.textContent = 'Unable to unlock this local vault. Check your password.'; }
 }
 async function retryPendingSync() {

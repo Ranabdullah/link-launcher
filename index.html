@@ -1336,7 +1336,7 @@
 
 
         <!-- KEEP ME SIGNED IN ON THIS PC -->
-<p style="font-size:12px;color:var(--text-muted)">Your master password stays in this browser while unlocked. You need it when reopening the app; encrypted links cannot be recovered without it.</p>
+<label style="font-size:12px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="rememberBrowser">Keep this browser unlocked</label><p style="font-size:12px;color:var(--text-muted)">Use only on your own trusted browser: anyone opening it can access your vault. Your password is remembered locally with a browser encryption key, never sent to the cloud. Lock or Log Out removes it. Incognito windows forget it when closed.</p>
 
         <button type="submit" id="unlockSubmitBtn" class="btn-primary" style="width: 100%; justify-content: center; height: 42px; font-size: 14px; margin-top: 4px;">
           Create Account & Open
@@ -1366,7 +1366,7 @@
       <div class="brand-title-wrap">
         <div class="brand-name">
           DreamsLab
-          <span class="brand-version-badge">v2.0.0</span>
+          <span class="brand-version-badge">v2.0.4</span>
           <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
         </div>
       </div>
@@ -1391,6 +1391,7 @@
         Backup
       </button>
 
+      <button class="btn-header" id="browserRoutingButton" onclick="showBrowserRouting()">Browser links</button>
       <button class="btn-header btn-lock" onclick="lockVault()" title="Lock Vault">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Lock
@@ -1476,13 +1477,15 @@
       </div>
       <!-- PROFILE FILTER TABS -->
       <div id="profileFilterTabs" style="display: flex; gap: 4px; padding: 2px 0 6px 0;">
-        <button type="button" id="btnFilterProfAll" class="btn-filter-pill active" onclick="setSidebarProfileFilter('ALL')">All</button>
+        <button type="button" id="btnFilterProfAll" class="btn-filter-pill active" onclick="showAllAccounts()">All accounts</button>
         <button type="button" id="btnFilterProfStarred" class="btn-filter-pill" onclick="setSidebarProfileFilter('STARRED')">⭐ Starred</button>
         <button type="button" id="btnFilterProfPinned" class="btn-filter-pill" onclick="setSidebarProfileFilter('PINNED')">📌 Pinned</button>
       </div>
       <div id="sidebarProfilesList" style="display: flex; flex-direction: column;">
         <!-- Dynamic Profiles List -->
       </div>
+      <p id="currentDeviceLabel" class="device-profiles-empty"></p>
+      <button class="btn-secondary device-profiles-button" onclick="openDeviceProfilesModal()">Choose profiles for this device</button><button class="btn-secondary device-profiles-button" onclick="findBrowserProfiles()">Find browser profiles on this PC</button>
 
       <!-- CATEGORIES / LABELS -->
       <div class="nav-section-title" style="margin-top: 8px;">
@@ -1501,7 +1504,7 @@
           <!-- Dynamic Category Chips -->
         </div>
 
-        <div class="toolbar-right">
+        <div class="toolbar-right"><button class="btn-tool" onclick="openAppearance('categories')" title="Change tab colours" aria-label="Change tab colours">🎨</button>
 
           <button class="btn-tool" onclick="toggleTaskPanel()" title="Toggle Tasks Side Panel">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -1567,7 +1570,7 @@
           <label class="form-label">URL *</label>
           <div style="display: flex; gap: 6px;">
             <input type="url" id="drawerUrlInput" class="form-control" placeholder="https://..." required>
-            <button type="button" class="btn-secondary" onclick="openDirectTab(document.getElementById('drawerUrlInput').value)" title="Open in browser">🌐</button>
+            <button type="button" class="btn-secondary" onclick="openAssignedLink({...vaultData.links.find(l=>l.id===currentDrawerLinkId),url:document.getElementById('drawerUrlInput').value})" title="Open in browser">🌐</button>
             <button type="button" class="btn-secondary" onclick="copyLinkUrl(document.getElementById('drawerUrlInput').value)" title="Copy URL">📋</button>
           </div>
         </div>
@@ -1642,25 +1645,19 @@
   <div id="addLinkModal" class="modal-overlay">
     <div class="modal-card" style="max-width: 520px;">
       <div class="modal-header">
-        <div class="modal-title">Add New Link</div>
+        <div><div class="modal-title">Add a link</div><p class="form-caption">Save a website to the account and category you use.</p></div>
         <button class="modal-close-btn" onclick="closeModal('addLinkModal')">&times;</button>
       </div>
       <form onsubmit="saveNewLinkItem(event)">
-        <div class="modal-body">
-          <label class="field-label" for="newLinkUrl">Website address</label>
-          <input id="newLinkUrl" class="input-google" type="url" required placeholder="https://example.com" oninput="autoFetchTitleForNew(this.value)">
-          <label class="field-label" for="newLinkTitle" style="margin-top:12px;">Name</label>
-          <input id="newLinkTitle" class="input-google" type="text" placeholder="Example">
-          <label class="field-label" for="newLinkProfileSelect" style="margin-top:12px;">Account label</label>
-          <select id="newLinkProfileSelect" class="input-google"></select>
-          <label class="field-label" for="newLinkCategory" style="margin-top:12px;">Category</label>
-          <input id="newLinkCategory" class="input-google" list="drawerCategoryDatalist" placeholder="General">
-          <label class="field-label" for="newLinkPriority" style="margin-top:12px;">Priority</label>
-          <select id="newLinkPriority" class="input-google"><option value="normal">Normal</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
-          <label class="field-label" for="newLinkNotes" style="margin-top:12px;">Notes</label>
-          <textarea id="newLinkNotes" class="input-google" rows="3" placeholder="Optional notes"></textarea>
-        </div>
-        <div class="modal-footer">
+        <div class="modal-body add-link-fields">
+ <div class="form-field full-width"><label class="field-label" for="newLinkUrl">Website address</label><input id="newLinkUrl" class="input-google" type="text" inputmode="url" autocomplete="url" required placeholder="https://example.com" oninput="autoFetchTitleForNew(this.value)"></div>
+ <div class="form-field full-width"><label class="field-label" for="newLinkTitle">Name (optional)</label><input id="newLinkTitle" class="input-google" type="text" placeholder="Uses the website name if left empty"></div>
+ <div class="form-field full-width"><label class="field-label" for="newLinkProfileSelect">Open with account</label><select id="newLinkProfileSelect" class="input-google" onchange="updateAddLinkPreview()"></select><p id="addLinkRoutingPreview" class="form-caption"></p></div>
+ <div class="form-field"><label class="field-label" for="newLinkCategory">Category</label><input id="newLinkCategory" class="input-google" list="drawerCategoryDatalist" placeholder="Choose or type a category"></div>
+ <div class="form-field"><label class="field-label" for="newLinkPriority">Priority</label><select id="newLinkPriority" class="input-google"><option value="normal">Normal</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+ <div class="form-field full-width"><label class="field-label" for="newLinkNotes">Notes (optional)</label><textarea id="newLinkNotes" class="input-google" rows="2" placeholder="What is this link for?"></textarea></div>
+ </div>
+ <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeModal('addLinkModal')">Cancel</button>
           <button type="submit" class="btn-primary">Add Link</button>
         </div>
@@ -1709,7 +1706,34 @@
   </div>
 
 
-  <div id="cloudModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Cloud account</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('cloudModal')">×</button></div><div class="modal-body"><p id="cloudAccountEmail"></p><p id="cloudServerLabel"></p><p id="cloudSyncStatus" role="status"></p><p>Every account link is encrypted before syncing. This device shows links saved or assigned here. New browsers start with their own device view.</p><button class="btn-primary" onclick="forceCloudSync()">Sync now</button><button class="btn-secondary" onclick="pullLatestFromCloud()">Reload cloud vault</button><button class="btn-secondary" onclick="deleteCloudAccount()">Delete cloud account</button></div></div></div>
+  <div id="cloudModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Cloud account</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('cloudModal')">×</button></div><div class="modal-body"><p id="cloudAccountEmail"></p><p id="cloudServerLabel"></p><p id="cloudSyncStatus" role="status"></p><p>Every account link is encrypted before syncing. This device shows your chosen profiles and links saved or assigned here. Each browser installation has its own selection.</p><button class="btn-primary" onclick="forceCloudSync()">Sync now</button><button class="btn-secondary" onclick="pullLatestFromCloud()">Reload cloud vault</button><button class="btn-secondary" onclick="deleteCloudAccount()">Delete cloud account</button></div></div></div>
+  <div id="browserRoutingModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Browser profiles</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('browserRoutingModal')">×</button></div><div class="modal-body">
+    <div class="setup-tabs" role="tablist" aria-label="Browser profile instructions">
+      <button id="routingTabProfiles" role="tab" aria-controls="routingPanelProfiles" aria-selected="true" onclick="selectRoutingTab('Profiles')">Profiles</button>
+      <button id="routingTabSetup" role="tab" aria-controls="routingPanelSetup" aria-selected="false" tabindex="-1" onclick="selectRoutingTab('Setup')">Setup</button>
+      <button id="routingTabHelp" role="tab" aria-controls="routingPanelHelp" aria-selected="false" tabindex="-1" onclick="selectRoutingTab('Help')">Help</button>
+    </div>
+    <p id="browserRoutingState" class="routing-status" role="status"></p>
+    <section id="routingPanelProfiles" role="tabpanel" aria-labelledby="routingTabProfiles" tabindex="0"><p>Choose where each account opens. These assignments stay on this Windows PC.</p><div id="browserProfileAssignments"></div><button id="saveBrowserProfiles" class="btn-primary" hidden>Save browser profiles</button><button class="btn-secondary" type="button" onclick="selectRoutingTab('Setup')">Setup instructions</button></section>
+    <section id="routingPanelSetup" role="tabpanel" aria-labelledby="routingTabSetup" tabindex="0" hidden>
+      <p><strong>What this download does:</strong> opens your saved links in their assigned Chrome/Edge profiles. It contains the browser extension, a local Windows helper, readable setup scripts and a Read first page.</p>
+      <dl class="setup-help"><dt>Browser extension</dt><dd>Connects this app page to the helper using native messaging. Access is limited to the app addresses listed in its manifest.</dd><dt>Local helper</dt><dd>Reads browser profile names/emails and launches the profile you select. It receives your vault account email, account label and clicked URL. Assignments stay on this PC; passwords, cookies, history and your link collection are not read.</dd><dt>Setup.cmd</dt><dd>A readable Windows launcher for the included PowerShell installer. It installs only after you run it. Setup uses installed Node.js or downloads a private official runtime from nodejs.org and verifies its checksum.</dd></dl>
+      <p><strong>Before running:</strong> open READ-FIRST.html in the extracted ZIP for file details, permissions and removal steps. This package is unsigned; Windows may ask you to approve running it. The setup scripts are included for inspection.</p>
+      <a class="btn-primary setup-download" href="browser-bridge.zip" download="Link-Launcher-Browser-Setup.zip">Download browser setup ZIP</a> <a href="browser-bridge.sha256" target="_blank" rel="noopener noreferrer">Download checksum</a>
+      <ol class="setup-steps"><li><strong>Extract the ZIP</strong> into a permanent folder. Open that folder.</li><li><strong>Load the extension.</strong> Open <code>chrome://extensions</code> or <code>edge://extensions</code>, enable Developer mode, choose Load unpacked and select the extracted folder. Updating? Replace its files and click Reload.</li><li><strong>Double-click Setup.cmd.</strong> The helper installs for your Windows user. If Node.js is missing, setup downloads a private, verified runtime automatically. No command typing or administrator access is needed.</li><li><strong>Reload the extension and refresh this app.</strong> Open Profiles above, choose a browser for each account and save.</li></ol>
+      <p>One download; you still need to extract it, load the extension and run Setup. Windows may ask you to approve running the file. Install the extension in each profile where you use this app; install the helper once per Windows user.</p>
+      <p>Windows Chrome/Edge only. No Link Launcher EXE or background service. Internet is needed for the first runtime download. On phones, links use the current browser.</p>
+    </section>
+    <section id="routingPanelHelp" role="tabpanel" aria-labelledby="routingTabHelp" tabindex="0" hidden><dl class="setup-help">
+      <dt>Show every account again</dt><dd>Click <strong>All accounts</strong> above the account list. This clears the selected account. Choose <strong>All devices</strong> to include accounts and links from your other workspaces too. Category, search and priority filters can still limit the links shown.</dd>
+      <dt>Change colours</dt><dd>Account: click its small coloured dot. Category tab: click the palette button above the links, choose the tab and save a colour. Colours sync in your encrypted vault.</dd>
+      <dt>Missing profiles</dt><dd>Use <strong>Find browser profiles on this PC</strong> to add missing accounts. All devices shows saved vault accounts; it does not automatically import profiles from other computers.</dd>
+      <dt>New browser or incognito</dt><dd>Choose a saved workspace such as Home PC in Choose profiles for this device. Incognito needs Allow in incognito on the extension and forgets local choices when closed.</dd>
+      <dt>Privacy and login</dt><dd>The helper reads local browser profile names and emails. It receives your vault account email, selected label and clicked URL; it never reads passwords, cookies or your link collection. Website login uses the account already signed in inside the chosen browser profile.</dd>
+      <dt>Your own cloud</dt><dd>Change the first matches entry in the extension manifest.json to your app's HTTPS origin plus /*, then reload the extension. Keep access limited to your own app.</dd>
+    </dl></section>
+  </div></div></div>
+  <div id="deviceProfilesModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Profiles on this device</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('deviceProfilesModal')">×</button></div><form onsubmit="saveDeviceProfiles(event)"><div class="modal-body"><label class="field-label" for="savedDeviceWorkspace">Saved device workspace</label><select id="savedDeviceWorkspace" class="input-google" onchange="selectBrowserWorkspace()"></select><p>Choose Home PC or another saved workspace to reuse its profiles in this browser. New workspace keeps a separate selection. This choice is remembered per account in normal browsing; incognito forgets it when closed.</p><label class="field-label" for="deviceDisplayName">Workspace name (optional)</label><input id="deviceDisplayName" class="input-google" maxlength="80" placeholder="Home PC, Work laptop, My phone"><p>Choose the profiles you use here. Their existing and future links will appear in This device.</p><p>Saved workspaces belong to your encrypted account. This app cannot detect your physical computer or Chrome profiles; choose the workspace you want to use.</p><div id="deviceProfilesChoices" class="device-profile-choices"></div><p>Unchecking a profile hides its links here unless you saved or assigned those links individually. Everything stays in All devices.</p></div><div class="modal-footer"><button class="btn-secondary" type="button" onclick="closeModal('deviceProfilesModal')">Cancel</button><button class="btn-primary" type="submit">Save profiles</button></div></form></div></div>
   <div id="addProfileModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Add account label</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('addProfileModal')">×</button></div><form onsubmit="saveNewProfileItem(event)"><div class="modal-body"><label class="field-label" for="newProfName">Name</label><input id="newProfName" class="input-google" required maxlength="100"><label class="field-label" for="newProfEmail">Email (optional label)</label><input id="newProfEmail" class="input-google" type="email" maxlength="254"><p>This organises links. It does not sign you into that Google account.</p></div><div class="modal-footer"><button class="btn-primary" type="submit">Add label</button></div></form></div></div>
 
   <!-- TOAST NOTIFICATION -->
@@ -1727,7 +1751,7 @@
     let currentUserEmail = '';
 
     // Cloud Backend Configuration
-    let cloudApiUrl = window.LINK_LAUNCHER_CLOUD.apiUrl || (location.hostname.endsWith('github.io') ? 'https://dreamslab-cloud-vault.onrender.com' : location.origin);
+    let cloudApiUrl = window.LINK_LAUNCHER_CLOUD.apiUrl || location.origin;
     let cloudAuthToken = null;
     let cloudVaultVersion = 1;
     let syncStatusState = 'synced'; // 'synced', 'syncing', 'offline'
@@ -2125,6 +2149,8 @@
     }
 
     async function confirmResetLocalVault() {
+      await rememberedBrowser.forget();
+      document.getElementById('rememberBrowser').checked=false;
       await saveQueue;
       await clearCloudSession();
       document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
@@ -2200,10 +2226,10 @@
 
 
 
-    async function handleUnlock(event) {
+    async function handleUnlock(event, rememberedCredentials) {
       if (event) event.preventDefault();
-      const email = document.getElementById('userEmailInput').value.trim().toLowerCase();
-      const pass = document.getElementById('masterPasswordInput').value;
+      const email = (rememberedCredentials?.email || document.getElementById('userEmailInput').value).trim().toLowerCase();
+      const pass = rememberedCredentials?.password || document.getElementById('masterPasswordInput').value;
       const error = document.getElementById('unlockError');
       const button = document.getElementById('unlockSubmitBtn');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !pass) { error.textContent = 'Enter your email and master password.'; return; }
@@ -2246,7 +2272,7 @@
         const decoded = encrypted ? validateImportedVault(await decryptData(encrypted, pass)) : { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
         currentUserEmail = email; currentPassword = pass; vaultData = decoded;
         cloudAuthToken = token; cloudVaultVersion = version || 1;
-        normalizeVaultLinks();
+        normalizeVaultLinks(); restoreBrowserWorkspace();
         if (encrypted) localStorage.setItem(key, JSON.stringify(encrypted));
         localStorage.setItem('dreamslab_last_email', email);
         saveSyncMeta({ version: cloudVaultVersion, dirty: !isCreatePasswordMode && !!meta.dirty }, email);
@@ -2258,20 +2284,24 @@
         updateSyncBadge(conflict ? 'conflict' : token ? 'synced' : 'offline');
         showToast(token ? 'Cloud account opened.' : 'Offline: using this device’s encrypted cache.');
         if (token && meta.dirty && !conflict) await saveVault();
+        try { await rememberedBrowser.save('cloud'); } catch { showToast('Opened. This browser could not remember the unlock.'); }
       } catch (err) {
         currentPassword = null; cloudAuthToken = null;
         error.textContent = err.name === 'OperationError' ? 'Incorrect master password or damaged backup.' : err.message;
       } finally { button.disabled = false; }
     }
 
-    function lockVault() {
+    async function lockVault() {
+      await rememberedBrowser.forget();
+      document.getElementById('rememberBrowser').checked=false;
+      await saveQueue;
       vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
       selectedLinkIds.clear(); renderApp(); closeDetailDrawer();
       document.getElementById('drawerForm').reset();
       document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
       document.getElementById('confirmPasswordInput').value = '';
       currentPassword = null;
-      // Note: Lock does NOT delete secure_session.dat - it only locks the screen
+      // Explicit lock removes automatic browser unlock.
       const emailInput = document.getElementById('userEmailInput');
       if (emailInput && currentUserEmail) {
         emailInput.value = currentUserEmail;
@@ -2291,6 +2321,8 @@
     }
 
     async function handleLogout() {
+      await rememberedBrowser.forget();
+      document.getElementById('rememberBrowser').checked=false;
       await saveQueue;
       await clearCloudSession();
       currentPassword = null;
@@ -2345,12 +2377,17 @@
     function normalizeVaultLinks() {
       if (!Array.isArray(vaultData.links)) vaultData.links = [];
       if (!Array.isArray(vaultData.profiles)) vaultData.profiles = [];
+      vaultData.devices = (Array.isArray(vaultData.devices) ? vaultData.devices : []).filter(d => d && typeof d.id === 'string').map(d => ({
+        id: d.id, name: typeof d.name === 'string' ? d.name.slice(0, 80) : '', updatedAt: d.updatedAt || new Date().toISOString()
+      }));
       if (!Array.isArray(vaultData.categories)) vaultData.categories = [...DEFAULT_CATEGORIES];
       vaultData.categories = vaultData.categories.filter(c => typeof c === 'string');
+      vaultData.categoryColors = Object.fromEntries(Object.entries(vaultData.categoryColors || {}).filter(([key,color]) => key.length <= 100 && /^#[0-9a-f]{6}$/i.test(color)));
       vaultData.profiles = vaultData.profiles.filter(p => p && typeof p === 'object').map(p => ({
         id: typeof p.id === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(p.id) ? p.id : 'prof_' + crypto.randomUUID(),
         name: typeof p.name === 'string' ? p.name : '', email: typeof p.email === 'string' ? p.email : '',
-        pinned: !!p.pinned, starred: !!p.starred, updatedAt: p.updatedAt || new Date().toISOString()
+        deviceIds: Array.isArray(p.deviceIds) ? p.deviceIds.filter(id => typeof id === 'string') : [],
+        color: /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '', pinned: !!p.pinned, starred: !!p.starred, updatedAt: p.updatedAt || new Date().toISOString()
       }));
       vaultData.links = vaultData.links.filter(l => l && typeof l === 'object');
 
@@ -2373,11 +2410,12 @@
 
 
 
-    function getProfileMeta(email, name) {
+    function getProfileMeta(email, name, id) {
       const text = name || email || 'Unassigned';
       let hash = 0;
-      for (const ch of text) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
-      return { name: text, shortName: text, color: GOOGLE_AVATAR_COLORS[Math.abs(hash) % GOOGLE_AVATAR_COLORS.length], letter: text.charAt(0).toUpperCase() };
+      for (const ch of (email || id || text)) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
+      const profile = (vaultData.profiles || []).find(p => (id && p.id === id) || (email && p.email.toLowerCase() === email.toLowerCase()));
+      return { name: text, shortName: text, color: /^#[0-9a-f]{6}$/i.test(profile?.color || '') ? profile.color : GOOGLE_AVATAR_COLORS[Math.abs(hash) % GOOGLE_AVATAR_COLORS.length], letter: text.charAt(0).toUpperCase() };
     }
 
 
@@ -2387,6 +2425,13 @@
     // ZERO-FALLBACK PROFILES VIEW FILTER
 
     let sidebarProfileFilter = 'ALL'; // 'ALL' | 'STARRED' | 'PINNED'
+
+    function showAllAccounts() {
+      activeProfileEmail = null;
+      sidebarProfileFilter = 'ALL';
+      setSidebarProfileFilter('ALL');
+      renderApp();
+    }
 
     function setSidebarProfileFilter(filter) {
       sidebarProfileFilter = filter;
@@ -2431,8 +2476,58 @@
     }
 
     function getDisplayProfiles() {
-      const scopeEmails = null;
-      return sortAndFilterProfiles(vaultData.profiles || [], sidebarProfileFilter, scopeEmails);
+      const localLinks = getScopedLinks();
+      const profiles = (vaultData.profiles || []).filter(p => !filterToLocalOnly ||
+        (p.deviceIds || []).includes(currentDeviceId) || localLinks.some(l => linkMatchesProfile(l, p)));
+      return sortAndFilterProfiles(profiles, sidebarProfileFilter);
+    }
+
+    function linkMatchesProfile(link, profile) {
+      return (link.profileId && link.profileId === profile.id) || (!!profile.email && (link.profileEmail || '').trim().toLowerCase() === profile.email.trim().toLowerCase());
+    }
+
+    function linkUsesDeviceProfile(link) {
+      return (vaultData.profiles || []).some(p => (p.deviceIds || []).includes(currentDeviceId) && linkMatchesProfile(link, p));
+    }
+
+    function getDeviceDisplayName() {
+      return ((vaultData.devices || []).find(d => d.id === currentDeviceId) || {}).name || '';
+    }
+
+    function openDeviceProfilesModal() {
+      const picker=document.getElementById('savedDeviceWorkspace'), physical=getDeviceId();
+      const entries=[...(vaultData.devices||[])];
+      if(!entries.some(d=>d.id===physical))entries.unshift({id:physical,name:'New workspace for this browser'});
+      picker.replaceChildren(...entries.map(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name||('Unnamed workspace — '+d.id.slice(0,8));option.selected=d.id===currentDeviceId;return option;}));
+      document.getElementById('deviceDisplayName').value = getDeviceDisplayName();
+      document.getElementById('deviceProfilesChoices').innerHTML = sortAndFilterProfiles(vaultData.profiles || []).map(p =>
+        `<label class="device-profile-choice"><input type="checkbox" value="${escapeHtml(p.id)}" ${(p.deviceIds || []).includes(currentDeviceId) ? 'checked' : ''}><span><strong>${escapeHtml(p.name || p.email)}</strong><small>${escapeHtml(p.email)}</small></span></label>`
+      ).join('') || '<p>No profiles yet. Add an account label first.</p>';
+      document.body.classList.remove('nav-open');
+      openModal('deviceProfilesModal');
+    }
+
+    async function saveDeviceProfiles(event) {
+      event.preventDefault();
+      const selected = new Set([...document.querySelectorAll('#deviceProfilesChoices input:checked')].map(input => input.value));
+      const name = document.getElementById('deviceDisplayName').value.trim().slice(0, 80);
+      const device = (vaultData.devices || []).find(d => d.id === currentDeviceId);
+      if (device) { device.name = name; device.updatedAt = new Date().toISOString(); }
+      else { (vaultData.devices ||= []).push({id:currentDeviceId, name, updatedAt:new Date().toISOString()}); }
+      for (const profile of vaultData.profiles || []) {
+        const ids = new Set(profile.deviceIds || []);
+        if (selected.has(profile.id)) ids.add(currentDeviceId); else ids.delete(currentDeviceId);
+        const next = [...ids];
+        if (JSON.stringify(next) !== JSON.stringify(profile.deviceIds || [])) {
+          profile.deviceIds = next; profile.updatedAt = new Date().toISOString();
+        }
+      }
+      const saved = await saveVault();
+      if (!saved.success && !saved.localSaved) return;
+      filterToLocalOnly = true; localStorage.setItem('dreamslab_filter_scope', 'local');
+      activeProfileEmail = null; selectedLinkIds.clear();
+      closeModal('deviceProfilesModal'); renderApp();
+      showToast('Profiles saved for this browser. All devices keeps every link.');
     }
 
     async function toggleProfileStar(profileIdOrEmail, event) {
@@ -2466,11 +2561,16 @@
     // ZERO-FALLBACK LINKS VIEW FILTER
     function getScopedLinks() {
       const links = (vaultData.links || []).filter(l => !l.deleted);
-      return filterToLocalOnly ? links.filter(l => (l.deviceIds || []).includes(currentDeviceId)) : links;
+      if (!filterToLocalOnly) return links;
+      const chosenProfiles = (vaultData.profiles || []).filter(p => (p.deviceIds || []).includes(currentDeviceId));
+      const profileIds = new Set(chosenProfiles.map(p => p.id));
+      const profileEmails = new Set(chosenProfiles.filter(p => p.email).map(p => p.email.trim().toLowerCase()));
+      return links.filter(l => (l.deviceIds || []).includes(currentDeviceId) || profileIds.has(l.profileId) || profileEmails.has((l.profileEmail || '').trim().toLowerCase()));
     }
 
     function toggleProfileScope() {
       filterToLocalOnly = !filterToLocalOnly;
+      if (!filterToLocalOnly) { activeProfileEmail = null; setSidebarProfileFilter('ALL'); }
       localStorage.setItem('dreamslab_filter_scope', filterToLocalOnly ? 'local' : 'cloud');
       activeProfileEmail = null; selectedLinkIds.clear(); renderApp();
     }
@@ -2507,7 +2607,7 @@
 
     // Dynamic folder & metadata resolution
     function getProfileForLink(link) {
-      return (vaultData.profiles || []).find(p => (link.profileId && p.id === link.profileId) || (link.profileEmail && p.email === link.profileEmail)) || { name: link.profileName || 'Unassigned', email: link.profileEmail || '', id: '' };
+      return (vaultData.profiles || []).find(p => linkMatchesProfile(link, p)) || { name: link.profileName || 'Unassigned', email: link.profileEmail || '', id: '' };
     }
 
     // Explicit opt-in to link a local detected account label to the user's cloud account
@@ -2547,12 +2647,16 @@
       const scope = document.getElementById('btnToggleScope');
       scope.textContent = filterToLocalOnly ? 'This device' : 'All devices';
       scope.title = 'Switch device links / every link in your account';
+      document.getElementById('currentDeviceLabel').textContent = 'Device: ' + (getDeviceDisplayName() || 'Unnamed — choose profiles to name it');
       document.getElementById('sidebarProfilesList').innerHTML = getDisplayProfiles().map(p => {
-        const id = p.email || p.id, meta = getProfileMeta(p.email, p.name);
+        const id = p.email || p.id, meta = getProfileMeta(p.email, p.name, p.id);
         const arg = escapeHtml(JSON.stringify(id));
-        const count = getScopedLinks().filter(l => (p.email && l.profileEmail === p.email) || l.profileId === p.id).length;
-        return `<div class="account-item ${activeProfileEmail === id ? 'active' : ''}"><button class="account-label-button" onclick="selectProfileFilter(${arg})"><span class="account-avatar" style="background:${meta.color}">${escapeHtml(meta.letter)}</span><span class="account-info"><span class="account-name">${escapeHtml(meta.name)}</span><span class="account-email">${escapeHtml(p.email)}</span></span></button><button class="btn-profile-action" onclick="toggleProfilePin(${arg}, event)" title="Pin label">${p.pinned ? '📌' : '📍'}</button><button class="btn-profile-action" onclick="toggleProfileStar(${arg}, event)" title="Star label">${p.starred ? '★' : '☆'}</button><span class="nav-badge">${count}</span><button class="btn-profile-del" onclick="deleteProfile(${arg},event)" title="Delete label">×</button></div>`;
+        const count = getScopedLinks().filter(l => linkMatchesProfile(l, p)).length;
+        return `<div class="account-item ${activeProfileEmail === id ? 'active' : ''}" style="--profile-color:${meta.color};--profile-tint:${meta.color}10"><button class="account-label-button" onclick="selectProfileFilter(${arg})"><span class="account-avatar" style="background:${meta.color}">${escapeHtml(meta.letter)}</span><span class="account-info"><span class="account-name">${escapeHtml(meta.name)}</span><span class="account-email">${escapeHtml(p.email)}</span></span></button><button class="btn-profile-action" onclick="toggleProfilePin(${arg}, event)" title="Pin label">${p.pinned ? '📌' : '📍'}</button><button class="btn-profile-action" onclick="toggleProfileStar(${arg}, event)" title="Star label">${p.starred ? '★' : '☆'}</button><span class="nav-badge">${count}</span><button class="btn-profile-action profile-colour-button" onclick="openAppearance('profile',${arg},event)" title="Change account colour" aria-label="Change account colour" style="color:${meta.color}">●</button><button class="btn-profile-del" onclick="deleteProfile(${arg},event)" title="Delete label">×</button></div>`;
       }).join('');
+      if (!document.getElementById('sidebarProfilesList').children.length) {
+        document.getElementById('sidebarProfilesList').innerHTML = '<p class="device-profiles-empty">' + (filterToLocalOnly ? 'No profiles selected here. Choose profiles below, or add a link to a profile on this device.' : 'No profiles match this filter.') + '</p>';
+      }
     }
 
 
@@ -2565,7 +2669,7 @@
       let html = '';
       let colorIdx = 0;
       cats.forEach(cat => {
-        const color = GOOGLE_AVATAR_COLORS[colorIdx % GOOGLE_AVATAR_COLORS.length];
+        const color = categoryColour(cat);
         colorIdx++;
         const count = getScopedLinks().filter(l => l.category === cat).length;
         const isActive = activeCategory === cat;
@@ -2593,8 +2697,8 @@
         const isActive = activeCategory === cat;
         const count = cat === 'ALL' ? getScopedLinks().length : getScopedLinks().filter(l => l.category === cat).length;
         html += `
-          <button type="button" class="category-chip ${isActive ? 'active' : ''}" onclick="selectCategory(${escapeHtml(JSON.stringify(cat))})">
-            ${cat === 'ALL' ? 'All Items' : escapeHtml(cat)} (${count})
+          <button type="button" class="category-chip ${isActive ? 'active' : ''}" style="--tab-color:${categoryColour(cat)};--tab-tint:${categoryColour(cat)}14" onclick="selectCategory(${escapeHtml(JSON.stringify(cat))})">
+            <span class="chip-dot" style="background:${categoryColour(cat)}"></span>${cat === 'ALL' ? 'All Items' : escapeHtml(cat)} <span class="tab-count">${count}</span>
           </button>
         `;
       });
@@ -2647,7 +2751,7 @@
 
       if (filtered.length === 0) {
         let emptyTitle = 'No Links Found';
-        let emptyDesc = filterToLocalOnly ? 'Save a link here, or switch to All devices and assign existing links to this device.' : 'No bookmarks match your current view or filter.';
+        let emptyDesc = filterToLocalOnly ? 'Choose the profiles you use here, add a link, or find individual links in All devices.' : 'No bookmarks match your current view or filter.';
 
 
         container.innerHTML = `
@@ -2658,6 +2762,7 @@
             <div style="margin-top: 10px; display:flex; gap:8px; justify-content:center;">
               <button class="btn-primary" onclick="openAddLinkModal()">+ Add Link</button>
               ${filterToLocalOnly ? '<button class="btn-secondary" onclick="toggleProfileScope()">All devices</button>' : ''}
+              ${filterToLocalOnly ? '<button class="btn-secondary" onclick="openDeviceProfilesModal()">Choose profiles</button>' : ''}
             </div>
           </div>
         `;
@@ -2670,13 +2775,13 @@
         try { domain = new URL(l.url).hostname; } catch(e) { domain = l.url; }
         const faviconUrl = 'favicon.png';
         const prof = getProfileForLink(l);
-        const meta = getProfileMeta(prof.email || l.profileEmail || prof.folder, prof.name);
+        const meta = getProfileMeta(prof.email || l.profileEmail || prof.folder, prof.name, prof.id);
         const priority = l.priority || 'normal';
         const isStarred = !!l.starred;
         const prioClass = priority === 'high' ? 'prio-high' : (priority === 'medium' ? 'prio-medium' : (priority === 'low' ? 'prio-low' : 'prio-normal'));
 
         html += `
-          <div class="link-row" onclick="openDetailDrawer('${l.id}')">
+          <div class="link-row" style="--profile-color:${meta.color};--profile-tint:${meta.color}08" onclick="openDetailDrawer('${l.id}')">
             <!-- CHECKBOX -->
             <input type="checkbox" class="link-checkbox" data-id="${l.id}" aria-label="Select ${escapeHtml(l.title)}" onclick="event.stopPropagation(); toggleSelectLink('${l.id}')">
 
@@ -2708,11 +2813,11 @@
             <div class="link-row-actions" onclick="event.stopPropagation()">
               <button class="move-link" onclick="moveLink('${l.id}', -1)" title="Move up" aria-label="Move ${escapeHtml(l.title)} up">↑</button>
               <button class="move-link" onclick="moveLink('${l.id}', 1)" title="Move down" aria-label="Move ${escapeHtml(l.title)} down">↓</button>
-              <button class="device-toggle" onclick="toggleLinkDevice('${l.id}')" title="Assign or remove from this device">${(l.deviceIds || []).includes(currentDeviceId) ? '✓ Device' : '+ Device'}</button>
+              <button class="device-toggle" onclick="toggleLinkDevice('${l.id}')" title="${linkUsesDeviceProfile(l) ? 'Shown through a profile chosen for this device' : 'Assign or remove from this device'}">${linkUsesDeviceProfile(l) ? '✓ Profile' : (l.deviceIds || []).includes(currentDeviceId) ? '✓ Device' : '+ Device'}</button>
               <button class="btn-row-action btn-row-run" onclick="handleLinkRun('${l.id}')" title="Open link">
                 ▶ Run
               </button>
-              <button class="btn-row-action" onclick="handleLinkOpen('${l.id}')" title="Open in default browser">
+              <button class="btn-row-action" onclick="handleLinkOpen('${l.id}')" title="Open in assigned browser profile">
                 🌐
               </button>
               <button class="btn-row-action" onclick="handleLinkCopy('${l.id}')" title="Copy URL">
@@ -2754,7 +2859,7 @@
       let html = '';
       taskLinks.forEach(t => {
         const prof = getProfileForLink(t);
-        const meta = getProfileMeta(prof.email || t.profileEmail || prof.folder, prof.name);
+        const meta = getProfileMeta(prof.email || t.profileEmail || prof.folder, prof.name, prof.id);
 
         html += `
           <div class="task-card ${t.taskDone ? 'completed' : ''}">
@@ -2789,13 +2894,13 @@
     function handleLinkRun(id) {
       const item = (vaultData.links || []).find(l => l.id === id);
       if (!item) return;
-      openDirectTab(item.url);
+      openAssignedLink(item);
     }
 
     function handleLinkOpen(id) {
       const item = (vaultData.links || []).find(l => l.id === id);
       if (!item) return;
-      openDirectTab(item.url);
+      openAssignedLink(item);
     }
 
     function handleLinkCopy(id) {
@@ -2989,9 +3094,9 @@
 
     function populateProfileSelect(selectId, selectedVal) {
       const select = document.getElementById(selectId);
-      select.innerHTML = '<option value="">Unassigned</option>' + (vaultData.profiles || []).map(p => {
+      select.innerHTML = '<option value="">Unassigned</option>' + sortAndFilterProfiles(vaultData.profiles || []).map(p => {
         const value = p.email || p.id;
-        return '<option value="' + escapeHtml(value) + '" ' + (value === selectedVal ? 'selected' : '') + '>' + escapeHtml(p.name || p.email) + '</option>';
+        return '<option value="' + escapeHtml(value) + '" ' + (value === selectedVal ? 'selected' : '') + '>' + escapeHtml((p.name || p.email) + (p.email ? ' — ' + p.email : '')) + '</option>';
       }).join('');
     }
 
@@ -3099,7 +3204,7 @@
 
       let url = urlInput ? urlInput.value.trim() : '';
       if (!url) { showToast('⚠️ URL is required'); return; }
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      if (!/^https?:\/\//i.test(url)) {
         url = 'https://' + url;
       }
 
@@ -3183,6 +3288,7 @@
         id: 'prof_' + Math.random().toString(36).substr(2, 9),
         name: name || meta.name,
         email: email,
+        deviceIds: [currentDeviceId],
         color: meta.color,
         letter: meta.letter,
         createdAt: new Date().toISOString(),
@@ -3346,5 +3452,8 @@
 
 </script>
 <script src="web-app.js"></script>
+<script src="browser-session.js"></script>
+<script src="browser-routing.js"></script>
+<script src="profile-appearance.js"></script>
 </body>
 </html>

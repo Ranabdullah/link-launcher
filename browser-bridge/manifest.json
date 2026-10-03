@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "DreamsLab Browser Link Bridge",
+  "version": "1.1.1",
+  "description": "Open links in their assigned Chrome or Edge profile using the optional local helper. No vault or password access.",
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_title": "DreamsLab Link Launcher",
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://link-launcher.ranakaharian1.workers.dev/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "incognito": "split"
+}

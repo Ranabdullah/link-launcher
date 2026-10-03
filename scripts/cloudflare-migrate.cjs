@@ -44,9 +44,11 @@ async function exportSource(file) {
     const rows = Array.isArray(data) ? data : Object.entries(data.users || {}).map(([email,u]) => ({ ...u, email }));
     snapshot = prepareExport(rows, 'local-file-backup');
   } else {
-    if (!process.env.DATABASE_URL) throw new Error('Set the Render external DATABASE_URL privately in your terminal, or pass an explicitly selected backup file.');
+    const connectionFile = path.join(privateDir, 'render-database-url.txt');
+    const connectionString = process.env.DATABASE_URL || (fs.existsSync(connectionFile) ? fs.readFileSync(connectionFile, 'utf8').trim() : '');
+    if (!connectionString) throw new Error('Set DATABASE_URL privately or save the external URL in migration-private/render-database-url.txt.');
     const { Client } = require('pg');
-    const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15000 });
+    const client = new Client({ connectionString, ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15000 });
     try {
       await client.connect();
       await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
@@ -66,10 +68,13 @@ async function exportSource(file) {
 function wrangler(args) {
   const result = spawnSync(process.execPath, [path.join(root,'node_modules/wrangler/bin/wrangler.js'), ...args], {
     cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
-    env: { ...process.env, XDG_CONFIG_HOME: path.join(root,'.cloudflare-auth'), WRANGLER_SEND_METRICS: 'false', CLOUDFLARE_ACCOUNT_ID: '2bd585fdb9252b0687c939a434d19886' }
+    env: { ...process.env, XDG_CONFIG_HOME: path.join(root,'.cloudflare-auth'), WRANGLER_SEND_METRICS: 'false', CLOUDFLARE_ACCOUNT_ID: '4dddb56c05af56a431914f2cb7f48eb4' }
   });
   // CLI logs can include SQL and emails. Never print captured output on failure.
   if (result.status !== 0) throw new Error('Cloudflare database operation failed. Inspect private Wrangler logs locally; no account records have been printed.');
+  // Remote SQL-file imports can emit progress notices despite --json. Their
+  // exit code confirms execution; the separate fingerprint check confirms data.
+  if (args.includes('--file')) return null;
   return JSON.parse(result.stdout);
 }
 function query(sql, local) {

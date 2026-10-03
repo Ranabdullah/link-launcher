@@ -1,70 +1,39 @@
-# Link Launcher Cloudflare transfer
+# Cloudflare migration — completed 2 October 2026
 
-Current status, 1 October 2026: implementation and local verification complete; remote transfer pending access. No paid plan, remote database, remote Worker, Git push or Render deletion was performed.
+Live app: https://link-launcher.ranakaharian1.workers.dev
+Owner: ranakaharian1@gmail.com
+Cloudflare account: 4dddb56c05af56a431914f2cb7f48eb4
+D1: link-launcher-vault / 2ea49342-0c59-4ce2-abc4-a671e5db0b75
+Plan: Workers Free, verified in the account dashboard. No paid upgrade, domain purchase or Render deletion.
 
-The local preview at `http://localhost:4173/` now runs the Cloudflare backend against the verified five-account local D1 copy, bound only to this computer. Cloud writes, new registrations and deletion are held while the migration is pending; existing accounts can be tested with their own password. This is still a local preview, not a live cloud transfer.
+The fresh Render PostgreSQL export contained one account. It was taken after installing a reversible trigger preventing writes to the old users table. Original account identifiers, authentication salt/hash, timestamps, version and encrypted vault bytes were transferred and verified by this combined SHA-256 fingerprint:
 
-## Verified locally
+49bf28b9c34dd45946f5be41f13564af4fd17a90b505db9d3ae195b6bb1ad699
 
-- Cloudflare Workers API and D1 schema retain original account identifiers, PBKDF2 verifier hashes, timestamps, vault versions and encrypted vault bytes. Passwords are not requested or reset. Legacy opaque payloads are also retained unchanged; retaining them does not guarantee an old malformed/test payload can be decrypted.
-- Vaults are stored in chunks to support the app's 15 MB request limit despite D1's 2 MB row limit. Each save commits metadata and chunks in one atomic batch. Concurrent stale writes cannot overwrite the winning version.
-- Account isolation, validation, wrong credentials, duplicate registration, logout revocation, deletion/recreation, shared edge rate limits, cross-origin rejection and private-file denial passed Workers/D1 tests.
-- Actual Chrome desktop/mobile flows passed against Workers/D1: CRUD, ordering, labels, search, device scope, offline reload/edit/reopen, reconnect, conflicts, encrypted export/import and lock. Widths: 320, 390, 768, 1024 and 1440.
-- All five records in the preserved local backup were imported into local D1. Verification compared the SHA-256 fingerprint of every account's preserved fields and encrypted bytes: exact match. This backup is not established as the latest Render production data.
-- Wrangler deployment dry run passed. Production dependencies reported zero vulnerabilities.
+The private production backup is `migration-private/transfer-2026-10-02T22-16-15-965Z.json` with its SQL sidecar. These and the private Render connection file are ignored and excluded from public assets/sales archives. Preserve encrypted backups securely. The older five-account local backup was not substituted for current production data.
 
-## Access blockers
+The Worker was deployed with `MIGRATION_PENDING=true` during verification, then enabled with false. A fresh private JWT_SECRET was set directly on Cloudflare. Existing passwords did not change. Migration deployment version: 5d103be1-9101-4884-b851-33510b7bb5da. The obsolete Render frontend fallback was removed. The 3 October profile-selection update is deployed as abfdf725-4b61-4cd9-a39a-0b3c2d3fcfba with shell cache v5.
 
-1. Target Cloudflare account: `2bd585fdb9252b0687c939a434d19886`, requested email `abdullahinayat24@gmail.com`. Wrangler authorization completed as `ranakaharian1@gmail.com`, which only has account `4dddb56c05af56a431914f2cb7f48eb4`. The target account API rejects this login. Sign out of Cloudflare in the authorization browser, sign in to the requested account, then authorize a new Wrangler login. Check `whoami --json` before any remote writes.
-2. Render production database `dpg-dajgev7qj5pc73dhjbgg-a`: read-only query still returns forbidden. Either reconnect the owning Render workspace or supply the external PostgreSQL connection through a private local environment variable. Do not paste database credentials into chat, source files or the public frontend.
-3. Screenshot shows Render database expiry on **13 October 2026**. Back up and complete the cutover before expiry. Retain Render until migration and real sign-in are verified.
+## Verification
 
-## Cutover sequence after access is restored
+- HTTPS app and `/api/health` return 200; D1 connected, schema ready, migrationPending false.
+- Served frontend has no `storeSecureSession` call or Electron/DPAPI requirement.
+- Live disposable-account tests passed registration, wrong-password rejection, login, read/save, stale-write protection, logout revocation and cleanup.
+- Original account/encrypted-byte fingerprint was checked after cleanup and still matches the source.
+- Private environment, migration, source and account-data paths return 404.
+- The owner must personally verify readable links with their password; the agent did not use it. Choose All devices on the new browser origin.
+- Local tests cover PC/phone, offline edits/reopening, ordering, labels, backups and conflicts. Physical-device installation and maximum-vault performance at the free CPU limit remain owner checks.
 
-1. Confirm that the exact target Cloudflare account uses **Workers Free** in its Workers plans page. Do not enable paid billing. The project uses only static assets, Workers, D1 and native rate-limit bindings.
-2. Export the current Render database with the read-only export tool. Privately set its external `DATABASE_URL` in your terminal, then run:
+## Use the new address
 
-   ```text
-   node scripts/cloudflare-migrate.cjs export
-   ```
+Sign in with the existing vault email/master password. Do not create a replacement account. Use **Choose profiles for this device**, name the browser installation, select the profiles used here and save. **This device** shows their existing/future links alongside individually saved/assigned links; **All devices** keeps every account link. Other browser installations have independent selections. Browser data removal requires choosing again; the web app does not detect Chrome profiles. Install with the browser's Install app/Add to Home Screen action. Old-origin unsynced browser storage does not move automatically; export/import an encrypted backup first when needed.
 
-   This takes a read-only repeatable-read snapshot and creates a timestamped JSON backup and SQL file under ignored `migration-private/`. No emails, hashes or ciphertext are printed. A local-file export is also supported, but must not silently replace a newer production export.
+Render is preserved but read-only. Its dashboard reports expiry on **13 October 2026**. It is no longer the active cloud store. Reversible freeze control is `scripts/cloudflare-source.cjs`. Do not simply resume old writes: after the new host changes, the old snapshot is stale. A rollback requires a new Cloudflare backup, write freeze and verified reconciliation before switching hosts.
 
-3. Create a new empty destination:
+Free limits include 100,000 Worker requests/day, 5 million D1 rows read/day, 100,000 written/day, 500 MB per database and 5 GB total D1 storage. CPU/platform limits apply. Quotas can pause sync. [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/) and [limits](https://developers.cloudflare.com/d1/platform/limits/).
 
-   ```text
-   npm run cloudflare -- d1 create link-launcher-vault
-   ```
+## Code and sales edition
 
-   Set the returned database ID in `wrangler.jsonc`, replacing the all-zero placeholder. Keep the original account ID. Apply the schema:
+Origin: https://github.com/Ranabdullah/link-launcher. At the start of this turn, main contained the web implementation at 88aa537. Old Render upstream https://github.com/abdullahinayat24-lang/link-launcher remained at f1ef696. This turn's account/config/licensing changes are local for review; no Git push was made.
 
-   ```text
-   npm run cloudflare -- d1 migrations apply link-launcher-vault --remote
-   ```
-
-4. Stop saves to the old host during the final transfer. Take a fresh export after saves stop. Keep a complete source backup. Import that snapshot into the empty destination:
-
-   ```text
-   node scripts/cloudflare-migrate.cjs import migration-private/transfer-TIMESTAMP.json
-   ```
-
-   The importer refuses nonempty destinations. It regenerates SQL from the fingerprint-checked backup and verifies account count, authentication fields, metadata and encrypted bytes after import. On failure, do not switch hosts; preserve the source and inspect the destination. No automated overwrite/merge is performed.
-
-5. Generate a fresh random secret of at least 32 characters, store it privately as the Worker `JWT_SECRET`, and keep it stable. New host sessions require a new sign-in; account passwords and encryption keys are unchanged.
-
-   ```text
-   npm run cloudflare -- secret put JWT_SECRET
-   npm run cloudflare:deploy
-   ```
-
-   Keep `MIGRATION_PENDING=true` for initial read-only verification. Test existing user sign-in on the new host and confirm encrypted links open. Do not create replacement accounts. A separate local Miniflare fixture exercises test-account mutations; avoid altering real accounts to test writes during the freeze.
-
-6. When source snapshot and new-host checks are verified, set `MIGRATION_PENDING=false`, deploy again, and switch clients to the new HTTPS Worker URL. Check `/api/health`, two-device sync/conflicts, logout, installation, updates, encrypted backup restore and offline reopening. Do not keep editing both hosts.
-
-7. Old-origin browser storage does not move automatically. Export unsynced work from the old app before switching; new-host sign-in downloads transferred cloud data, with a new browser device ID. Existing transferred links appear under **All devices** and can be assigned to this browser. Keep the old database and migration backup until the transition is proven. Render deletion is a separate explicit action.
-
-## Free-plan limits
-
-Current published limits include 100,000 Worker requests/day, 500 MB per D1 database, 5 million rows read/day and 100,000 rows written/day. Static asset delivery is free; API calls consume Worker quotas. Free CPU limits also apply, so high-load/large-vault performance needs live verification. Reaching quotas can interrupt sync; it does not make hosting unlimited. Offline encrypted copies remain available.
-
-Sources: [Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [D1 limits](https://developers.cloudflare.com/d1/platform/limits/), [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/), [static asset billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/).
+The commercial download is a clean separate edition with no owner database binding or credentials. Buyer instructions and signed activation are included. Signing keys stay in ignored `seller-private/`. The personal live app uses the migrated account backend; the sales edition adds browser/account licence checks. See `commercial/SELLER-GUIDE.md` for fulfilment and limitations.

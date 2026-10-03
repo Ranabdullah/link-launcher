@@ -20,3 +20,5 @@ test-results/
 .wrangler/
 .dev.vars*
 migration-private/
+seller-private/
+sale-dist/

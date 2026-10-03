@@ -1,6 +1,6 @@
 {
   "name": "dreamslab-link-launcher",
-  "version": "2.0.0",
+  "version": "2.0.4",
   "private": true,
   "description": "Installable web-only link manager with encrypted offline storage and account sync",
   "main": "server/server.js",
@@ -12,7 +12,9 @@
     "test:cloudflare:web": "node tests/cloudflare-browser.cjs",
     "cloudflare": "node scripts/cloudflare.cjs",
     "cloudflare:check": "npm run build && node scripts/cloudflare.cjs deploy --dry-run --outdir .wrangler/dry-run",
-    "cloudflare:deploy": "npm run build && node scripts/cloudflare.cjs deploy"
+    "cloudflare:deploy": "npm run build && node scripts/cloudflare.cjs deploy",
+    "commercial:build": "node scripts/build-commercial.cjs",
+    "test:commercial": "node --test tests/commercial-api.test.cjs && node tests/commercial-browser.cjs && node tests/commercial-cloud-browser.cjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -22,9 +24,11 @@
   "engines": {
     "node": ">=22"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
+    "fflate": "^0.8.3",
     "miniflare": "^5.20261001.0-alpha",
+    "sharp": "^0.35.4",
     "wrangler": "^4.146.0"
   }
 }
