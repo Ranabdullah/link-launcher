@@ -1366,7 +1366,7 @@
       <div class="brand-title-wrap">
         <div class="brand-name">
           DreamsLab
-          <span class="brand-version-badge">v2.0.4</span>
+          <span class="brand-version-badge">v2.0.5</span>
           <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
         </div>
       </div>
@@ -1694,7 +1694,7 @@
 
         <div style="background: #fdf2f2; border: 1px solid #f5c2c7; border-radius: 8px; padding: 14px;">
           <div style="font-weight: 600; font-size: 13px; color: var(--google-red); margin-bottom: 4px;">🧹 Reset Local Device</div>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Clear local cache and saved state on this computer (Cloud backup remains safe).</p>
+          <p style="font-size:12px;color:var(--text-secondary)">Keep an encrypted .dlvault backup and the offline app copy in your chosen folder. The offline app ZIP has no personal links; import your encrypted backup to restore them.</p><a class="btn-secondary" href="offline-app.zip" download="Link-Launcher-Offline-Copy.zip">Download offline app copy</a><p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Clear local cache and saved state on this computer (Cloud backup remains safe).</p>
           <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="openResetDeviceModal(event)">🧹 Reset Local Device</button>
         </div>
         <div id="localSaveStatus" style="font-size: 12px; text-align: center; min-height: 16px; font-weight: 500; margin-top: 8px;"></div>
@@ -1767,7 +1767,23 @@
     function handleFaviconError(img) {
       if (!img) return;
       img.onerror = null;
-      img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2372777a' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='2' y1='12' x2='22' y2='12'/><path d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/></svg>";
+      img.remove();
+    }
+
+    function websiteIcon(url) {
+      let hostname = '', icon = '';
+      try {
+        const parsed = new URL(url);
+        if (['https:', 'http:'].includes(parsed.protocol) && !parsed.username && !parsed.password) {
+          hostname = parsed.hostname.replace(/^www\./, '');
+          // Never request remote icons for local addresses or use a saved link's path/query.
+          if (hostname.includes('.') && !/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname) && !hostname.endsWith('.local') && !hostname.endsWith('.invalid') && !hostname.includes(':')) {
+            icon = 'https://' + parsed.host + '/favicon.ico';
+          }
+        }
+      } catch (_) {}
+      const initial = (hostname || 'link').slice(0, 2).toUpperCase();
+      return '<span class="website-icon" title="' + escapeHtml(hostname || 'Website') + '"><span class="website-icon-fallback" aria-hidden="true">' + escapeHtml(initial) + '</span>' + (icon ? '<img src="' + escapeHtml(icon) + '" class="link-favicon-mini" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="handleFaviconError(this)">' : '') + '</span>';
     }
 
     const DEFAULT_CATEGORIES = [
@@ -2387,7 +2403,7 @@
         id: typeof p.id === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(p.id) ? p.id : 'prof_' + crypto.randomUUID(),
         name: typeof p.name === 'string' ? p.name : '', email: typeof p.email === 'string' ? p.email : '',
         deviceIds: Array.isArray(p.deviceIds) ? p.deviceIds.filter(id => typeof id === 'string') : [],
-        color: /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '', pinned: !!p.pinned, starred: !!p.starred, updatedAt: p.updatedAt || new Date().toISOString()
+        color: /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '', colorSource: p.colorSource === 'custom' ? 'custom' : 'browser', pinned: !!p.pinned, starred: !!p.starred, updatedAt: p.updatedAt || new Date().toISOString()
       }));
       vaultData.links = vaultData.links.filter(l => l && typeof l === 'object');
 
@@ -2415,7 +2431,8 @@
       let hash = 0;
       for (const ch of (email || id || text)) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
       const profile = (vaultData.profiles || []).find(p => (id && p.id === id) || (email && p.email.toLowerCase() === email.toLowerCase()));
-      return { name: text, shortName: text, color: /^#[0-9a-f]{6}$/i.test(profile?.color || '') ? profile.color : GOOGLE_AVATAR_COLORS[Math.abs(hash) % GOOGLE_AVATAR_COLORS.length], letter: text.charAt(0).toUpperCase() };
+      const browserStyle = currentBrowserStyles.get(profile?.id) || currentBrowserStyles.get(email) || {};
+      return { name: text, shortName: text, color: profile?.colorSource === 'custom' && /^#[0-9a-f]{6}$/i.test(profile.color || '') ? profile.color : browserStyle.colour || (/^#[0-9a-f]{6}$/i.test(profile?.color || '') ? profile.color : automaticColour(email || id || name || 'Unassigned')), avatar: browserStyle.avatar || '', letter: text.charAt(0).toUpperCase() };
     }
 
 
@@ -2652,7 +2669,7 @@
         const id = p.email || p.id, meta = getProfileMeta(p.email, p.name, p.id);
         const arg = escapeHtml(JSON.stringify(id));
         const count = getScopedLinks().filter(l => linkMatchesProfile(l, p)).length;
-        return `<div class="account-item ${activeProfileEmail === id ? 'active' : ''}" style="--profile-color:${meta.color};--profile-tint:${meta.color}10"><button class="account-label-button" onclick="selectProfileFilter(${arg})"><span class="account-avatar" style="background:${meta.color}">${escapeHtml(meta.letter)}</span><span class="account-info"><span class="account-name">${escapeHtml(meta.name)}</span><span class="account-email">${escapeHtml(p.email)}</span></span></button><button class="btn-profile-action" onclick="toggleProfilePin(${arg}, event)" title="Pin label">${p.pinned ? '📌' : '📍'}</button><button class="btn-profile-action" onclick="toggleProfileStar(${arg}, event)" title="Star label">${p.starred ? '★' : '☆'}</button><span class="nav-badge">${count}</span><button class="btn-profile-action profile-colour-button" onclick="openAppearance('profile',${arg},event)" title="Change account colour" aria-label="Change account colour" style="color:${meta.color}">●</button><button class="btn-profile-del" onclick="deleteProfile(${arg},event)" title="Delete label">×</button></div>`;
+        return `<div class="account-item ${activeProfileEmail === id ? 'active' : ''}" style="--profile-color:${meta.color};--profile-tint:${meta.color}10"><button class="account-label-button" onclick="showAccountOptions(${arg})"><span class="account-avatar" style="background:${meta.color}">${profileAvatarContent(meta)}</span><span class="account-info"><span class="account-name">${escapeHtml(meta.name)}</span><span class="account-email">${escapeHtml(p.email)}</span></span></button><button class="btn-profile-action" onclick="toggleProfilePin(${arg}, event)" title="Pin label">${p.pinned ? '📌' : '📍'}</button><button class="btn-profile-action" onclick="toggleProfileStar(${arg}, event)" title="Star label">${p.starred ? '★' : '☆'}</button><span class="nav-badge">${count}</span><button class="btn-profile-action profile-colour-button" onclick="openAppearance('profile',${arg},event)" title="Change account colour" aria-label="Change account colour" style="color:${meta.color}">●</button><button class="btn-profile-action account-options-button" onclick="showAccountOptions(${arg},event)" title="Account options" aria-label="Account options">⋯</button></div>`;
       }).join('');
       if (!document.getElementById('sidebarProfilesList').children.length) {
         document.getElementById('sidebarProfilesList').innerHTML = '<p class="device-profiles-empty">' + (filterToLocalOnly ? 'No profiles selected here. Choose profiles below, or add a link to a profile on this device.' : 'No profiles match this filter.') + '</p>';
@@ -2773,7 +2790,6 @@
       filtered.forEach(l => {
         let domain = '';
         try { domain = new URL(l.url).hostname; } catch(e) { domain = l.url; }
-        const faviconUrl = 'favicon.png';
         const prof = getProfileForLink(l);
         const meta = getProfileMeta(prof.email || l.profileEmail || prof.folder, prof.name, prof.id);
         const priority = l.priority || 'normal';
@@ -2801,7 +2817,7 @@
 
             <!-- TITLE & SNIPPET -->
             <div class="link-content-col">
-              <img src="${faviconUrl}" class="link-favicon-mini" onerror="handleFaviconError(this)">
+              ${websiteIcon(l.url)}
               <span class="link-title-text">${escapeHtml(l.title)}</span>
               <span class="link-snippet-text">— ${escapeHtml(l.notes || l.url)}</span>
             </div>
@@ -2862,7 +2878,7 @@
         const meta = getProfileMeta(prof.email || t.profileEmail || prof.folder, prof.name, prof.id);
 
         html += `
-          <div class="task-card ${t.taskDone ? 'completed' : ''}">
+          <div class="task-card ${t.taskDone ? 'completed' : ''}" style="--profile-color:${meta.color}">
             <div class="task-card-top">
               <input type="checkbox" class="task-checkbox" ${t.taskDone ? 'checked' : ''} onchange="toggleTaskDone('${t.id}')">
               <div class="task-title" onclick="openDetailDrawer('${t.id}')">${escapeHtml(t.title)}</div>
@@ -3041,7 +3057,11 @@
     function toggleTaskPanel() {
       const panel = document.getElementById('tasksSidebar');
       if (!panel) return;
-      panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'flex' : 'none';
+      const open = panel.classList.contains('collapsed') || getComputedStyle(panel).display === 'none';
+      panel.classList.toggle('collapsed', !open);
+      panel.style.display = open ? 'flex' : 'none';
+      if (innerWidth <= 1200) panel.style.top = document.querySelector('.app-header').getBoundingClientRect().bottom + 8 + 'px';
+      localStorage.setItem('dreamslab_task_panel', open ? 'open' : 'closed');
     }
 
     function selectNavView(view) {

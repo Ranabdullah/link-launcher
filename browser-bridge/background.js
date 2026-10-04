@@ -10,9 +10,9 @@ function trustedSender(sender) {
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   if(!trustedSender(sender))return;
   if(message?.type==='dreamslab-bridge-ping'){respond({ready:true,version:chrome.runtime.getManifest().version});return;}
-  const commands={'dreamslab-bridge-profiles':'list','dreamslab-bridge-bindings':'bindings','dreamslab-bridge-bind':'bind','dreamslab-bridge-profile-open':'open'};
+  const commands={'dreamslab-bridge-profiles':'list','dreamslab-bridge-bindings':'bindings','dreamslab-bridge-bind':'bind','dreamslab-bridge-profile-open':'open','dreamslab-bridge-profile-manage':'manage'};
   if(commands[message?.type]){
-    chrome.runtime.sendNativeMessage('com.dreamslab.linklauncher',{command:commands[message.type],account:message.account,bindings:message.bindings,profileKey:message.profileKey,profileEmail:message.profileEmail,url:message.url},response=>{
+    chrome.runtime.sendNativeMessage('com.dreamslab.linklauncher',{command:commands[message.type],account:message.account,bindings:message.bindings,profileKey:message.profileKey,profileEmail:message.profileEmail,target:message.target,url:message.url},response=>{
       const error=chrome.runtime.lastError;
       respond(error?{helperReady:false,opened:false,error:'The profile helper is not connected. Double-click Setup.cmd from the download, then reload this extension.'}:response);
     });return true;

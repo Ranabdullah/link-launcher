@@ -16,7 +16,7 @@ There is no maintained Link Launcher EXE, Electron dependency or desktop install
 
 ## Commercial download
 
-`sale-dist/Link-Launcher-Commercial-2.1.4.zip` is the clean buyer download. `START-HERE.html` explains local use with a loopback browser server; `OWN-CLOUD.md` explains a private Workers/D1 setup on the buyer's own account. No seller accounts, vaults, cloud IDs, private keys or credentials are included.
+`sale-dist/Link-Launcher-Commercial-2.1.5.zip` is the clean buyer download. `START-HERE.html` explains local use with a loopback browser server; `OWN-CLOUD.md` explains a private Workers/D1 setup on the buyer's own account. No seller accounts, vaults, cloud IDs, private keys or credentials are included.
 
 The sales edition adds signed activation bound to the purchase email and browser installation, up to three issued installations per single-person order. Activation fulfilment is manual after the seller verifies payment. Local use works offline after activation/loading. Its own-cloud API also checks the signed licence and account email. No payment platform or checkout is integrated.
 

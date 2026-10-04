@@ -11,10 +11,10 @@ let cloud=fs.readFileSync(path.join(root,'commercial/OWN-CLOUD.md'),'utf8');
 cloud+='\n## Saved workspaces, automatic unlock and browser links\n\n'+[workspace,remember,routing,own].join('\n\n')+'\n';
 cloud=cloud.replace('The master password stays in browser memory while unlocked.','The master password stays in browser memory while unlocked; optional trusted-browser unlock keeps an encrypted local copy with a browser-held key.');
 fs.writeFileSync(path.join(root,'commercial/OWN-CLOUD.md'),cloud);
-let readme=fs.readFileSync(path.join(root,'README.md'),'utf8').replaceAll('Commercial-2.1.0','Commercial-2.1.4');
+let readme=fs.readFileSync(path.join(root,'README.md'),'utf8').replaceAll('Commercial-2.1.0','Commercial-2.1.5');
 readme+='\n## Browser continuity and link routing\n\n'+[workspace,remember,routing].join('\n\n')+'\n';
 fs.writeFileSync(path.join(root,'README.md'),readme);
-for(const name of ['START-HERE.html','OWN-CLOUD.md'])fs.copyFileSync(path.join(root,'commercial',name),path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.4',name));
-for(const file of ['scripts/build-commercial.cjs','sale-dist/Link-Launcher-Commercial-2.1.4/web/sw.js']) {
+for(const name of ['START-HERE.html','OWN-CLOUD.md'])fs.copyFileSync(path.join(root,'commercial',name),path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.5',name));
+for(const file of ['scripts/build-commercial.cjs','sale-dist/Link-Launcher-Commercial-2.1.5/web/sw.js']) {
  const f=path.join(root,file);fs.writeFileSync(f,fs.readFileSync(f,'utf8').replaceAll('commercial-v2','commercial-v3'));
 }

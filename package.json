@@ -1,6 +1,6 @@
 {
   "name": "dreamslab-link-launcher",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "private": true,
   "description": "Installable web-only link manager with encrypted offline storage and account sync",
   "main": "server/server.js",

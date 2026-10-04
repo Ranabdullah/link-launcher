@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DreamsLab Browser Link Bridge",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Open links in their assigned Chrome or Edge profile using the optional local helper. No vault or password access.",
   "icons": {
     "16": "icon.png",

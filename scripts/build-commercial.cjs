@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const out = path.join(root, 'sale-dist/Link-Launcher-Commercial-2.1.4');
+const out = path.join(root, 'sale-dist/Link-Launcher-Commercial-2.1.5');
 const assets = ['index.html','cloud-config.js','cloud-client.js','web-app.js','browser-session.js','browser-routing.js','profile-appearance.js','browser-bridge.zip','browser-bridge.sha256','responsive.css','manifest.webmanifest','sw.js','favicon.png','robots.txt','_headers'];
 if (!fs.existsSync(path.join(root,'commercial/license-public-key.json'))) throw new Error('Initialize the seller signing key before building.');
 if (fs.existsSync(out)) throw new Error('Existing sales build found. Preserve or move it before building a replacement.');
@@ -13,12 +13,12 @@ fs.copyFileSync(path.join(root,'commercial/license-gate.js'),path.join(out,'web/
 const publicKey = JSON.parse(fs.readFileSync(path.join(root,'commercial/license-public-key.json'),'utf8'));
 if (publicKey.d || publicKey.kty !== 'EC') throw new Error('Expected a public verification key only.');
 fs.writeFileSync(path.join(out,'web/license-config.js'), 'window.LINK_LAUNCHER_LICENSE = '+JSON.stringify({publicKey})+';\n');
-let html = fs.readFileSync(path.join(out,'web/index.html'),'utf8').replace(/v2\.0\.\d+/g, 'v2.1.4');
+let html = fs.readFileSync(path.join(out,'web/index.html'),'utf8').replace(/v2\.0\.\d+/g, 'v2.1.5');
 html = html.replace("location.hostname.endsWith('github.io') ? 'https://dreamslab-cloud-vault.onrender.com' : location.origin", 'location.origin');
 const bootstrap = fs.readFileSync(path.join(root,'commercial/license-bootstrap.js'),'utf8');
 html = html.replace('</body>', '<script>\n'+bootstrap+'\n</script>\n<script src="license-config.js"></script>\n<script src="license-gate.js"></script>\n</body>');
 fs.writeFileSync(path.join(out,'web/index.html'), html);
-let sw = fs.readFileSync(path.join(out,'web/sw.js'),'utf8').replace(/link-launcher-web-v\d+/,'link-launcher-web-commercial-v6');
+let sw = fs.readFileSync(path.join(out,'web/sw.js'),'utf8').replace(/link-launcher-web-v\d+/,'link-launcher-web-commercial-v7');
 sw = sw.replace("'./favicon.png'", "'./favicon.png', './license-config.js', './license-gate.js'");
 fs.writeFileSync(path.join(out,'web/sw.js'),sw);
 fs.copyFileSync(path.join(root,'commercial/local-server.cjs'),path.join(out,'local-server.cjs'));
@@ -34,7 +34,7 @@ const config = JSON.parse(fs.readFileSync(path.join(root,'wrangler.jsonc'),'utf8
 delete config.account_id; config.d1_databases[0].database_id='00000000-0000-0000-0000-000000000000'; config.assets.directory='./web'; config.vars.MIGRATION_PENDING='false';
 config.vars.LICENSE_PUBLIC_KEY=JSON.stringify(publicKey);
 fs.writeFileSync(path.join(out,'wrangler.jsonc'),JSON.stringify(config,null,2)+'\n');
-fs.writeFileSync(path.join(out,'package.json'),JSON.stringify({name:'link-launcher-commercial',version:'2.1.4',private:true,license:'SEE LICENSE IN COMMERCIAL-LICENSE.md',engines:{node:'>=22'},scripts:{local:'node local-server.cjs',cloudflare:'wrangler',deploy:'wrangler deploy'},devDependencies:{wrangler:'4.146.0'}},null,2)+'\n');
+fs.writeFileSync(path.join(out,'package.json'),JSON.stringify({name:'link-launcher-commercial',version:'2.1.5',private:true,license:'SEE LICENSE IN COMMERCIAL-LICENSE.md',engines:{node:'>=22'},scripts:{local:'node local-server.cjs',cloudflare:'wrangler',deploy:'wrangler deploy'},devDependencies:{wrangler:'4.146.0'}},null,2)+'\n');
 for(const file of ['START-HERE.html','OWN-CLOUD.md','COMMERCIAL-LICENSE.md']) fs.copyFileSync(path.join(root,'commercial',file),path.join(out,file));
 fs.copyFileSync(path.join(root,'commercial/CORE-MIT-LICENSE.txt'),path.join(out,'CORE-MIT-LICENSE.txt'));
 fs.writeFileSync(path.join(out,'.gitignore'),'node_modules/\n.wrangler/\n.dev.vars*\n.env*\n*.lllicense\n');

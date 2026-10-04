@@ -16,7 +16,7 @@ function licence(installation,owner=email) {
 }
 function upload(page,bundle) {return page.locator('#commercialLicenseFile').setInputFiles({name:'qa.lllicense',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(bundle))});}
 async function activate(page,bundle) {await upload(page,bundle);await page.locator('#commercialActivation').waitFor({state:'detached'});}
-fs.cpSync(path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.4'),temp,{recursive:true});
+fs.cpSync(path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.5'),temp,{recursive:true});
 fs.writeFileSync(path.join(temp,'web/license-config.js'),'window.LINK_LAUNCHER_LICENSE='+JSON.stringify({publicKey})+';');
 const server=spawn(process.execPath,['local-server.cjs'],{cwd:temp,env:{...process.env,PORT:'4791'},stdio:'ignore'});
 (async()=>{

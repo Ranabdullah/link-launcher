@@ -4,9 +4,25 @@ function candidates(env=process.env){const local=env.LOCALAPPDATA,pf=env.Program
  {id:'chrome',name:'Chrome',root:path.join(local,'Google/Chrome/User Data'),executables:[path.join(pf,'Google/Chrome/Application/chrome.exe'),path.join(pf86||pf,'Google/Chrome/Application/chrome.exe'),path.join(local,'Google/Chrome/Application/chrome.exe')]},
  {id:'edge',name:'Edge',root:path.join(local,'Microsoft/Edge/User Data'),executables:[path.join(pf86||pf,'Microsoft/Edge/Application/msedge.exe'),path.join(pf,'Microsoft/Edge/Application/msedge.exe')]}
 ];}
-function enumerate(browsers=candidates()){const result=[];for(const browser of browsers){const executable=browser.executables.find(f=>fs.existsSync(f));if(!executable)continue;let cache;try{cache=JSON.parse(fs.readFileSync(path.join(browser.root,'Local State'),'utf8')).profile.info_cache;}catch{continue;}
+function browserColour(value){if(!Number.isInteger(value)||value===0)return '';return '#'+(value>>>0&0xffffff).toString(16).padStart(6,'0');}
+function localAppearance(folder,record,budget){
+ let colour=browserColour(record.profile_color_seed)||browserColour(record.profile_highlight_color),avatar='';
+ const inside=file=>{const relative=path.relative(fs.realpathSync(folder),fs.realpathSync(file));return !relative.startsWith('..')&&!path.isAbsolute(relative);};
+ try{const file=path.join(folder,'Preferences');if(inside(file)){const theme=JSON.parse(fs.readFileSync(file,'utf8')).browser?.theme;colour=browserColour(theme?.user_color2)||browserColour(theme?.user_color)||colour;}}catch{}
+ // Only a local raster profile picture, never a URL, SVG, arbitrary file or symlink escape.
+ const name=record.gaia_picture_file_name;
+ if(typeof name==='string'&&/^Google[ _]Profile[ _]Picture\.(png|jpe?g)$/i.test(name))try{
+  const file=path.join(folder,name),size=fs.statSync(file).size;
+  if(size>0&&size<=128*1024&&size<=budget.remaining&&inside(file)){
+   const bytes=fs.readFileSync(file),mime=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))?'image/png':bytes[0]===255&&bytes[1]===216&&bytes[2]===255?'image/jpeg':'';
+   if(mime){avatar='data:'+mime+';base64,'+bytes.toString('base64');budget.remaining-=size;}
+  }
+ }catch{}
+ return{colour,avatar};
+}
+function enumerate(browsers=candidates()){const result=[],budget={remaining:512*1024};for(const browser of browsers){const executable=browser.executables.find(f=>fs.existsSync(f));if(!executable)continue;let cache;try{cache=JSON.parse(fs.readFileSync(path.join(browser.root,'Local State'),'utf8')).profile.info_cache;}catch{continue;}
  for(const [directory,record]of Object.entries(cache||{})){if(!/^(Default|Profile [0-9]+)$/.test(directory))continue;const folder=path.join(browser.root,directory);try{const relative=path.relative(fs.realpathSync(browser.root),fs.realpathSync(folder));if(relative.startsWith('..')||path.isAbsolute(relative))continue;}catch{continue;}
- result.push({id:browser.id+':'+directory,browser:browser.name,name:String(record.name||directory).slice(0,120),email:String(record.user_name||'').slice(0,254),directory,root:browser.root,executable});
+ result.push({id:browser.id+':'+directory,browser:browser.name,name:String(record.name||directory).slice(0,120),email:String(record.user_name||'').slice(0,254),...localAppearance(folder,record,budget),directory,root:browser.root,executable});
  }}return result;}
 function store(settingsFile){return JSON.parse(fs.readFileSync(settingsFile,'utf8').replace(/^\uFEFF/,''));}
 async function saveBindings(settingsFile,key,bindings,merge=false){
@@ -22,19 +38,21 @@ async function saveBindings(settingsFile,key,bindings,merge=false){
 function accountKey(account){if(typeof account!=='string'||account.length>254||!account.includes('@'))throw Error('Sign in to your vault first.');return crypto.createHash('sha256').update(account.trim().toLowerCase()).digest('hex');}
 function profileKey(value){if(typeof value!=='string'||value.length<1||value.length>300)throw Error('Choose an account for this link.');return value;}
 function website(value){if(typeof value!=='string'||value.length>16384)throw Error('Invalid website address.');const u=new URL(value);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error('Invalid website address.');return u.href;}
-async function dispatch(message,{settingsFile,browsers,launch=spawn}={}){const config=store(settingsFile),profiles=enumerate(browsers);const publicProfiles=profiles.map(({id,browser,name,email})=>({id,browser,name,email}));
+async function dispatch(message,{settingsFile,browsers,launch=spawn}={}){const config=store(settingsFile),profiles=enumerate(browsers);const publicProfiles=profiles.map(({id,browser,name,email,colour,avatar})=>({id,browser,name,email,colour,avatar}));
  if(message?.command==='list')return{helperReady:true,machineId:config.machineId,profiles:publicProfiles};
  const key=accountKey(message?.account);config.accounts||={};const bindings=config.accounts[key]||{};
  if(message.command==='bindings')return{bindings,profiles:publicProfiles};
  if(message.command==='bind'){if(!message.bindings||typeof message.bindings!=='object'||Array.isArray(message.bindings)||Object.keys(message.bindings).length>500)throw Error('Invalid browser assignments.');const next=Object.create(null);for(const [label,target]of Object.entries(message.bindings)){profileKey(label);if(target==='')continue;if(!profiles.some(p=>p.id===target))throw Error('A selected browser profile is no longer on this computer.');next[label]=target;}await saveBindings(settingsFile,key,next);return{saved:true,bindings:next};}
- if(message.command!=='open')throw Error('Unknown helper request.');
- const label=profileKey(message.profileKey),url=website(message.url);let target=profiles.find(p=>p.id===bindings[label]);
+ if(!['open','manage'].includes(message.command))throw Error('Unknown helper request.');
+ const label=profileKey(message.profileKey);let url=message.command==='open'?website(message.url):'',target=profiles.find(p=>p.id===bindings[label]);
+ if(message.command==='manage'&&!['profile','passwords','home'].includes(message.target))throw Error('Unknown browser settings page.');
  if(bindings[label]&&!target)throw Error('The assigned browser profile was removed. Choose its replacement in Browser profiles.');
  if(!target&&typeof message.profileEmail==='string'&&message.profileEmail.trim()){
   const matches=profiles.filter(p=>p.email.trim().toLowerCase()===message.profileEmail.trim().toLowerCase());
   if(matches.length===1){target=matches[0];await saveBindings(settingsFile,key,{[label]:target.id},true);}
  }
  if(!target)throw Error('Choose the browser profile for this account in Browser profiles. The link has not been opened.');
+ if(message.command==='manage')url=message.target==='home'?'about:blank':target.id.startsWith('edge:')?(message.target==='passwords'?'edge://settings/passwords':'edge://settings/profiles'):(message.target==='passwords'?'chrome://password-manager/passwords':'chrome://settings/manageProfile');
  await new Promise((resolve,reject)=>{const child=launch(target.executable,['--user-data-dir='+target.root,'--profile-directory='+target.directory,url],{shell:false,detached:true,windowsHide:true,stdio:'ignore'});child.once('error',reject);child.once('spawn',()=>{child.unref();resolve();});});
  return{opened:true,browser:target.browser,profile:target.name};
 }

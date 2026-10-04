@@ -1,5 +1,5 @@
 const fs=require('node:fs');const path=require('node:path');const assert=require('node:assert/strict');
-const root=path.resolve(__dirname,'..');const customer=process.argv[2] ? path.resolve(process.argv[2]) : path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.4');
+const root=path.resolve(__dirname,'..');const customer=process.argv[2] ? path.resolve(process.argv[2]) : path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.5');
 const forbidden=['4dddb56c05af56a431914f2cb7f48eb4','2bd585fdb9252b0687c939a434d19886','2ea49342-0c59-4ce2-abc4-a671e5db0b75','ranakaharian1@gmail.com','abdullahinayat24@gmail.com','dreamslab-cloud-vault.onrender.com'];
 const local=JSON.parse(fs.readFileSync(path.join(root,'server/data/vaults.json'),'utf8'));
 for(const [email,row] of Object.entries(local.users||{}))forbidden.push(email,row.verifierHash,row.verifier_hash);

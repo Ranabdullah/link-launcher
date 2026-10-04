@@ -1,4 +1,4 @@
-function automaticColour(key){let hash=0;for(const char of String(key))hash=((hash<<5)-hash+char.charCodeAt(0))|0;return GOOGLE_AVATAR_COLORS[Math.abs(hash)%GOOGLE_AVATAR_COLORS.length];}
+function automaticColour(key){let hash=2166136261;for(const char of String(key))hash=Math.imul(hash^char.charCodeAt(0),16777619)>>>0;const hue=(hash%360)/60,s=.58,l=.42,c=(1-Math.abs(2*l-1))*s,x=c*(1-Math.abs(hue%2-1)),m=l-c/2;const rgb=hue<1?[c,x,0]:hue<2?[x,c,0]:hue<3?[0,c,x]:hue<4?[0,x,c]:hue<5?[x,0,c]:[c,0,x];return '#'+rgb.map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');}
 function categoryColour(category){const value=Object.hasOwn(vaultData.categoryColors||{},category)?vaultData.categoryColors[category]:'';return /^#[0-9a-f]{6}$/i.test(value)?value:automaticColour(category);}
 function appearanceModal(id,title){
  let modal=document.getElementById(id);if(modal)return modal;

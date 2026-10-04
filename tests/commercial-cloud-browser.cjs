@@ -3,7 +3,7 @@ const {Miniflare,convertV4MiniflareOptions}=require('miniflare');
 const fs=require('node:fs');const path=require('node:path');const os=require('node:os');const crypto=require('node:crypto');const assert=require('node:assert/strict');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'link-launcher-own-cloud-'));
 const keys=crypto.generateKeyPairSync('ec',{namedCurve:'prime256v1'});const publicKey=keys.publicKey.export({format:'jwk'});
-fs.cpSync(path.resolve('sale-dist/Link-Launcher-Commercial-2.1.4'),temp,{recursive:true});
+fs.cpSync(path.resolve('sale-dist/Link-Launcher-Commercial-2.1.5'),temp,{recursive:true});
 fs.writeFileSync(path.join(temp,'web/license-config.js'),'window.LINK_LAUNCHER_LICENSE='+JSON.stringify({publicKey})+';');
 fs.writeFileSync(path.join(temp,'web/cloud-config.js'),"window.LINK_LAUNCHER_CLOUD={apiUrl:'',localOnly:false};");
 const email='buyer@example.invalid';const password='OwnCloudBuyerPassword42';

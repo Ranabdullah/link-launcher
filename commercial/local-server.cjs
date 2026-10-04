@@ -11,7 +11,7 @@ http.createServer((request, response) => {
   if (pathname === '/api/health') { response.writeHead(200, {'Content-Type':'application/json','Cache-Control':'no-store'}).end(JSON.stringify({status:'ok',storage:'local-browser',cloudEnabled:false})); return; }
   const file = pathname === '/' ? 'index.html' : pathname.slice(1);
   if (!files.has(file)) { response.writeHead(404).end('Not found'); return; }
-  response.writeHead(200, { 'Content-Type':types[path.extname(file)] || 'application/octet-stream','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'" });
+  response.writeHead(200, { 'Content-Type':types[path.extname(file)] || 'application/octet-stream','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'" });
   if (request.method === 'HEAD') { response.end(); return; }
   fs.createReadStream(path.join(root, file)).pipe(response);
 }).listen(port, '127.0.0.1', () => console.log(`Link Launcher local edition: http://localhost:${port}/\nKeep this window open while loading or installing the app. No links are stored on a server.`));

@@ -156,7 +156,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   {
     const taskPanel = document.getElementById('tasksSidebar');
-    if (innerWidth <= 1200) taskPanel.classList.add('collapsed');
+    if (localStorage.getItem('dreamslab_task_panel') === 'closed' || (innerWidth <= 1200 && localStorage.getItem('dreamslab_task_panel') !== 'open')) taskPanel.classList.add('collapsed');
   }
   if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./sw.js').then(reg => {

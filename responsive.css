@@ -189,3 +189,26 @@ body {background:radial-gradient(ellipse at 12% 0%,#eaf0fb 0,transparent 46%),ra
  .browser-profile-assignment {padding:7px 0;gap:10px;}.browser-profile-assignment select {padding:8px;font:inherit;}
 }
 @media(max-width:800px){.setup-tabs button {min-height:44px;padding:8px;}.setup-download{min-height:44px;box-sizing:border-box;}.account-item{height:auto;min-height:44px;}}
+/* Account identity runs across the complete row, with readable text. */
+.account-item {background:color-mix(in srgb,var(--profile-color,#0b57d0) 18%,#fff);}
+.account-item:hover {background:color-mix(in srgb,var(--profile-color,#0b57d0) 26%,#fff);}
+.account-item.active {background:color-mix(in srgb,var(--profile-color,#0b57d0) 34%,#fff);color:#172033;}
+.link-row {background:color-mix(in srgb,var(--profile-color,#0b57d0) 20%,#fff);}
+.link-row:hover,.link-row:focus-within {background:color-mix(in srgb,var(--profile-color,#0b57d0) 28%,#fff);}
+.link-row.selected {background:color-mix(in srgb,var(--profile-color,#0b57d0) 36%,#fff);}
+.link-row-actions {background:color-mix(in srgb,var(--profile-color,#0b57d0) 20%,#fff);border-radius:10px;padding:2px;}
+.category-chip {background:color-mix(in srgb,var(--tab-color,#0b57d0) 20%,#fff);color:#172033;}
+.category-chip:hover {background:color-mix(in srgb,var(--tab-color,#0b57d0) 28%,#fff);}
+.category-chip.active {background:color-mix(in srgb,var(--tab-color,#0b57d0) 36%,#fff);font-weight:650;}
+.account-item .account-avatar,.sender-avatar-badge {background:color-mix(in srgb,var(--profile-color,#0b57d0) 24%,#fff)!important;color:#172033;}
+.website-icon {position:relative;display:inline-flex;width:18px;height:18px;flex-shrink:0;align-items:center;justify-content:center;vertical-align:middle;border-radius:5px;overflow:hidden;background:#ffffffb3;}
+.website-icon-fallback {font-size:8px;font-weight:650;color:#334155;line-height:18px;}
+.website-icon .link-favicon-mini {position:absolute;inset:1px;width:16px;height:16px;margin:0;background:white;border-radius:3px;}
+.sidebar-right {width:240px;align-self:flex-start;height:auto;max-height:calc(100dvh - 100px);background:rgba(255,255,255,.98);}
+.tasks-header {height:42px;padding:0 12px;}.tasks-title {font-size:12px;}
+.tasks-content {flex:0 1 auto;padding:8px;gap:6px;min-height:0;}
+.task-card {border:0;border-radius:10px;padding:8px;gap:4px;background:color-mix(in srgb,var(--profile-color,#0b57d0) 20%,#fff);}
+.task-card:hover {background:color-mix(in srgb,var(--profile-color,#0b57d0) 28%,#fff);box-shadow:none;}
+.task-title {font-size:12px;}.task-card-bottom {margin-left:20px;}
+@media(max-width:1200px){.sidebar-right {width:min(260px,calc(100vw - 24px));top:80px;bottom:auto;max-height:calc(100dvh - 160px);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}}
+@media(max-width:800px){.link-row-actions{background:transparent;}.task-card .btn-row-action{min-height:40px;}.task-checkbox{min-width:20px;min-height:20px;}}

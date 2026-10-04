@@ -1,6 +1,6 @@
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),{spawn,spawnSync}=require('node:child_process'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'link-sales-demo-')),media='F:/AntiGravity/Sales Portfolio/Products/link-launcher/Media';
-fs.cpSync(path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.4'),temp,{recursive:true});
+fs.cpSync(path.join(root,'sale-dist/Link-Launcher-Commercial-2.1.5'),temp,{recursive:true});
 const keys=crypto.generateKeyPairSync('ec',{namedCurve:'prime256v1'}),publicKey=keys.publicKey.export({format:'jwk'});fs.writeFileSync(path.join(temp,'web/license-config.js'),'window.LINK_LAUNCHER_LICENSE='+JSON.stringify({publicKey})+';');
 (async()=>{const server=spawn(process.execPath,['local-server.cjs'],{cwd:temp,env:{...process.env,PORT:'4795'},stdio:'ignore'});let browser;try{
  for(let i=0;i<40;i++){try{if((await fetch('http://localhost:4795')).ok)break}catch{}await new Promise(r=>setTimeout(r,100))}
