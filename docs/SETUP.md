@@ -75,7 +75,7 @@ Use D1 backup facilities and securely stored exports for server recovery, with a
 
 ## Alternative Node hosting
 
-`npm start` serves UI/API on PORT (default 3000). Production needs HTTPS, NODE_ENV=production, a stable random JWT_SECRET of at least 32 characters and persistent private DATA_DIR. Ephemeral filesystems lose accounts on restart. DATABASE_URL optionally selects PostgreSQL; configure it through the host's secret manager. Configure the reverse proxy correctly, never expose data as static files and maintain independent backups.
+`npm start` serves UI/API on PORT (default 3000). Production needs HTTPS, NODE_ENV=production, a stable random JWT_SECRET of at least 32 characters, ALLOWED_ORIGINS set to your exact HTTPS origin, and persistent private DATA_DIR. Ephemeral filesystems lose accounts on restart. DATABASE_URL optionally selects PostgreSQL; configure it through the host's secret manager. Configure the reverse proxy correctly, never expose data as static files and maintain independent backups.
 
 ## Branding and updates
 
