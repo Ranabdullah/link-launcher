@@ -1,0 +1,3480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DreamsLab Link Launcher</title>
+  <meta name="description" content="Organise and sync links across computers and phones. Install as an app and manage saved links offline.">
+  <meta name="theme-color" content="#0b57d0">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script src="cloud-config.js"></script>
+  <script src="cloud-client.js"></script>
+  <style>
+    :root {
+      --bg-app: #f6f8fc;
+      --bg-surface: #ffffff;
+      --bg-sidebar: #f6f8fc;
+      --bg-hover: #eaedf5;
+      --bg-active: #d3e3fd;
+      --text-active: #041e49;
+
+      --text-primary: #1f1f1f;
+      --text-secondary: #444746;
+      --text-muted: #72777a;
+      --border-subtle: #e0e2ec;
+      --border-hover: #c4c7c5;
+
+      --google-blue: #0b57d0;
+      --google-blue-hover: #0842a0;
+      --google-blue-light: #c2e7ff;
+      --google-red: #d93025;
+      --google-yellow: #f29900;
+      --google-green: #188038;
+      --google-purple: #9334e6;
+
+      --font-google: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Roboto Mono', monospace;
+
+      --radius-xs: 4px;
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 12px rgba(60, 64, 67, 0.12);
+      --shadow-lg: 0 8px 24px rgba(60, 64, 67, 0.15);
+      --shadow-drawer: -4px 0 24px rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      line-height: 1.4;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SCROLLBARS */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #bdc1c6; }
+
+    /* ==========================================================================
+       1. TOP HEADER BAR
+       ========================================================================== */
+    .app-header {
+      height: 64px;
+      background: var(--bg-app);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 240px;
+    }
+
+    .brand-logo-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-family: var(--font-google);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-version-badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: #eaf1fb;
+      color: var(--google-blue);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+
+    /* SEARCH BAR */
+    .header-search-container {
+      flex: 1;
+      max-width: 720px;
+      position: relative;
+    }
+
+    .header-search-box {
+      width: 100%;
+      height: 46px;
+      background: #eaf1fb;
+      border: 1px solid transparent;
+      border-radius: var(--radius-full);
+      padding: 0 46px 0 46px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-primary);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .header-search-box:focus {
+      background: var(--bg-surface);
+      border-color: var(--border-subtle);
+      box-shadow: 0 1px 6px rgba(32, 33, 36, 0.15);
+    }
+
+    .search-icon-left {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+      display: flex;
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 50%;
+      display: none;
+    }
+    .search-clear-btn:hover { color: var(--text-primary); background: #dadce0; }
+
+    /* HEADER CONTROLS */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-header {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-family: var(--font-google);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-header:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+    }
+
+    .btn-header.btn-sync {
+      color: var(--google-blue);
+      background: #eaf1fb;
+      border-color: rgba(11, 87, 208, 0.2);
+    }
+    .btn-header.btn-sync:hover { background: #d3e3fd; }
+
+    .btn-header.btn-lock {
+      color: var(--google-red);
+      border-color: rgba(217, 48, 37, 0.2);
+    }
+    .btn-header.btn-lock:hover { background: #fce8e6; }
+
+    /* ==========================================================================
+       2. THREE-COLUMN APP LAYOUT
+       ========================================================================== */
+    .app-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* LEFT SIDEBAR */
+    .sidebar-left {
+      width: 260px;
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 12px 16px;
+      overflow-y: auto;
+      flex-shrink: 0;
+      border-right: 1px solid transparent;
+    }
+
+    .btn-compose {
+      height: 52px;
+      background: var(--google-blue-light);
+      color: #001d35;
+      border: none;
+      border-radius: 16px;
+      padding: 0 24px;
+      font-family: var(--font-google);
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .btn-compose:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      background: #b3ddff;
+    }
+
+    .nav-section-title {
+      font-family: var(--font-google);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 14px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-section-title .btn-add-mini {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+    .nav-section-title .btn-add-mini:hover { color: var(--google-blue); background: #eaf1fb; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius-full);
+      color: var(--text-secondary);
+      font-family: var(--font-google);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .nav-item.active {
+      background: var(--bg-active);
+      color: var(--text-active);
+      font-weight: 600;
+    }
+
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .nav-badge {
+      font-size: 11px;
+      font-family: var(--font-body);
+      color: var(--text-muted);
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    .nav-item.active .nav-badge { color: var(--text-active); font-weight: 600; }
+
+    /* ACCOUNT LIST ITEMS */
+    .account-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .account-item:hover { background: var(--bg-hover); }
+    .account-item.active {
+      background: var(--bg-active);
+      color: var(--text-active);
+      font-weight: 600;
+    }
+
+    .account-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--google-blue);
+      color: #fff;
+      font-family: var(--font-google);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .account-info {
+      display: flex;
+      flex-direction: column;
+      margin-left: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+    .account-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .account-email { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .account-item-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-profile-del {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 3px 5px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .account-item:hover .btn-profile-del {
+      display: inline-flex;
+    }
+    .btn-profile-del:hover {
+      color: var(--google-red);
+      background: rgba(217, 48, 37, 0.12);
+    }
+
+    .btn-profile-star, .btn-profile-pin {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      padding: 2px 3px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .btn-profile-star.starred {
+      color: var(--google-yellow);
+    }
+    .btn-profile-pin.pinned {
+      color: var(--google-blue);
+    }
+    .btn-profile-star:hover {
+      color: var(--google-yellow);
+      background: rgba(242, 153, 0, 0.12);
+    }
+    .btn-profile-pin:hover {
+      color: var(--google-blue);
+      background: rgba(11, 87, 208, 0.12);
+    }
+    .profile-filter-tabs {
+      display: flex;
+      gap: 4px;
+      margin: 4px 0 6px 0;
+    }
+    .profile-filter-tab {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .profile-filter-tab.active {
+      background: var(--bg-active);
+      color: var(--text-active);
+      border-color: #c2e7ff;
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       3. MIDDLE MAIN PANE (LINKS TABLE STREAM)
+       ========================================================================== */
+
+    .main-pane {
+      flex: 1;
+      background: var(--bg-surface);
+      border-radius: 16px;
+      margin: 0 12px 12px 0;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* TABLE TOOLBAR */
+    .table-toolbar {
+      height: 52px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+    }
+
+    .category-chip {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-family: var(--font-google);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .category-chip:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .category-chip.active {
+      background: #eaf1fb;
+      color: var(--google-blue);
+      border-color: rgba(11, 87, 208, 0.3);
+      font-weight: 600;
+    }
+
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: background 0.15s;
+    }
+    .btn-tool:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    /* LINKS STREAM / ROWS */
+    .links-stream {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: 28px 28px 20px 115px minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-bottom: 1px solid #f1f3f4;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .link-row:hover {
+      background: #f8fafd;
+      box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0;
+    }
+    .link-row.selected { background: #c2dbff; }
+
+    .link-checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--google-blue);
+      cursor: pointer;
+    }
+
+    .link-star-btn {
+      background: none;
+      border: none;
+      font-size: 17px;
+      cursor: pointer;
+      color: #747775;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transition: color 0.15s;
+    }
+    .link-star-btn:hover { color: var(--google-yellow); background: rgba(242, 153, 0, 0.1); }
+    .link-star-btn.starred { color: var(--google-yellow); }
+
+    .prio-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .prio-high { background: var(--google-red); box-shadow: 0 0 6px rgba(217, 48, 37, 0.4); }
+    .prio-medium { background: var(--google-yellow); }
+    .prio-low { background: var(--google-purple); }
+    .prio-normal { background: #dadce0; }
+
+    .link-sender-col {
+      font-family: var(--font-google);
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .sender-avatar-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%; color: #ffffff; font-size: 9.5px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .sender-name-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-content-col {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-favicon-mini {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      object-fit: contain;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .link-title-text {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .link-snippet-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-cat-pill {
+      font-size: 11px;
+      font-family: var(--font-google);
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #f1f3f4;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .link-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.3;
+      transition: opacity 0.15s;
+    }
+    .link-row:hover .link-row-actions { opacity: 1; }
+
+    .btn-row-action {
+      height: 28px;
+      padding: 0 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--font-google);
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn-row-action:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .btn-row-run {
+      background: var(--google-blue);
+      color: #fff;
+      border-color: var(--google-blue);
+      font-weight: 600;
+    }
+    .btn-row-run:hover { background: var(--google-blue-hover); color: #fff; }
+
+    .btn-row-delete:hover { background: #fce8e6; color: var(--google-red); border-color: rgba(217,48,37,0.3); }
+
+    /* EMPTY STATE */
+    .empty-stream-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 320px;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 12px;
+    }
+    .empty-stream-icon { font-size: 42px; opacity: 0.6; }
+    .empty-stream-title { font-family: var(--font-google); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+
+    /* ==========================================================================
+       4. RIGHT SIDEBAR (GOOGLE TASKS & IMPORTANT SIDE PANEL)
+       ========================================================================== */
+    .sidebar-right {
+      width: 320px;
+      background: var(--bg-surface);
+      border-radius: 16px;
+      margin: 0 12px 12px 0;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sidebar-right.collapsed {
+      width: 0;
+      margin: 0;
+      border: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tasks-header {
+      height: 52px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .tasks-title {
+      font-family: var(--font-google);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tasks-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-card {
+      background: #f8fafd;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .task-card:hover {
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      border-color: var(--border-hover);
+    }
+    .task-card.completed { opacity: 0.55; text-decoration: line-through; }
+
+    .task-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .task-checkbox {
+      margin-top: 2px;
+      accent-color: var(--google-blue);
+      cursor: pointer;
+    }
+
+    .task-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      flex: 1;
+      line-height: 1.3;
+    }
+
+    .task-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-left: 22px;
+    }
+
+    .task-account-badge {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-google);
+    }
+
+    /* RIGHT EXPANDER ICON STRIP */
+    .side-icon-strip {
+      width: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 12px;
+      gap: 16px;
+      border-left: 1px solid var(--border-subtle);
+      background: var(--bg-app);
+      flex-shrink: 0;
+    }
+
+    .side-strip-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .side-strip-btn:hover { background: #dadce0; color: var(--text-primary); }
+    .side-strip-btn.active { background: #c2e7ff; color: var(--google-blue); }
+
+    /* ==========================================================================
+       5. INLINE DETAIL DRAWER (GMAIL INSPECTOR)
+       ========================================================================== */
+    .detail-drawer {
+      position: absolute;
+      top: 0; right: 0; bottom: 12px;
+      width: 460px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-subtle);
+      border-radius: 16px 0 0 16px;
+      box-shadow: var(--shadow-drawer);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .detail-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      height: 56px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .drawer-title { font-family: var(--font-google); font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-family: var(--font-google); font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-primary);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-control:focus {
+      border-color: var(--google-blue);
+      box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.15);
+    }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    .drawer-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafbfc;
+      border-radius: 0 0 0 16px;
+    }
+
+    .btn-primary {
+      background: var(--google-blue);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-google);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary:hover { background: var(--google-blue-hover); }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-google);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    /* ==========================================================================
+       6. MODALS & POPUPS
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; }
+
+    .modal-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalPop 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-family: var(--font-google); font-size: 17px; font-weight: 600; color: var(--text-primary); }
+    .modal-close-btn { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .modal-close-btn:hover { background: #dadce0; color: var(--text-primary); }
+
+    .modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #fafbfc;
+    }
+
+    /* TOAST */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: #323232;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: var(--font-google);
+      box-shadow: var(--shadow-md);
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.2s;
+      pointer-events: none;
+    }
+    .toast-msg.show { opacity: 1; transform: translateY(0); }
+
+    /* LOCK SCREEN OVERLAY */
+    #lockScreen {
+      position: fixed;
+      inset: 0;
+      background: #f6f8fc;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .lock-card {
+      background: #fff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .lock-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Password Visibility Toggle */
+    .password-toggle-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      transition: all 0.2s;
+    }
+    .password-toggle-btn:hover {
+      color: var(--text-primary);
+      background: #eaedf5;
+    }
+
+    /* Environment Mode Badge (Online vs Desktop) */
+    .env-mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      margin-left: 10px;
+      letter-spacing: 0.2px;
+    }
+    .env-mode-badge.online {
+      background: #e8f0fe;
+      color: #1a73e8;
+      border: 1px solid #aecbfa;
+    }
+    .env-mode-badge.desktop {
+      background: #e6f4ea;
+      color: #137333;
+      border: 1px solid #ceead6;
+    }
+
+    /* Desktop Diagnostic Banner */
+    .diagnostic-banner {
+      width: 100%;
+      padding: 8px 16px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      font-weight: 500;
+      box-sizing: border-box;
+      z-index: 50;
+    }
+    .diagnostic-banner.warning {
+      background: #fef7e0;
+      color: #b06000;
+      border-color: #f9ab00;
+    }
+    .diagnostic-banner.info {
+      background: #e8f0fe;
+      color: #1a73e8;
+      border-color: #aecbfa;
+    }
+    .diagnostic-banner.error {
+      background: #fce8e6;
+      color: #c5221f;
+      border-color: #f28b82;
+    }
+    .diagnostic-banner.success {
+      background: #e6f4ea;
+      color: #137333;
+      border-color: #ceead6;
+    }
+
+    /* Unlinked Local Profile Item */
+    .unlinked-profile-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      margin: 2px 0;
+      border-radius: var(--radius-md);
+      background: #f1f3f4;
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+    .unlinked-profile-item:hover {
+      background: #e8eaed;
+    }
+    .btn-link-optin {
+      background: #ffffff;
+      border: 1px solid #dadce0;
+      border-radius: var(--radius-sm);
+      color: var(--google-blue);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-link-optin:hover {
+      background: var(--google-blue);
+      color: #ffffff;
+      border-color: var(--google-blue);
+    }
+
+    /* Modals must appear above lock screen (z-index: 9999) */
+    .modal-overlay {
+      z-index: 10000 !important;
+    }
+
+    .btn-filter-pill {
+      flex: 1;
+      padding: 3px 6px;
+      font-size: 10.5px;
+      font-family: var(--font-google);
+      font-weight: 500;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .btn-filter-pill:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .btn-filter-pill.active {
+      background: var(--google-blue-light);
+      color: var(--google-blue);
+      border-color: #a8c7fa;
+      font-weight: 600;
+    }
+    .btn-profile-action {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 11px;
+      border-radius: 4px;
+      opacity: 0.6;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-profile-action:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    .btn-profile-action.active {
+      opacity: 1;
+    }
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .sync-local {
+      background: #f1f3f4;
+      color: #5f6368;
+      border: 1px solid #dadce0;
+    }
+    .sync-online {
+      background: #e6f4ea;
+      color: #137333;
+      border: 1px solid #ceead6;
+    }
+    .sync-offline {
+      background: #fef7e0;
+      color: #b06000;
+      border: 1px solid #feefc3;
+    }
+    .sync-expired {
+      background: #fce8e6;
+      color: #c5221f;
+      border: 1px solid #fad2cf;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-gray { background: #9aa0a6; }
+    .dot-green { background: #1e8e3e; }
+    .dot-yellow { background: #f9ab00; }
+    .dot-red { background: #d93025; }
+
+  </style>
+  <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+    <!-- ========================================================================
+       0. ZERO-KNOWLEDGE LOCK SCREEN
+       ======================================================================== -->
+  <div id="lockScreen">
+    <div class="lock-card" style="max-width: 420px; padding: 28px 24px;">
+      <img src="icons/icon-192.png" width="64" height="64" alt="DreamsLab Link Launcher">
+      <div id="lockTitle" style="font-family: var(--font-google); font-size: 20px; font-weight: 700; color: var(--text-primary);">
+        Create Vault Account
+      </div>
+      <p id="lockSubtitle" style="font-size: 12px; color: var(--text-muted); margin-top: -4px;">
+        Your encrypted links on computers and phones
+      </p>
+
+      <!-- MODE TABS: Create Account / Sign In -->
+      <div style="display: flex; gap: 8px; width: 100%; margin-top: 6px; margin-bottom: 8px; background: #eaedf5; padding: 4px; border-radius: var(--radius-full);">
+        <button type="button" id="tabCreateAccount" onclick="setLockMode(true)" style="flex: 1; padding: 7px 12px; border: none; border-radius: var(--radius-full); font-family: var(--font-google); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: var(--google-blue); color: #fff;">Create Account</button>
+        <button type="button" id="tabSignIn" onclick="setLockMode(false)" style="flex: 1; padding: 7px 12px; border: none; border-radius: var(--radius-full); font-family: var(--font-google); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-secondary);">Sign In</button>
+      </div>
+
+      <form id="unlockForm" onsubmit="handleUnlock(event)" style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+        <!-- EMAIL INPUT -->
+        <div style="width: 100%;">
+          <input type="email" id="userEmailInput" aria-label="Account email" autocomplete="username" class="form-control" placeholder="Email Address (identifies your vault)" required autofocus style="font-size: 14px; padding: 10px 14px;">
+        </div>
+
+        <!-- MASTER PASSWORD INPUT -->
+        <div style="position: relative; width: 100%;">
+          <input type="password" id="masterPasswordInput" aria-label="Master password" autocomplete="current-password" class="form-control" placeholder="Choose Master Password" required style="font-size: 14px; padding: 10px 42px 10px 14px;">
+          <button type="button" id="togglePasswordBtn" class="password-toggle-btn" onclick="togglePasswordVisibility('masterPasswordInput', this)" title="View Password">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;">
+              <path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+              <circle cx="12" cy="12" r="5.2" stroke="currentColor" stroke-width="2.2" fill="none"/>
+              <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+              <circle cx="13.3" cy="10.7" r="0.9" fill="#ffffff"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- CONFIRM PASSWORD INPUT (Create Mode) -->
+        <div id="confirmPasswordGroup" style="position: relative; width: 100%; display: block;">
+          <input type="password" id="confirmPasswordInput" aria-label="Confirm master password" autocomplete="new-password" class="form-control" placeholder="Confirm Master Password" style="font-size: 14px; padding: 10px 42px 10px 14px;">
+          <button type="button" id="toggleConfirmPasswordBtn" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPasswordInput', this)" title="View Password">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;">
+              <path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+              <circle cx="12" cy="12" r="5.2" stroke="currentColor" stroke-width="2.2" fill="none"/>
+              <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+              <circle cx="13.3" cy="10.7" r="0.9" fill="#ffffff"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- CLOUD CONNECT GROUP (Hidden - seamless cloud login) -->
+        <div id="cloudConnectGroup" style="display: none;">
+          <input type="hidden" id="cloudConnectInput" value="">
+          <button type="button" id="toggleCloudConnectBtn" style="display: none;"></button>
+        </div>
+
+
+        <!-- KEEP ME SIGNED IN ON THIS PC -->
+<label style="font-size:12px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="rememberBrowser">Keep this browser unlocked</label><p style="font-size:12px;color:var(--text-muted)">Use only on your own trusted browser: anyone opening it can access your vault. Your password is remembered locally with a browser encryption key, never sent to the cloud. Lock or Log Out removes it. Incognito windows forget it when closed.</p>
+
+        <button type="submit" id="unlockSubmitBtn" class="btn-primary" style="width: 100%; justify-content: center; height: 42px; font-size: 14px; margin-top: 4px;">
+          Create Account & Open
+        </button>
+      </form>
+
+      <button type="button" class="btn-secondary" onclick="openOfflineVault()" style="margin-top:8px">Open / create local-only vault</button>
+      <div id="unlockError" role="status" style="color: var(--google-red); font-size: 12px; font-weight: 500; min-height: 18px; text-align: center; margin-top: 4px;"></div>
+
+      <div id="lockFooterText" style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); width: 100%; padding-top: 12px; margin-top: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <span id="lockFooterToggle">Have an account? <a href="#" onclick="setLockMode(false); return false;" style="color: var(--google-blue); text-decoration: underline; cursor: pointer; font-weight: 500;">Sign In</a></span>
+          <a href="#" onclick="openResetDeviceModal(event); return false;" style="color: var(--google-red); text-decoration: underline; cursor: pointer; font-weight: 500;">🧹 Reset this device</a>
+        </div>
+<p style="margin-top:8px">Install using your browser menu → Install app / Add to Home Screen.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       TOP HEADER
+       ======================================================================== -->
+  <header class="app-header">
+    <button id="mobileMenu" class="web-menu" onclick="toggleMobileNavigation()" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <div class="header-brand">
+      <img src="icons/icon-192.png" class="brand-logo-img" alt="DreamsLab Link Launcher">
+      <div class="brand-title-wrap">
+        <div class="brand-name">
+          DreamsLab
+          <span class="brand-version-badge">v2.0.5</span>
+          <span id="envModeBadge" class="env-mode-badge online">🌐 Online Mode</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="header-search-container">
+      <span class="search-icon-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input type="text" id="globalSearchInput" aria-label="Search links" class="header-search-box" placeholder="Search in links, emails, categories, notes..." oninput="handleSearch(this.value)">
+      <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()">&times;</button>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="header-actions">
+      <button id="cloudSyncBadge" class="btn-header" onclick="openCloudModal()">Offline</button>
+      <button id="installApp" class="btn-header" onclick="installWebApp()" hidden>Install app</button>
+
+      <button class="btn-header" onclick="openLocalSaveModal()" title="Export / Import JSON Backup">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Backup
+      </button>
+
+      <a href="guide.html" target="_blank" rel="noopener" class="btn-secondary" style="min-height:44px;display:inline-flex;align-items:center;text-decoration:none">Help</a><button class="btn-header" id="browserRoutingButton" onclick="showBrowserRouting()">Browser links</button>
+      <button class="btn-header btn-lock" onclick="lockVault()" title="Lock Vault">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Lock
+      </button>
+      <button class="btn-header btn-logout" onclick="handleLogout()" title="Log Out of Link Launcher">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </div>
+  </header>
+  <div id="webStatus" class="web-status" hidden></div>
+  <button class="nav-scrim" onclick="toggleMobileNavigation()" aria-label="Close navigation"></button>
+  <button class="mobile-compose" onclick="openAddLinkModal()">＋ Add link</button>
+  <div id="desktopDiagnosticBanner" class="diagnostic-banner" style="display: none;"></div>
+    <!-- CONCURRENCY CONFLICT BANNER -->
+    <div id="conflictBanner" style="display:none; padding: 10px 16px; background: #fef2f2; border: 1px solid #f87171; border-radius: 8px; margin: 10px 16px; align-items: center; justify-content: space-between; color: #991b1b; font-size: 12.5px;">
+      <div>⚠️ <b>Cloud data changed on another device</b> (Cloud v<span id="conflictCloudVer"></span> vs Local v<span id="conflictLocalVer"></span>). Your changes are saved locally. Reload to sync with the latest cloud version.</div>
+      <button type="button" class="btn-primary" style="background: #dc2626; border-color: #dc2626; font-size: 12px; padding: 4px 10px;" onclick="pullLatestFromCloud()">🔄 Reload Cloud Version</button>
+    </div>
+
+
+  <!-- ========================================================================
+       APP BODY: 3-COLUMN LAYOUT
+       ======================================================================== -->
+  <div class="app-body">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left">
+      <button class="btn-compose" onclick="openAddLinkModal()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Link
+      </button>
+
+      <!-- PRIMARY VIEWS -->
+      <div class="nav-item active" id="navAll" onclick="selectNavView('ALL')">
+        <div class="nav-item-left">
+          <span class="nav-icon">📥</span>
+          <span class="nav-label">All Links</span>
+        </div>
+        <span class="nav-badge" id="countAll">0</span>
+      </div>
+
+      <div class="nav-item" id="navStarred" onclick="selectNavView('STARRED')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color: var(--google-yellow);">★</span>
+          <span class="nav-label">Starred</span>
+        </div>
+        <span class="nav-badge" id="countStarred">0</span>
+      </div>
+
+      <div class="nav-item" id="navHigh" onclick="selectNavView('HIGH')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color: var(--google-red);">🔥</span>
+          <span class="nav-label">High Priority</span>
+        </div>
+        <span class="nav-badge" id="countHigh">0</span>
+      </div>
+
+      <div class="nav-item" id="navMedium" onclick="selectNavView('MEDIUM')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color: var(--google-yellow);">⚡</span>
+          <span class="nav-label">Medium Priority</span>
+        </div>
+        <span class="nav-badge" id="countMedium">0</span>
+      </div>
+
+      <div class="nav-item" id="navLow" onclick="selectNavView('LOW')">
+        <div class="nav-item-left">
+          <span class="nav-icon" style="color: var(--google-purple);">📌</span>
+          <span class="nav-label">Low Priority</span>
+        </div>
+        <span class="nav-badge" id="countLow">0</span>
+      </div>
+
+
+      <!-- CHROME ACCOUNTS / EMAILS -->
+      <div class="nav-section-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <span style="display: flex; align-items: center; gap: 6px;">
+          <span>Accounts</span>
+          <button type="button" onclick="toggleProfileScope()" id="btnToggleScope" title="Switch this device / all account links" style="background: #eaf1fb; border: 1px solid #d3e3fd; border-radius: 10px; font-size: 10px; cursor: pointer; color: var(--google-blue); font-weight: 600; padding: 1px 6px;">💻 Local</button>
+        </span>
+        <button class="btn-add-mini" onclick="openAddProfileModal()" title="Add Account label">+</button>
+      </div>
+      <!-- PROFILE FILTER TABS -->
+      <div id="profileFilterTabs" style="display: flex; gap: 4px; padding: 2px 0 6px 0;">
+        <button type="button" id="btnFilterProfAll" class="btn-filter-pill active" onclick="showAllAccounts()">All accounts</button>
+        <button type="button" id="btnFilterProfStarred" class="btn-filter-pill" onclick="setSidebarProfileFilter('STARRED')">⭐ Starred</button>
+        <button type="button" id="btnFilterProfPinned" class="btn-filter-pill" onclick="setSidebarProfileFilter('PINNED')">📌 Pinned</button>
+      </div>
+      <div id="sidebarProfilesList" style="display: flex; flex-direction: column;">
+        <!-- Dynamic Profiles List -->
+      </div>
+      <p id="currentDeviceLabel" class="device-profiles-empty"></p>
+      <button class="btn-secondary device-profiles-button" onclick="openDeviceProfilesModal()">Choose profiles for this device</button><button class="btn-secondary device-profiles-button" onclick="findBrowserProfiles()">Find browser profiles on this PC</button>
+
+      <!-- CATEGORIES / LABELS -->
+      <div class="nav-section-title" style="margin-top: 8px;">
+        <span>Labels</span>
+      </div>
+      <div id="sidebarCategoriesList" style="display: flex; flex-direction: column;">
+        <!-- Dynamic Labels List -->
+      </div>
+    </aside>
+
+    <!-- MIDDLE MAIN PANE: LINKS TABLE -->
+    <main class="main-pane">
+      <!-- TABLE TOOLBAR -->
+      <div class="table-toolbar">
+        <div class="toolbar-left" id="categoryChipsContainer">
+          <!-- Dynamic Category Chips -->
+        </div>
+
+        <div class="toolbar-right"><button class="btn-tool" onclick="openAppearance('categories')" title="Change tab colours" aria-label="Change tab colours">🎨</button>
+
+          <button class="btn-tool" onclick="toggleTaskPanel()" title="Toggle Tasks Side Panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="selectionToolbar" class="selection-toolbar" hidden style="display:none"><span id="selectionCount"></span><button onclick="bulkLinks('star')">Star</button><button onclick="bulkLinks('device')">Add to this device</button><button onclick="bulkLinks('delete')">Delete</button><button onclick="selectedLinkIds.clear(); updateSelectionToolbar()">Clear</button></div>
+      <!-- LINKS STREAM -->
+      <div class="links-stream" id="linksListContainer">
+        <!-- Dynamic Link Rows -->
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR: GOOGLE TASKS PANEL -->
+    <aside class="sidebar-right" id="tasksSidebar">
+      <div class="tasks-header">
+        <div class="tasks-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--google-blue)" stroke-width="2.2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Priority Tasks
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <button class="btn-tool" onclick="clearCompletedTasks()" title="Clear completed tasks">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+          <button class="btn-tool" onclick="toggleTaskPanel()" title="Collapse Panel">&times;</button>
+        </div>
+      </div>
+
+      <div class="tasks-content" id="tasksListContainer">
+        <!-- Dynamic Tasks Cards -->
+      </div>
+    </aside>
+
+    <!-- FAR RIGHT ICON STRIP -->
+    <div class="side-icon-strip">
+      <button class="side-strip-btn active" id="btnStripTasks" onclick="toggleTaskPanel()" title="Tasks Panel">
+        📌
+      </button>
+      <button class="side-strip-btn" onclick="selectNavView('STARRED')" title="Starred Links">
+        ⭐
+      </button>
+    </div>
+
+    <!-- ======================================================================
+         5. INLINE DETAIL DRAWER (GMAIL STYLE ROW INSPECTOR)
+         ====================================================================== -->
+    <div class="detail-drawer" id="detailDrawer">
+      <div class="drawer-header">
+        <div class="drawer-title" id="drawerHeading">Link Details</div>
+        <button class="modal-close-btn" onclick="closeDetailDrawer()">&times;</button>
+      </div>
+
+      <form id="drawerForm" onsubmit="saveDrawerDetails(event)" class="drawer-body">
+        <input type="hidden" id="drawerLinkId">
+
+        <div class="form-group">
+          <label class="form-label">Display Title *</label>
+          <input type="text" id="drawerTitleInput" class="form-control" placeholder="e.g. Canva Book Cover" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">URL *</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="url" id="drawerUrlInput" class="form-control" placeholder="https://..." required>
+            <button type="button" class="btn-secondary" onclick="openAssignedLink({...vaultData.links.find(l=>l.id===currentDrawerLinkId),url:document.getElementById('drawerUrlInput').value})" title="Open in browser">🌐</button>
+            <button type="button" class="btn-secondary" onclick="copyLinkUrl(document.getElementById('drawerUrlInput').value)" title="Copy URL">📋</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Account label (optional)</label>
+          <select id="drawerProfileSelect" class="form-control"></select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Category / Label</label>
+            <input type="text" id="drawerCategoryInput" class="form-control" list="drawerCategoryDatalist" placeholder="e.g. Book Publish">
+            <datalist id="drawerCategoryDatalist"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Priority Level</label>
+            <select id="drawerPrioritySelect" class="form-control">
+              <option value="normal">🟢 Normal</option>
+              <option value="high">🔴 High / Urgent</option>
+              <option value="medium">🟡 Medium / Important</option>
+              <option value="low">🟣 Low / Backlog</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea id="drawerNotesInput" class="form-control" placeholder="Optional context for this link"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tags (comma separated)</label>
+          <input type="text" id="drawerTagsInput" class="form-control" placeholder="e.g. amazon, publishing, design">
+        </div>
+
+        <div style="display: flex; gap: 16px; margin-top: 4px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+            <input type="checkbox" id="drawerStarredCheck" class="link-checkbox">
+            ⭐ Starred
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+            <input type="checkbox" id="drawerTaskCheck" class="link-checkbox">
+            📌 Pin to Priority Tasks
+          </label>
+        </div>
+      </form>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn-secondary" style="color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="deleteCurrentDrawerLink()">
+          Delete
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-secondary" onclick="launchCurrentDrawerLink()">
+            Open link
+          </button>
+          <button type="button" class="btn-primary" onclick="document.getElementById('drawerForm').requestSubmit()">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================
+       MODALS
+       ======================================================================== -->
+
+  <!-- ADD LINK MODAL -->
+  <div id="addLinkModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div><div class="modal-title">Add a link</div><p class="form-caption">Save a website to the account and category you use.</p></div>
+        <button class="modal-close-btn" onclick="closeModal('addLinkModal')">&times;</button>
+      </div>
+      <form onsubmit="saveNewLinkItem(event)">
+        <div class="modal-body add-link-fields">
+ <div class="form-field full-width"><label class="field-label" for="newLinkUrl">Website address</label><input id="newLinkUrl" class="input-google" type="text" inputmode="url" autocomplete="url" required placeholder="https://example.com" oninput="autoFetchTitleForNew(this.value)"></div>
+ <div class="form-field full-width"><label class="field-label" for="newLinkTitle">Name (optional)</label><input id="newLinkTitle" class="input-google" type="text" placeholder="Uses the website name if left empty"></div>
+ <div class="form-field full-width"><label class="field-label" for="newLinkProfileSelect">Open with account</label><select id="newLinkProfileSelect" class="input-google" onchange="updateAddLinkPreview()"></select><p id="addLinkRoutingPreview" class="form-caption"></p></div>
+ <div class="form-field"><label class="field-label" for="newLinkCategory">Category</label><input id="newLinkCategory" class="input-google" list="drawerCategoryDatalist" placeholder="Choose or type a category"></div>
+ <div class="form-field"><label class="field-label" for="newLinkPriority">Priority</label><select id="newLinkPriority" class="input-google"><option value="normal">Normal</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+ <div class="form-field full-width"><label class="field-label" for="newLinkNotes">Notes (optional)</label><textarea id="newLinkNotes" class="input-google" rows="2" placeholder="What is this link for?"></textarea></div>
+ </div>
+ <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('addLinkModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Add Link</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOCAL BACKUP MODAL -->
+  <div id="localSaveModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Backup & Restore</div>
+        <button class="modal-close-btn" onclick="closeModal('localSaveModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-weight: 600; font-size: 13px; color: var(--google-green); margin-bottom: 4px;">🔒 Export Encrypted Vault Backup (Recommended)</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Downloads an AES-256 encrypted <code>.dlvault</code> file protected by your Master Password.</p>
+          <button class="btn-primary" style="width: 100%; justify-content: center; background: var(--google-green); border-color: var(--google-green);" onclick="exportEncryptedVault()">⬇ Export Encrypted Vault (.dlvault)</button>
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-weight: 600; font-size: 13px; color: #b45309; margin-bottom: 4px;">⚠️ Plaintext JSON Export (Insecure)</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Export unencrypted JSON. Requires security confirmation.</p>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; color: #b45309; border-color: #fde68a;" onclick="openPlaintextExportModal()">Export Plaintext JSON...</button>
+        </div>
+
+        <div style="background: #f8fafd; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-weight: 600; font-size: 13px; color: var(--google-purple); margin-bottom: 4px;">📥 Import Vault Backup</div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Replace this account’s links and labels with a backup. Export your current vault first.</p>
+          <input type="file" id="localBackupFileInput" accept=".dlvault,.json" onchange="handleImportVaultFile(event)" style="display:none;">
+          <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('localBackupFileInput').click()">Choose Backup File (.dlvault / .json)</button>
+        </div>
+
+        <div style="background: #fdf2f2; border: 1px solid #f5c2c7; border-radius: 8px; padding: 14px;">
+          <div style="font-weight: 600; font-size: 13px; color: var(--google-red); margin-bottom: 4px;">🧹 Reset Local Device</div>
+          <p style="font-size:12px;color:var(--text-secondary)">Keep an encrypted .dlvault backup and the offline app copy in your chosen folder. The offline app ZIP has no personal links; import your encrypted backup to restore them.</p><a class="btn-secondary" href="offline-app.zip" download="Link-Launcher-Offline-Copy.zip">Download offline app copy</a><p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Clear local cache and saved state on this computer (Cloud backup remains safe).</p>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--google-red); border-color: rgba(217,48,37,0.3);" onclick="openResetDeviceModal(event)">🧹 Reset Local Device</button>
+        </div>
+        <div id="localSaveStatus" style="font-size: 12px; text-align: center; min-height: 16px; font-weight: 500; margin-top: 8px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal('localSaveModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="cloudModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Cloud account</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('cloudModal')">×</button></div><div class="modal-body"><p id="cloudAccountEmail"></p><p id="cloudServerLabel"></p><p id="cloudSyncStatus" role="status"></p><p>Every account link is encrypted before syncing. This device shows your chosen profiles and links saved or assigned here. Each browser installation has its own selection.</p><button class="btn-primary" onclick="forceCloudSync()">Sync now</button><button class="btn-secondary" onclick="pullLatestFromCloud()">Reload cloud vault</button><button class="btn-secondary" onclick="deleteCloudAccount()">Delete cloud account</button></div></div></div>
+  <div id="browserRoutingModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Browser profiles</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('browserRoutingModal')">×</button></div><div class="modal-body">
+    <div class="setup-tabs" role="tablist" aria-label="Browser profile instructions">
+      <button id="routingTabProfiles" role="tab" aria-controls="routingPanelProfiles" aria-selected="true" onclick="selectRoutingTab('Profiles')">Profiles</button>
+      <button id="routingTabSetup" role="tab" aria-controls="routingPanelSetup" aria-selected="false" tabindex="-1" onclick="selectRoutingTab('Setup')">Setup</button>
+      <button id="routingTabHelp" role="tab" aria-controls="routingPanelHelp" aria-selected="false" tabindex="-1" onclick="selectRoutingTab('Help')">Help</button>
+    </div>
+    <p id="browserRoutingState" class="routing-status" role="status"></p>
+    <section id="routingPanelProfiles" role="tabpanel" aria-labelledby="routingTabProfiles" tabindex="0"><p>Choose where each account opens. These assignments stay on this Windows PC.</p><div id="browserProfileAssignments"></div><button id="saveBrowserProfiles" class="btn-primary" hidden>Save browser profiles</button><button class="btn-secondary" type="button" onclick="selectRoutingTab('Setup')">Setup instructions</button></section>
+    <section id="routingPanelSetup" role="tabpanel" aria-labelledby="routingTabSetup" tabindex="0" hidden>
+      <p><strong>What this download does:</strong> opens your saved links in their assigned Chrome/Edge profiles. It contains the browser extension, a local Windows helper, readable setup scripts and a Read first page.</p>
+      <dl class="setup-help"><dt>Browser extension</dt><dd>Connects this app page to the helper using native messaging. Access is limited to the app addresses listed in its manifest.</dd><dt>Local helper</dt><dd>Reads browser profile names/emails and launches the profile you select. It receives your vault account email, account label and clicked URL. Assignments stay on this PC; passwords, cookies, history and your link collection are not read.</dd><dt>Setup.cmd</dt><dd>A readable Windows launcher for the included PowerShell installer. It installs only after you run it. Setup uses installed Node.js or downloads a private official runtime from nodejs.org and verifies its checksum.</dd></dl>
+      <p><strong>Before running:</strong> open READ-FIRST.html in the extracted ZIP for file details, permissions and removal steps. This package is unsigned; Windows may ask you to approve running it. The setup scripts are included for inspection.</p>
+      <a class="btn-primary setup-download" href="browser-bridge.zip" download="Link-Launcher-Browser-Setup.zip">Download browser setup ZIP</a> <a href="browser-bridge.sha256" target="_blank" rel="noopener noreferrer">Download checksum</a>
+      <ol class="setup-steps"><li><strong>Extract the ZIP</strong> into a permanent folder. Open that folder.</li><li><strong>Load the extension.</strong> Open <code>chrome://extensions</code> or <code>edge://extensions</code>, enable Developer mode, choose Load unpacked and select the extracted folder. Updating? Replace its files and click Reload.</li><li><strong>Double-click Setup.cmd.</strong> The helper installs for your Windows user. If Node.js is missing, setup downloads a private, verified runtime automatically. No command typing or administrator access is needed.</li><li><strong>Reload the extension and refresh this app.</strong> Open Profiles above, choose a browser for each account and save.</li></ol>
+      <p>One download; you still need to extract it, load the extension and run Setup. Windows may ask you to approve running the file. Install the extension in each profile where you use this app; install the helper once per Windows user.</p>
+      <p>Windows Chrome/Edge only. No Link Launcher EXE or background service. Internet is needed for the first runtime download. On phones, links use the current browser.</p>
+    </section>
+    <section id="routingPanelHelp" role="tabpanel" aria-labelledby="routingTabHelp" tabindex="0" hidden><dl class="setup-help">
+      <dt>Show every account again</dt><dd>Click <strong>All accounts</strong> above the account list. This clears the selected account. Choose <strong>All devices</strong> to include accounts and links from your other workspaces too. Category, search and priority filters can still limit the links shown.</dd>
+      <dt>Change colours</dt><dd>Account: click its small coloured dot. Category tab: click the palette button above the links, choose the tab and save a colour. Colours sync in your encrypted vault.</dd>
+      <dt>Missing profiles</dt><dd>Use <strong>Find browser profiles on this PC</strong> to add missing accounts. All devices shows saved vault accounts; it does not automatically import profiles from other computers.</dd>
+      <dt>New browser or incognito</dt><dd>Choose a saved workspace such as Home PC in Choose profiles for this device. Incognito needs Allow in incognito on the extension and forgets local choices when closed.</dd>
+      <dt>Privacy and login</dt><dd>The helper reads local browser profile names and emails. It receives your vault account email, selected label and clicked URL; it never reads passwords, cookies or your link collection. Website login uses the account already signed in inside the chosen browser profile.</dd>
+      <dt>Your own cloud</dt><dd>Change the first matches entry in the extension manifest.json to your app's HTTPS origin plus /*, then reload the extension. Keep access limited to your own app.</dd>
+    </dl></section>
+  </div></div></div>
+  <div id="deviceProfilesModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Profiles on this device</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('deviceProfilesModal')">×</button></div><form onsubmit="saveDeviceProfiles(event)"><div class="modal-body"><label class="field-label" for="savedDeviceWorkspace">Saved device workspace</label><select id="savedDeviceWorkspace" class="input-google" onchange="selectBrowserWorkspace()"></select><p>Choose Home PC or another saved workspace to reuse its profiles in this browser. New workspace keeps a separate selection. This choice is remembered per account in normal browsing; incognito forgets it when closed.</p><label class="field-label" for="deviceDisplayName">Workspace name (optional)</label><input id="deviceDisplayName" class="input-google" maxlength="80" placeholder="Home PC, Work laptop, My phone"><p>Choose the profiles you use here. Their existing and future links will appear in This device.</p><p>Saved workspaces belong to your encrypted account. This app cannot detect your physical computer or Chrome profiles; choose the workspace you want to use.</p><div id="deviceProfilesChoices" class="device-profile-choices"></div><p>Unchecking a profile hides its links here unless you saved or assigned those links individually. Everything stays in All devices.</p></div><div class="modal-footer"><button class="btn-secondary" type="button" onclick="closeModal('deviceProfilesModal')">Cancel</button><button class="btn-primary" type="submit">Save profiles</button></div></form></div></div>
+  <div id="addProfileModal" class="modal-overlay"><div class="modal-card"><div class="modal-header"><h2 class="modal-title">Add account label</h2><button class="modal-close-btn" aria-label="Close" onclick="closeModal('addProfileModal')">×</button></div><form onsubmit="saveNewProfileItem(event)"><div class="modal-body"><label class="field-label" for="newProfName">Name</label><input id="newProfName" class="input-google" required maxlength="100"><label class="field-label" for="newProfEmail">Email (optional label)</label><input id="newProfEmail" class="input-google" type="email" maxlength="254"><p>This organises links. It does not sign you into that Google account.</p></div><div class="modal-footer"><button class="btn-primary" type="submit">Add label</button></div></form></div></div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="appToast" class="toast-msg"></div>
+
+  <!-- ========================================================================
+       CORE ENGINE JAVASCRIPT
+       ======================================================================== -->
+  <script>
+    /* ==========================================================================
+       DREAMSLAB LINK LAUNCHER // SECURE ZERO-KNOWLEDGE ARCHITECTURE
+       ========================================================================== */
+
+    let currentPassword = null;
+    let currentUserEmail = '';
+
+    // Cloud Backend Configuration
+    let cloudApiUrl = window.LINK_LAUNCHER_CLOUD.apiUrl || location.origin;
+    let cloudAuthToken = null;
+    let cloudVaultVersion = 1;
+    let syncStatusState = 'synced'; // 'synced', 'syncing', 'offline'
+
+    let activeNavView = 'ALL';       // 'ALL', 'STARRED', 'HIGH', 'MEDIUM', 'LOW'
+    let activeProfileEmail = null;   // null or 'profile@example.com'
+    let activeCategory = 'ALL';      // 'ALL' or specific category
+    let searchQuery = '';
+    let selectedLinkIds = new Set();
+    let currentDrawerLinkId = null;
+    let filterToLocalOnly = localStorage.getItem('dreamslab_filter_scope') !== 'cloud';
+
+    function handleFaviconError(img) {
+      if (!img) return;
+      img.onerror = null;
+      img.remove();
+    }
+
+    function websiteIcon(url) {
+      let hostname = '', icon = '';
+      try {
+        const parsed = new URL(url);
+        if (['https:', 'http:'].includes(parsed.protocol) && !parsed.username && !parsed.password) {
+          hostname = parsed.hostname.replace(/^www\./, '');
+          // Never request remote icons for local addresses or use a saved link's path/query.
+          if (hostname.includes('.') && !/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname) && !hostname.endsWith('.local') && !hostname.endsWith('.invalid') && !hostname.includes(':')) {
+            icon = 'https://' + parsed.host + '/favicon.ico';
+          }
+        }
+      } catch (_) {}
+      const initial = (hostname || 'link').slice(0, 2).toUpperCase();
+      return '<span class="website-icon" title="' + escapeHtml(hostname || 'Website') + '"><span class="website-icon-fallback" aria-hidden="true">' + escapeHtml(initial) + '</span>' + (icon ? '<img src="' + escapeHtml(icon) + '" class="link-favicon-mini" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="handleFaviconError(this)">' : '') + '</span>';
+    }
+
+    const DEFAULT_CATEGORIES = [
+      "Book Publish",
+      "App Ideas",
+      "Book Writing",
+      "Advertisement",
+      "App Development",
+      "Book Cover",
+      "Work Related",
+      "Apps",
+      "Marketing",
+      "Personal",
+      "Research",
+      "Testing",
+      "General"
+    ];
+
+    const GOOGLE_AVATAR_COLORS = [
+      '#0b57d0', '#137333', '#b06000', '#c5221f', '#7b1fa2',
+      '#007b83', '#5c3566', '#d01884', '#185abc', '#1e8e3e'
+    ];
+
+    let vaultData = {
+      links: [],
+      categories: [...DEFAULT_CATEGORIES],
+      profiles: [],
+
+    };
+
+    let isCreatePasswordMode = false;
+
+    // Perfect eye SVG definitions
+    const SVG_EYE_OPEN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;"><path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="5.2" stroke="currentColor" stroke-width="2.2" fill="none"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="13.3" cy="10.7" r="0.9" fill="#ffffff"/></svg>';
+
+    const SVG_EYE_CLOSED = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; pointer-events: none;"><path d="M 2 12 C 5.5 5 18.5 5 22 12 C 18.5 19 5.5 19 2 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="5.2" stroke="currentColor" stroke-width="2.2" fill="none"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="13.3" cy="10.7" r="0.9" fill="#ffffff"/><line x1="3" y1="3" x2="21" y2="21" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      btn.title = isPass ? 'Hide Password' : 'View Password';
+      btn.innerHTML = isPass ? SVG_EYE_CLOSED : SVG_EYE_OPEN;
+    }
+
+    /* ==========================================================================
+       CRYPTO ENGINE (UNIVERSAL AES-256-GCM + PBKDF2)
+       ========================================================================== */
+    function toUint8Array(val) {
+      if (!val) return new Uint8Array(0);
+      if (val instanceof Uint8Array) return val;
+      if (Array.isArray(val)) return new Uint8Array(val);
+      if (typeof val === 'string') {
+        try {
+          const binStr = atob(val);
+          const arr = new Uint8Array(binStr.length);
+          for (let i = 0; i < binStr.length; i++) arr[i] = binStr.charCodeAt(i);
+          return arr;
+        } catch(e) {
+          return new TextEncoder().encode(val);
+        }
+      }
+      return new Uint8Array(0);
+    }
+
+    async function deriveKey(password, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(password),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+      return crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 100000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+
+    async function deriveAuthVerifier(email, password) {
+      const enc = new TextEncoder();
+      const normEmail = (email || '').toLowerCase().trim();
+      const salt = enc.encode('dreamslab-auth-salt:' + normEmail);
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(password),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveBits']
+      );
+      const bits = await crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 50000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        256
+      );
+      return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function updateSyncBadge(status) {
+      syncStatusState = status;
+      const badge = document.getElementById('cloudSyncBadge');
+      if (!badge) return;
+      if (status === 'syncing') {
+        badge.textContent = '🔄 Syncing...';
+        badge.style.color = 'var(--google-blue)';
+        badge.style.background = 'rgba(11,87,208,0.1)';
+      } else if (status === 'synced') {
+        badge.textContent = '☁️ Synced (v' + cloudVaultVersion + ')';
+        badge.style.color = '#188038';
+        badge.style.background = 'rgba(24,128,56,0.1)';
+      } else if (status === 'conflict') {
+        badge.textContent = '⚠️ Cloud Conflict';
+        badge.style.color = '#c5221f';
+        badge.style.background = 'rgba(217,48,37,0.15)';
+      } else if (status === 'error') {
+        badge.textContent = '❌ Sync Failed';
+        badge.style.color = '#c5221f';
+        badge.style.background = 'rgba(217,48,37,0.1)';
+      } else {
+        badge.textContent = '📡 Offline';
+        badge.style.color = 'var(--text-muted)';
+        badge.style.background = 'rgba(114,119,122,0.1)';
+      }
+    }
+
+    function showConflictBanner(cloudVer, localVer) {
+      const banner = document.getElementById('conflictBanner');
+      const cVer = document.getElementById('conflictCloudVer');
+      const lVer = document.getElementById('conflictLocalVer');
+      if (banner) {
+        if (cVer) cVer.textContent = cloudVer;
+        if (lVer) lVer.textContent = localVer;
+        banner.style.display = 'flex';
+      }
+    }
+
+    function hideConflictBanner() {
+      const banner = document.getElementById('conflictBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    async function pullLatestFromCloud() {
+      if (syncMeta().dirty && !confirm('Replace unsynced local changes with the cloud version? Export a backup first to keep them.')) return;
+      if (!cloudAuthToken || !currentPassword) {
+        showToast('⚠️ Please Sign In to pull cloud data.');
+        return;
+      }
+      showToast('🔄 Fetching latest data from cloud...');
+      updateSyncBadge('syncing');
+      try {
+        const res = await cloudFetch(cloudApiUrl + '/api/vault', {
+          headers: {
+            'Authorization': 'Bearer ' + cloudAuthToken
+          }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.encryptedVault) {
+          const decrypted = await decryptData(data.encryptedVault, currentPassword);
+          if (decrypted && decrypted.links) {
+            vaultData = decrypted;
+            normalizeVaultLinks();
+            cloudVaultVersion = data.version || 1;
+            saveSyncMeta({ version: cloudVaultVersion, dirty: false });
+            const key = getStorageKey(currentUserEmail);
+            localStorage.setItem(key, JSON.stringify(data.encryptedVault));
+            hideConflictBanner();
+            updateSyncBadge('synced');
+            renderApp();
+            showToast('✅ Cloud vault refreshed to latest version (v' + cloudVaultVersion + ')');
+          }
+        }
+      } catch (err) {
+        updateSyncBadge('error');
+        showToast('❌ Failed to reload from cloud: ' + err.message);
+      }
+    }
+
+    async function encryptData(data, password) {
+      const enc = new TextEncoder();
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKey(password, salt);
+      const encoded = enc.encode(JSON.stringify(data));
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        encoded
+      );
+      return {
+        salt: btoa(String.fromCharCode(...salt)),
+        iv: btoa(String.fromCharCode(...iv)),
+        data: bytesToBase64(new Uint8Array(ciphertext))
+      };
+    }
+
+    async function decryptData(encryptedObj, password) {
+      if (!encryptedObj) throw new Error('Empty encrypted object');
+
+      // Case 1: raw string ciphertext (legacy format 1)
+      if (typeof encryptedObj === 'string') {
+        try {
+          const buf = toUint8Array(encryptedObj);
+          const iv = buf.slice(0, 12);
+          const data = buf.slice(12);
+          const salt = new TextEncoder().encode('dreamslab-cyber-salt-2026');
+          const key = await deriveKey(password, salt);
+          const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+          return JSON.parse(new TextDecoder().decode(decrypted));
+        } catch(e) {}
+      }
+
+      // Case 2: object format { salt, iv, data }
+      const ivArr = toUint8Array(encryptedObj.iv);
+      const dataArr = toUint8Array(encryptedObj.data);
+
+      // Try with object's own salt if present
+      let saltArr = toUint8Array(encryptedObj.salt);
+      if (saltArr && saltArr.length > 0) {
+        try {
+          const key = await deriveKey(password, saltArr);
+          const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: ivArr },
+            key,
+            dataArr
+          );
+          return JSON.parse(new TextDecoder().decode(decrypted));
+        } catch(e) {
+          // Fall through to try fallback salt
+        }
+      }
+
+      // Fallback: legacy hardcoded salt
+      const fallbackSalt = new TextEncoder().encode('dreamslab-cyber-salt-2026');
+      const key = await deriveKey(password, fallbackSalt);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: ivArr },
+        key,
+        dataArr
+      );
+      return JSON.parse(new TextDecoder().decode(decrypted));
+    }
+
+    /* ==========================================================================
+       STORAGE NAMESPACING & DATA PERSISTENCE
+       ========================================================================== */
+    function getStorageKey(email) {
+      const norm = (email || currentUserEmail || '').toLowerCase().trim();
+      return norm ? 'dreamslab_vault_' + norm : 'dreamslab_vault_default';
+    }
+
+    async function saveVault() {
+      if (!currentPassword) return { success: false, error: 'Unlock your vault first.' };
+      const email = currentUserEmail, pass = currentPassword;
+      let localSaved = false;
+      try {
+        normalizeVaultLinks();
+        const snapshot = JSON.parse(JSON.stringify(vaultData));
+        snapshot.profiles.forEach(p => delete p.folder);
+        delete snapshot.cloudConfig;
+        const encrypted = await encryptData(snapshot, pass);
+        localStorage.setItem(getStorageKey(email), JSON.stringify(encrypted));
+        localSaved = true;
+        saveSyncMeta({ version: cloudVaultVersion, dirty: true }, email);
+        if (!cloudAuthToken || !navigator.onLine) { updateSyncBadge('offline'); return { success: true, localOnly: true }; }
+        updateSyncBadge('syncing');
+        const res = await cloudFetch(cloudApiUrl + '/api/vault', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + cloudAuthToken }, body: JSON.stringify({ encryptedVault: encrypted, version: cloudVaultVersion }) });
+        const data = await res.json();
+        if (email !== currentUserEmail || pass !== currentPassword) return { success: false, error: 'Session changed' };
+        if (res.status === 409) { showConflictBanner(data.cloudVersion, cloudVaultVersion); updateSyncBadge('conflict'); return { success: false, localSaved: true, status: 409, error: 'Cloud conflict. Local changes are safe.' }; }
+        if (!res.ok || !data.success) { updateSyncBadge('error'); return { success: false, localSaved: true, error: data.error || 'Cloud save failed. Local changes are safe.' }; }
+        cloudVaultVersion = data.version;
+        saveSyncMeta({ version: cloudVaultVersion, dirty: false }, email);
+        hideConflictBanner(); updateSyncBadge('synced'); return { success: true };
+      } catch (err) {
+        updateSyncBadge('error'); showToast('Save failed: ' + err.message);
+        return { success: false, localSaved, error: err.message };
+      }
+    }
+
+    /* ==========================================================================
+       LOCK SCREEN & ZERO-KNOWLEDGE CLOUD AUTHENTICATION FLOW
+       ========================================================================== */
+    function setLockMode(createMode) {
+      isCreatePasswordMode = createMode;
+      const title = document.getElementById('lockTitle');
+      const subtitle = document.getElementById('lockSubtitle');
+      const confirmGroup = document.getElementById('confirmPasswordGroup');
+      const confirmInput = document.getElementById('confirmPasswordInput');
+      const submitBtn = document.getElementById('unlockSubmitBtn');
+      const passInput = document.getElementById('masterPasswordInput');
+      const tabCreate = document.getElementById('tabCreateAccount');
+      const tabSignIn = document.getElementById('tabSignIn');
+      const errorEl = document.getElementById('unlockError');
+      const footerToggle = document.getElementById('lockFooterToggle');
+
+      if (errorEl) errorEl.innerHTML = '';
+
+      if (createMode) {
+        if (title) title.textContent = 'Create Vault Account';
+        if (subtitle) subtitle.textContent = 'Register a new zero-knowledge cloud vault';
+        if (confirmGroup) confirmGroup.style.display = 'block';
+        if (confirmInput) confirmInput.required = true;
+        if (submitBtn) submitBtn.textContent = 'Create Account & Open';
+        if (passInput) passInput.placeholder = 'Choose Master Password';
+        if (tabCreate) { tabCreate.style.background = 'var(--google-blue)'; tabCreate.style.color = '#fff'; }
+        if (tabSignIn) { tabSignIn.style.background = 'transparent'; tabSignIn.style.color = 'var(--text-secondary)'; }
+        if (footerToggle) {
+          footerToggle.innerHTML = 'Already have an account? <a href="#" onclick="setLockMode(false); return false;" style="color: var(--google-blue); text-decoration: underline; cursor: pointer; font-weight: 500;">Sign In</a>';
+        }
+        setTimeout(() => {
+          const emailIn = document.getElementById('userEmailInput');
+          const passIn = document.getElementById('masterPasswordInput');
+          const confIn = document.getElementById('confirmPasswordInput');
+          if (emailIn && !emailIn.value) {
+            emailIn.focus();
+          } else if (passIn && passIn.value && confIn) {
+            confIn.focus();
+          } else if (passIn) {
+            passIn.focus();
+          }
+        }, 60);
+      } else {
+        if (title) title.textContent = 'Sign In to Vault';
+        if (subtitle) subtitle.textContent = 'Enter your email & master password to sync';
+        if (confirmGroup) confirmGroup.style.display = 'none';
+        if (confirmInput) confirmInput.required = false;
+        if (submitBtn) submitBtn.textContent = 'Sign In & Sync';
+        if (passInput) passInput.placeholder = 'Master Password';
+        if (tabCreate) { tabCreate.style.background = 'transparent'; tabCreate.style.color = 'var(--text-secondary)'; }
+        if (tabSignIn) { tabSignIn.style.background = 'var(--google-blue)'; tabSignIn.style.color = '#fff'; }
+        if (footerToggle) {
+          footerToggle.innerHTML = 'Need an account? <a href="#" onclick="setLockMode(true); return false;" style="color: var(--google-blue); text-decoration: underline; cursor: pointer; font-weight: 500;">Create Account</a>';
+        }
+        setTimeout(() => {
+          const emailIn = document.getElementById('userEmailInput');
+          const passIn = document.getElementById('masterPasswordInput');
+          if (emailIn && !emailIn.value) {
+            emailIn.focus();
+          } else if (passIn) {
+            passIn.focus();
+          }
+        }, 60);
+      }
+
+      const serverLabel = document.getElementById('lockServerUrlText');
+      if (serverLabel) serverLabel.textContent = cloudApiUrl;
+    }
+
+
+
+
+
+    function checkLockScreenState() {
+      document.getElementById('userEmailInput').value = localStorage.getItem('dreamslab_last_email') || '';
+      setLockMode(false);
+    }
+
+
+
+    function openResetDeviceModal(event) {
+      if (event) event.preventDefault();
+      if (confirm('Remove cached vaults from this browser? Unsynced local-only links will be lost. Export a backup first. Cloud accounts are preserved.')) confirmResetLocalVault();
+    }
+
+    async function confirmResetLocalVault() {
+      await rememberedBrowser.forget();
+      document.getElementById('rememberBrowser').checked=false;
+      await saveQueue;
+      await clearCloudSession();
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+
+      // Clear all local cache and vault keys from localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('dreamslab_') || k.startsWith('dl_'))) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      currentDeviceId = getDeviceId();
+      const key = getStorageKey(currentUserEmail);
+      if (key) localStorage.removeItem(key);
+      localStorage.removeItem('dreamslab_cyber_vault_v1');
+      localStorage.removeItem('dreamslab_last_email');
+      sessionStorage.clear();
+
+
+
+      currentPassword = null;
+      currentUserEmail = '';
+      cloudAuthToken = null;
+      vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+      activeProfileEmail = null;
+      activeCategory = 'ALL';
+
+      // Clear main app DOM
+      const linksContainer = document.getElementById('linksListContainer');
+      if (linksContainer) linksContainer.innerHTML = '';
+      const profileContainer = document.getElementById('sidebarProfilesList');
+      if (profileContainer) profileContainer.innerHTML = '';
+
+      // Force lock screen visible
+      const lockScreen = document.getElementById('lockScreen');
+      if (lockScreen) lockScreen.style.display = 'flex';
+
+      setLockMode(true);
+      const emailInput = document.getElementById('userEmailInput');
+      const passInput = document.getElementById('masterPasswordInput');
+      const confirmInput = document.getElementById('confirmPasswordInput');
+      if (emailInput) {
+        emailInput.value = '';
+        emailInput.disabled = false;
+        emailInput.readOnly = false;
+      }
+      if (passInput) {
+        passInput.value = '';
+        passInput.disabled = false;
+        passInput.readOnly = false;
+      }
+      if (confirmInput) {
+        confirmInput.value = '';
+        confirmInput.disabled = false;
+        confirmInput.readOnly = false;
+      }
+
+      setTimeout(() => {
+        if (emailInput) {
+          emailInput.focus();
+        }
+      }, 100);
+
+      showToast('🧹 Device cache reset complete. Ready to sign in or create account.');
+    }
+
+
+
+
+
+
+
+
+    async function handleUnlock(event, rememberedCredentials) {
+      if (event) event.preventDefault();
+      const email = (rememberedCredentials?.email || document.getElementById('userEmailInput').value).trim().toLowerCase();
+      const pass = rememberedCredentials?.password || document.getElementById('masterPasswordInput').value;
+      const error = document.getElementById('unlockError');
+      const button = document.getElementById('unlockSubmitBtn');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !pass) { error.textContent = 'Enter your email and master password.'; return; }
+      if (isCreatePasswordMode && (pass.length < 12 || pass !== document.getElementById('confirmPasswordInput').value)) {
+        error.textContent = 'Choose at least 12 characters and confirm the same password.'; return;
+      }
+      button.disabled = true;
+      error.textContent = isCreatePasswordMode ? 'Creating your account…' : 'Signing in…';
+      await saveQueue;
+      cloudAuthToken = null;
+      const key = getStorageKey(email), cached = localStorage.getItem(key), meta = syncMeta(email);
+      try {
+        const authVerifier = await deriveAuthVerifier(email, pass);
+        let encrypted, version, token = null, conflict = false;
+        if (isCreatePasswordMode) {
+          const initial = cached ? validateImportedVault(await decryptData(JSON.parse(cached), pass)) : { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+          encrypted = await encryptData(initial, pass);
+          const res = await cloudFetch(cloudApiUrl + '/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, authVerifier, encryptedVault: encrypted }) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Account creation failed.');
+          token = data.token; version = data.version;
+        } else {
+          let res;
+          try { res = await cloudFetch(cloudApiUrl + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, authVerifier }) }); }
+          catch { if (!cached) throw new Error('Cloud unavailable and no offline vault exists here.'); }
+          if (res && res.status !== 503 && res.status !== 502 && res.status !== 504) {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Sign-in failed.');
+            token = data.token; version = data.version; encrypted = data.encryptedVault;
+            if (meta.dirty && cached) {
+              encrypted = JSON.parse(cached);
+              conflict = !!meta.version && meta.version !== version;
+              if (conflict) showConflictBanner(version, meta.version);
+              version = meta.version || version;
+            }
+          } else if (!cached) throw new Error('Cloud unavailable and no offline vault exists here.');
+          if (!token) { encrypted = JSON.parse(cached); version = meta.version || 1; }
+        }
+        if (!token && isCreatePasswordMode) throw new Error('No cloud account created. Use the local-only button while offline.');
+        const decoded = encrypted ? validateImportedVault(await decryptData(encrypted, pass)) : { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+        currentUserEmail = email; currentPassword = pass; vaultData = decoded;
+        cloudAuthToken = token; cloudVaultVersion = version || 1;
+        normalizeVaultLinks(); restoreBrowserWorkspace();
+        if (encrypted) localStorage.setItem(key, JSON.stringify(encrypted));
+        localStorage.setItem('dreamslab_last_email', email);
+        saveSyncMeta({ version: cloudVaultVersion, dirty: !isCreatePasswordMode && !!meta.dirty }, email);
+        document.getElementById('masterPasswordInput').value = '';
+        document.getElementById('confirmPasswordInput').value = '';
+        document.getElementById('lockScreen').style.display = 'none';
+        selectedLinkIds.clear(); activeProfileEmail = null; activeCategory = 'ALL'; searchQuery = '';
+        renderApp(); error.textContent = '';
+        updateSyncBadge(conflict ? 'conflict' : token ? 'synced' : 'offline');
+        showToast(token ? 'Cloud account opened.' : 'Offline: using this device’s encrypted cache.');
+        if (token && meta.dirty && !conflict) await saveVault();
+        try { await rememberedBrowser.save('cloud'); } catch { showToast('Opened. This browser could not remember the unlock.'); }
+      } catch (err) {
+        currentPassword = null; cloudAuthToken = null;
+        error.textContent = err.name === 'OperationError' ? 'Incorrect master password or damaged backup.' : err.message;
+      } finally { button.disabled = false; }
+    }
+
+    async function lockVault() {
+      currentBrowserStyles.clear();
+      await rememberedBrowser.forget();
+      document.getElementById('rememberBrowser').checked=false;
+      await saveQueue;
+      vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+      selectedLinkIds.clear(); renderApp(); closeDetailDrawer();
+      document.getElementById('drawerForm').reset();
+      document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
+      document.getElementById('confirmPasswordInput').value = '';
+      currentPassword = null;
+      // Explicit lock removes automatic browser unlock.
+      const emailInput = document.getElementById('userEmailInput');
+      if (emailInput && currentUserEmail) {
+        emailInput.value = currentUserEmail;
+      }
+      const lockTitle = document.getElementById('lockTitle');
+      if (lockTitle) {
+        lockTitle.textContent = 'Vault Locked (' + (currentUserEmail.split('@')[0] || 'User') + ')';
+      }
+      const passInput = document.getElementById('masterPasswordInput');
+      if (passInput) {
+        passInput.value = '';
+      }
+      setLockMode(false);
+      document.getElementById('lockScreen').style.display = 'flex';
+      setTimeout(() => { if (passInput) passInput.focus(); }, 50);
+      showToast('🔒 Vault locked — enter password to resume');
+    }
+
+    async function handleLogout() {
+      await rememberedBrowser.forget();
+      document.getElementById('rememberBrowser').checked=false;
+      await saveQueue;
+      await clearCloudSession();
+      currentPassword = null;
+      currentUserEmail = '';
+      cloudAuthToken = null;
+      vaultData = { links: [], profiles: [], categories: [...DEFAULT_CATEGORIES] };
+      activeProfileEmail = null;
+      activeCategory = 'ALL';
+
+      // Full logout completely deletes the remembered session and clears all inputs
+
+      sessionStorage.clear();
+
+      // Clear active DOM stream
+      const linksContainer = document.getElementById('linksListContainer');
+      if (linksContainer) linksContainer.innerHTML = '';
+      const profileContainer = document.getElementById('sidebarProfilesList');
+      if (profileContainer) profileContainer.innerHTML = '';
+
+      const emailInput = document.getElementById('userEmailInput');
+      if (emailInput) emailInput.value = '';
+      const passInput = document.getElementById('masterPasswordInput');
+      if (passInput) passInput.value = '';
+      const confirmInput = document.getElementById('confirmPasswordInput');
+      if (confirmInput) confirmInput.value = '';
+      const lockTitle = document.getElementById('lockTitle');
+      if (lockTitle) lockTitle.textContent = 'Sign In to Vault';
+
+      setLockMode(false);
+      document.getElementById('lockScreen').style.display = 'flex';
+      setTimeout(() => { if (emailInput) emailInput.focus(); }, 50);
+      showToast('🚪 Logged out — session cleared');
+      selectedLinkIds.clear(); renderApp(); closeDetailDrawer(); hideConflictBanner();
+      document.getElementById('drawerForm').reset();
+      document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
+    }
+
+
+
+    /* ==========================================================================
+       DESKTOP CHROME DETECTION & DIAGNOSTICS ENGINE
+       ========================================================================== */
+
+
+
+
+
+
+    /* ==========================================================================
+       DATA SCOPING & ZERO-FALLBACK VIEW LAYER
+       ========================================================================== */
+    function normalizeVaultLinks() {
+      if (!Array.isArray(vaultData.links)) vaultData.links = [];
+      if (!Array.isArray(vaultData.profiles)) vaultData.profiles = [];
+      vaultData.devices = (Array.isArray(vaultData.devices) ? vaultData.devices : []).filter(d => d && typeof d.id === 'string').map(d => ({
+        id: d.id, name: typeof d.name === 'string' ? d.name.slice(0, 80) : '', updatedAt: d.updatedAt || new Date().toISOString()
+      }));
+      if (!Array.isArray(vaultData.categories)) vaultData.categories = [...DEFAULT_CATEGORIES];
+      vaultData.categories = vaultData.categories.filter(c => typeof c === 'string');
+      vaultData.categoryColors = Object.fromEntries(Object.entries(vaultData.categoryColors || {}).filter(([key,color]) => key.length <= 100 && /^#[0-9a-f]{6}$/i.test(color)));
+      vaultData.profiles = vaultData.profiles.filter(p => p && typeof p === 'object').map(p => ({
+        id: typeof p.id === 'string' && /^[a-zA-Z0-9_-]{1,100}$/.test(p.id) ? p.id : 'prof_' + crypto.randomUUID(),
+        name: typeof p.name === 'string' ? p.name : '', email: typeof p.email === 'string' ? p.email : '',
+        deviceIds: Array.isArray(p.deviceIds) ? p.deviceIds.filter(id => typeof id === 'string') : [],
+        color: /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '', colorSource: p.colorSource === 'custom' ? 'custom' : 'browser', pinned: !!p.pinned, starred: !!p.starred, updatedAt: p.updatedAt || new Date().toISOString()
+      }));
+      vaultData.links = vaultData.links.filter(l => l && typeof l === 'object');
+
+      vaultData.links.forEach((l, index) => {
+        if (typeof l.id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(l.id)) l.id = 'link_' + crypto.randomUUID();
+        if (!Number.isFinite(l.order)) l.order = index;
+        if (!Array.isArray(l.deviceIds)) l.deviceIds = [];
+        if (typeof l.url !== 'string' || !safeLinkUrl(l.url)) l.url = '';
+        for (const key of ['title','notes','category','profileEmail','profileName']) l[key] = typeof l[key] === 'string' ? l[key] : '';
+        if (!['normal','high','medium','low'].includes(l.priority)) l.priority = 'normal';
+        if (!l.id) l.id = 'link_' + Math.random().toString(36).substr(2, 9);
+        if (!l.priority) l.priority = 'normal';
+        if (l.starred === undefined) l.starred = false;
+        if (l.isTask === undefined) l.isTask = (l.priority === 'high');
+        if (l.taskDone === undefined) l.taskDone = false;
+        if (l.deleted === undefined) l.deleted = false;
+        if (!l.updatedAt) l.updatedAt = new Date().toISOString();
+      });
+    }
+
+
+
+    function getProfileMeta(email, name, id) {
+      const text = name || email || 'Unassigned';
+      let hash = 0;
+      for (const ch of (email || id || text)) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
+      const profile = (vaultData.profiles || []).find(p => (id && p.id === id) || (email && p.email.toLowerCase() === email.toLowerCase()));
+      const browserStyle = currentBrowserStyles.get(profile?.id) || currentBrowserStyles.get(email) || {};
+      return { name: text, shortName: text, color: profile?.colorSource === 'custom' && /^#[0-9a-f]{6}$/i.test(profile.color || '') ? profile.color : browserStyle.colour || (/^#[0-9a-f]{6}$/i.test(profile?.color || '') ? profile.color : automaticColour(email || id || name || 'Unassigned')), avatar: browserStyle.avatar || '', letter: text.charAt(0).toUpperCase() };
+    }
+
+
+
+
+
+    // ZERO-FALLBACK PROFILES VIEW FILTER
+
+    let sidebarProfileFilter = 'ALL'; // 'ALL' | 'STARRED' | 'PINNED'
+
+    function showAllAccounts() {
+      activeProfileEmail = null;
+      sidebarProfileFilter = 'ALL';
+      setSidebarProfileFilter('ALL');
+      renderApp();
+    }
+
+    function setSidebarProfileFilter(filter) {
+      sidebarProfileFilter = filter;
+      ['All', 'Starred', 'Pinned'].forEach(tab => {
+        const btn = document.getElementById('btnFilterProf' + tab);
+        if (btn) btn.classList.toggle('active', tab.toUpperCase() === filter);
+      });
+      renderSidebarProfiles();
+    }
+
+    function sortAndFilterProfiles(profiles, filter = 'ALL', activeScopeEmails = null) {
+      if (!Array.isArray(profiles)) return [];
+
+      let list = profiles.filter(p => {
+        if (!p) return false;
+        if (activeScopeEmails !== null) {
+          const email = (p.email || '').toLowerCase().trim();
+          if (!email || !activeScopeEmails.has(email)) return false;
+        }
+        return true;
+      });
+
+      if (filter === 'STARRED') {
+        list = list.filter(p => !!p.starred);
+      } else if (filter === 'PINNED') {
+        list = list.filter(p => !!p.pinned);
+      }
+
+      return list.sort((a, b) => {
+        const aPinned = a.pinned ? 1 : 0;
+        const bPinned = b.pinned ? 1 : 0;
+        if (aPinned !== bPinned) return bPinned - aPinned;
+
+        const aStarred = a.starred ? 1 : 0;
+        const bStarred = b.starred ? 1 : 0;
+        if (aStarred !== bStarred) return bStarred - aStarred;
+
+        const aName = (a.name || a.email || '').toLowerCase();
+        const bName = (b.name || b.email || '').toLowerCase();
+        return aName.localeCompare(bName);
+      });
+    }
+
+    function getDisplayProfiles() {
+      const localLinks = getScopedLinks();
+      const profiles = (vaultData.profiles || []).filter(p => !filterToLocalOnly ||
+        (p.deviceIds || []).includes(currentDeviceId) || localLinks.some(l => linkMatchesProfile(l, p)));
+      return sortAndFilterProfiles(profiles, sidebarProfileFilter);
+    }
+
+    function linkMatchesProfile(link, profile) {
+      return (link.profileId && link.profileId === profile.id) || (!!profile.email && (link.profileEmail || '').trim().toLowerCase() === profile.email.trim().toLowerCase());
+    }
+
+    function linkUsesDeviceProfile(link) {
+      return (vaultData.profiles || []).some(p => (p.deviceIds || []).includes(currentDeviceId) && linkMatchesProfile(link, p));
+    }
+
+    function getDeviceDisplayName() {
+      return ((vaultData.devices || []).find(d => d.id === currentDeviceId) || {}).name || '';
+    }
+
+    function openDeviceProfilesModal() {
+      const picker=document.getElementById('savedDeviceWorkspace'), physical=getDeviceId();
+      const entries=[...(vaultData.devices||[])];
+      if(!entries.some(d=>d.id===physical))entries.unshift({id:physical,name:'New workspace for this browser'});
+      picker.replaceChildren(...entries.map(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name||('Unnamed workspace — '+d.id.slice(0,8));option.selected=d.id===currentDeviceId;return option;}));
+      document.getElementById('deviceDisplayName').value = getDeviceDisplayName();
+      document.getElementById('deviceProfilesChoices').innerHTML = sortAndFilterProfiles(vaultData.profiles || []).map(p =>
+        `<label class="device-profile-choice"><input type="checkbox" value="${escapeHtml(p.id)}" ${(p.deviceIds || []).includes(currentDeviceId) ? 'checked' : ''}><span><strong>${escapeHtml(p.name || p.email)}</strong><small>${escapeHtml(p.email)}</small></span></label>`
+      ).join('') || '<p>No profiles yet. Add an account label first.</p>';
+      document.body.classList.remove('nav-open');
+      openModal('deviceProfilesModal');
+    }
+
+    async function saveDeviceProfiles(event) {
+      event.preventDefault();
+      const selected = new Set([...document.querySelectorAll('#deviceProfilesChoices input:checked')].map(input => input.value));
+      const name = document.getElementById('deviceDisplayName').value.trim().slice(0, 80);
+      const device = (vaultData.devices || []).find(d => d.id === currentDeviceId);
+      if (device) { device.name = name; device.updatedAt = new Date().toISOString(); }
+      else { (vaultData.devices ||= []).push({id:currentDeviceId, name, updatedAt:new Date().toISOString()}); }
+      for (const profile of vaultData.profiles || []) {
+        const ids = new Set(profile.deviceIds || []);
+        if (selected.has(profile.id)) ids.add(currentDeviceId); else ids.delete(currentDeviceId);
+        const next = [...ids];
+        if (JSON.stringify(next) !== JSON.stringify(profile.deviceIds || [])) {
+          profile.deviceIds = next; profile.updatedAt = new Date().toISOString();
+        }
+      }
+      const saved = await saveVault();
+      if (!saved.success && !saved.localSaved) return;
+      filterToLocalOnly = true; localStorage.setItem('dreamslab_filter_scope', 'local');
+      activeProfileEmail = null; selectedLinkIds.clear();
+      closeModal('deviceProfilesModal'); renderApp();
+      showToast('Profiles saved for this browser. All devices keeps every link.');
+    }
+
+    async function toggleProfileStar(profileIdOrEmail, event) {
+      if (event) event.stopPropagation();
+      const p = (vaultData.profiles || []).find(prof => prof.id === profileIdOrEmail || prof.email === profileIdOrEmail);
+      if (p) {
+        p.starred = !p.starred;
+        p.updatedAt = new Date().toISOString();
+        await saveVault();
+        renderSidebarProfiles();
+        showToast(p.starred ? '⭐ Starred ' + (p.name || p.email) : 'Unstarred ' + (p.name || p.email));
+      }
+    }
+
+    async function toggleProfilePin(profileIdOrEmail, event) {
+      if (event) event.stopPropagation();
+      const p = (vaultData.profiles || []).find(prof => prof.id === profileIdOrEmail || prof.email === profileIdOrEmail);
+      if (p) {
+        p.pinned = !p.pinned;
+        p.updatedAt = new Date().toISOString();
+        await saveVault();
+        renderSidebarProfiles();
+        showToast(p.pinned ? '📌 Pinned ' + (p.name || p.email) + ' to top' : 'Unpinned ' + (p.name || p.email));
+      }
+    }
+
+
+    // Returns detected account labels on this computer not yet linked in Link Launcher cloud vault
+
+
+    // ZERO-FALLBACK LINKS VIEW FILTER
+    function getScopedLinks() {
+      const links = (vaultData.links || []).filter(l => !l.deleted);
+      if (!filterToLocalOnly) return links;
+      const chosenProfiles = (vaultData.profiles || []).filter(p => (p.deviceIds || []).includes(currentDeviceId));
+      const profileIds = new Set(chosenProfiles.map(p => p.id));
+      const profileEmails = new Set(chosenProfiles.filter(p => p.email).map(p => p.email.trim().toLowerCase()));
+      return links.filter(l => (l.deviceIds || []).includes(currentDeviceId) || profileIds.has(l.profileId) || profileEmails.has((l.profileEmail || '').trim().toLowerCase()));
+    }
+
+    function toggleProfileScope() {
+      filterToLocalOnly = !filterToLocalOnly;
+      if (!filterToLocalOnly) { activeProfileEmail = null; setSidebarProfileFilter('ALL'); }
+      localStorage.setItem('dreamslab_filter_scope', filterToLocalOnly ? 'local' : 'cloud');
+      activeProfileEmail = null; selectedLinkIds.clear(); renderApp();
+    }
+
+    async function deleteProfile(profileIdOrEmail, e) {
+      if (e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.preventDefault) e.preventDefault();
+      }
+      if (!profileIdOrEmail) return;
+
+      const normId = String(profileIdOrEmail).toLowerCase().trim();
+      const prof = (vaultData.profiles || []).find(p => (p.id && String(p.id).toLowerCase() === normId) || (p.email && p.email.toLowerCase().trim() === normId));
+      const profName = prof ? (prof.name || prof.email) : profileIdOrEmail;
+
+      if (!confirm(`Remove profile "${profName}" from your Link Launcher account?\n\n(Note: Links assigned to this profile will remain in your vault).`)) {
+        return;
+      }
+
+      vaultData.profiles = (vaultData.profiles || []).filter(p => {
+        const matchesId = p.id && String(p.id).toLowerCase() === normId;
+        const matchesEmail = p.email && p.email.toLowerCase().trim() === normId;
+        return !matchesId && !matchesEmail;
+      });
+
+      if (activeProfileEmail && (activeProfileEmail.toLowerCase().trim() === normId || (prof && prof.email && activeProfileEmail.toLowerCase().trim() === prof.email.toLowerCase().trim()))) {
+        activeProfileEmail = null;
+      }
+
+      await saveVault();
+      renderApp();
+      showToast(`🗑️ Profile "${profName}" removed from account.`);
+    }
+
+    // Dynamic folder & metadata resolution
+    function getProfileForLink(link) {
+      return (vaultData.profiles || []).find(p => linkMatchesProfile(link, p)) || { name: link.profileName || 'Unassigned', email: link.profileEmail || '', id: '' };
+    }
+
+    // Explicit opt-in to link a local detected account label to the user's cloud account
+
+
+
+
+    /* ==========================================================================
+       MAIN RENDER ENGINE
+       ========================================================================== */
+    function renderApp() {
+
+      updateNavigationCounts();
+      renderSidebarProfiles();
+      renderSidebarCategories();
+      renderCategoryChips();
+      renderLinksStream();
+      renderTasksList();
+    }
+
+    function updateNavigationCounts() {
+      const links = getScopedLinks();
+      const elAll = document.getElementById('countAll');
+      if (elAll) elAll.textContent = links.length;
+      const elStarred = document.getElementById('countStarred');
+      if (elStarred) elStarred.textContent = links.filter(l => l.starred).length;
+      const elHigh = document.getElementById('countHigh');
+      if (elHigh) elHigh.textContent = links.filter(l => l.priority === 'high').length;
+      const elMed = document.getElementById('countMedium');
+      if (elMed) elMed.textContent = links.filter(l => l.priority === 'medium').length;
+      const elLow = document.getElementById('countLow');
+      if (elLow) elLow.textContent = links.filter(l => l.priority === 'low').length;
+    }
+
+
+    function renderSidebarProfiles() {
+      const scope = document.getElementById('btnToggleScope');
+      scope.textContent = filterToLocalOnly ? 'This device' : 'All devices';
+      scope.title = 'Switch device links / every link in your account';
+      document.getElementById('currentDeviceLabel').textContent = 'Device: ' + (getDeviceDisplayName() || 'Unnamed — choose profiles to name it');
+      document.getElementById('sidebarProfilesList').innerHTML = getDisplayProfiles().map(p => {
+        const id = p.email || p.id, meta = getProfileMeta(p.email, p.name, p.id);
+        const arg = escapeHtml(JSON.stringify(id));
+        const count = getScopedLinks().filter(l => linkMatchesProfile(l, p)).length;
+        return `<div class="account-item ${activeProfileEmail === id ? 'active' : ''}" style="--profile-color:${meta.color};--profile-tint:${meta.color}10"><button class="account-label-button" onclick="selectProfileFilter(${arg})"><span class="account-avatar" style="background:${meta.color}">${profileAvatarContent(meta)}</span><span class="account-info"><span class="account-name">${escapeHtml(meta.name)}</span><span class="account-email">${escapeHtml(p.email)}</span></span></button><button class="btn-profile-action" onclick="toggleProfilePin(${arg}, event)" title="Pin label">${p.pinned ? '📌' : '📍'}</button><button class="btn-profile-action" onclick="toggleProfileStar(${arg}, event)" title="Star label">${p.starred ? '★' : '☆'}</button><span class="nav-badge">${count}</span><button class="btn-profile-action profile-colour-button" onclick="openAppearance('profile',${arg},event)" title="Change account colour" aria-label="Change account colour" style="color:${meta.color}">●</button><button class="btn-profile-action account-options-button" onclick="showAccountOptions(${arg},event)" title="Account options" aria-label="Account options">⋯</button></div>`;
+      }).join('');
+      if (!document.getElementById('sidebarProfilesList').children.length) {
+        document.getElementById('sidebarProfilesList').innerHTML = '<p class="device-profiles-empty">' + (filterToLocalOnly ? 'No profiles selected here. Choose profiles below, or add a link to a profile on this device.' : 'No profiles match this filter.') + '</p>';
+      }
+    }
+
+
+    function renderSidebarCategories() {
+      const container = document.getElementById('sidebarCategoriesList');
+      if (!container) return;
+      const cats = new Set(vaultData.categories || []);
+      (vaultData.links || []).forEach(l => { if (l.category) cats.add(l.category); });
+
+      let html = '';
+      let colorIdx = 0;
+      cats.forEach(cat => {
+        const color = categoryColour(cat);
+        colorIdx++;
+        const count = getScopedLinks().filter(l => l.category === cat).length;
+        const isActive = activeCategory === cat;
+
+        html += `
+          <div class="nav-item ${isActive ? 'active' : ''}" onclick="selectCategory(${escapeHtml(JSON.stringify(cat))})">
+            <div class="nav-item-left">
+              <span class="chip-dot" style="background: ${color}; width:8px; height:8px; border-radius:50%;"></span>
+              <span class="nav-label">${escapeHtml(cat)}</span>
+            </div>
+            <span class="nav-badge">${count}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderCategoryChips() {
+      const container = document.getElementById('categoryChipsContainer');
+      if (!container) return;
+      const cats = ['ALL', ...(vaultData.categories || [])];
+      let html = '';
+
+      cats.forEach(cat => {
+        const isActive = activeCategory === cat;
+        const count = cat === 'ALL' ? getScopedLinks().length : getScopedLinks().filter(l => l.category === cat).length;
+        html += `
+          <button type="button" class="category-chip ${isActive ? 'active' : ''}" style="--tab-color:${categoryColour(cat)};--tab-tint:${categoryColour(cat)}14" onclick="selectCategory(${escapeHtml(JSON.stringify(cat))})">
+            <span class="chip-dot" style="background:${categoryColour(cat)}"></span>${cat === 'ALL' ? 'All Items' : escapeHtml(cat)} <span class="tab-count">${count}</span>
+          </button>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       LINKS STREAM RENDER (ID-DISPATCHED & XSS-SAFE)
+       ========================================================================== */
+    function renderLinksStream() {
+      const container = document.getElementById('linksListContainer');
+      if (!container) return;
+      let filtered = [...getScopedLinks()];
+
+      // 1. Navigation View Filter
+      if (activeNavView === 'STARRED') filtered = filtered.filter(l => l.starred);
+      if (activeNavView === 'HIGH') filtered = filtered.filter(l => l.priority === 'high');
+      if (activeNavView === 'MEDIUM') filtered = filtered.filter(l => l.priority === 'medium');
+      if (activeNavView === 'LOW') filtered = filtered.filter(l => l.priority === 'low');
+
+      // 2. Profile Filter
+      if (activeProfileEmail) {
+        filtered = filtered.filter(l => {
+          const p = getProfileForLink(l);
+          return (p.email && p.email.toLowerCase() === activeProfileEmail.toLowerCase()) || (p.id === activeProfileEmail);
+        });
+      }
+
+      // 3. Category Filter
+      if (activeCategory !== 'ALL') {
+        filtered = filtered.filter(l => l.category === activeCategory);
+      }
+
+      // 4. Search Filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(l => {
+          const matchTitle = (l.title || '').toLowerCase().includes(q);
+          const matchUrl = (l.url || '').toLowerCase().includes(q);
+          const matchNotes = (l.notes || '').toLowerCase().includes(q);
+          const matchCat = (l.category || '').toLowerCase().includes(q);
+          const prof = getProfileForLink(l);
+          const matchProf = (prof.name || '').toLowerCase().includes(q) || (prof.email || '').toLowerCase().includes(q);
+          return matchTitle || matchUrl || matchNotes || matchCat || matchProf;
+        });
+      }
+
+      // 5. Sort by Priority
+      filtered.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      if (filtered.length === 0) {
+        let emptyTitle = 'No Links Found';
+        let emptyDesc = filterToLocalOnly ? 'Choose the profiles you use here, add a link, or find individual links in All devices.' : 'No bookmarks match your current view or filter.';
+
+
+        container.innerHTML = `
+          <div class="empty-stream-state">
+            <div class="empty-stream-icon">📭</div>
+            <div class="empty-stream-title">${emptyTitle}</div>
+            <p style="font-size: 13px;">${emptyDesc}</p>
+            <div style="margin-top: 10px; display:flex; gap:8px; justify-content:center;">
+              <button class="btn-primary" onclick="openAddLinkModal()">+ Add Link</button>
+              ${filterToLocalOnly ? '<button class="btn-secondary" onclick="toggleProfileScope()">All devices</button>' : ''}
+              ${filterToLocalOnly ? '<button class="btn-secondary" onclick="openDeviceProfilesModal()">Choose profiles</button>' : ''}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(l => {
+        let domain = '';
+        try { domain = new URL(l.url).hostname; } catch(e) { domain = l.url; }
+        const prof = getProfileForLink(l);
+        const meta = getProfileMeta(prof.email || l.profileEmail || prof.folder, prof.name, prof.id);
+        const priority = l.priority || 'normal';
+        const isStarred = !!l.starred;
+        const prioClass = priority === 'high' ? 'prio-high' : (priority === 'medium' ? 'prio-medium' : (priority === 'low' ? 'prio-low' : 'prio-normal'));
+
+        html += `
+          <div class="link-row" style="--profile-color:${meta.color};--profile-tint:${meta.color}08" onclick="openDetailDrawer('${l.id}')">
+            <!-- CHECKBOX -->
+            <input type="checkbox" class="link-checkbox" data-id="${l.id}" aria-label="Select ${escapeHtml(l.title)}" onclick="event.stopPropagation(); toggleSelectLink('${l.id}')">
+
+            <!-- STAR -->
+            <button class="link-star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStarLink('${l.id}', event)" title="Star Link">
+              ${isStarred ? '★' : '☆'}
+            </button>
+
+            <!-- PRIORITY DOT -->
+            <div class="prio-dot ${prioClass}" title="Priority: ${priority.toUpperCase()}"></div>
+
+            <!-- PROFILE / SENDER -->
+            <div class="link-sender-col" title="${escapeHtml(meta.name)} (${escapeHtml(prof.email || '')})">
+              <span class="sender-avatar-badge" style="background: ${meta.color};">${escapeHtml(meta.letter)}</span>
+              <span class="sender-name-text">${escapeHtml(meta.name)}</span>
+            </div>
+
+            <!-- TITLE & SNIPPET -->
+            <div class="link-content-col">
+              ${websiteIcon(l.url)}
+              <span class="link-title-text">${escapeHtml(l.title)}</span>
+              <span class="link-snippet-text">— ${escapeHtml(l.notes || l.url)}</span>
+            </div>
+
+            <!-- CATEGORY PILL -->
+            ${l.category ? '<span class="link-cat-pill">' + escapeHtml(l.category) + '</span>' : '<span></span>'}
+
+            <!-- HOVER ACTIONS (ID DISPATCHED FOR SAFETY) -->
+            <div class="link-row-actions" onclick="event.stopPropagation()">
+              <button class="move-link" onclick="moveLink('${l.id}', -1)" title="Move up" aria-label="Move ${escapeHtml(l.title)} up">↑</button>
+              <button class="move-link" onclick="moveLink('${l.id}', 1)" title="Move down" aria-label="Move ${escapeHtml(l.title)} down">↓</button>
+              <button class="device-toggle" onclick="toggleLinkDevice('${l.id}')" title="${linkUsesDeviceProfile(l) ? 'Shown through a profile chosen for this device' : 'Assign or remove from this device'}">${linkUsesDeviceProfile(l) ? '✓ Profile' : (l.deviceIds || []).includes(currentDeviceId) ? '✓ Device' : '+ Device'}</button>
+              <button class="btn-row-action btn-row-run" onclick="handleLinkRun('${l.id}')" title="Open link">
+                ▶ Run
+              </button>
+              <button class="btn-row-action" onclick="handleLinkOpen('${l.id}')" title="Open in assigned browser profile">
+                🌐
+              </button>
+              <button class="btn-row-action" onclick="handleLinkCopy('${l.id}')" title="Copy URL">
+                📋
+              </button>
+              <button class="btn-row-action" onclick="toggleTaskPin('${l.id}')" title="Pin to Tasks side panel">
+                📌
+              </button>
+              <button class="btn-row-action btn-row-delete" onclick="handleLinkDelete('${l.id}')" title="Delete">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       RIGHT SIDEBAR: GOOGLE TASKS RENDER
+       ========================================================================== */
+    function renderTasksList() {
+      const container = document.getElementById('tasksListContainer');
+      if (!container) return;
+      const taskLinks = getScopedLinks().filter(l => l.isTask);
+
+      if (taskLinks.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 12px;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📌</div>
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No Tasks Pinned</div>
+            Click the 📌 pin button on any link to pull it into your daily tasks list.
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      taskLinks.forEach(t => {
+        const prof = getProfileForLink(t);
+        const meta = getProfileMeta(prof.email || t.profileEmail || prof.folder, prof.name, prof.id);
+
+        html += `
+          <div class="task-card ${t.taskDone ? 'completed' : ''}" style="--profile-color:${meta.color}">
+            <div class="task-card-top">
+              <input type="checkbox" class="task-checkbox" ${t.taskDone ? 'checked' : ''} onchange="toggleTaskDone('${t.id}')">
+              <div class="task-title" onclick="openDetailDrawer('${t.id}')">${escapeHtml(t.title)}</div>
+            </div>
+            <div class="task-card-bottom">
+              <span class="task-account-badge" style="display: flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${meta.color}; flex-shrink: 0;"></span>
+                <span>${escapeHtml(meta.name)}</span>
+              </span>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-row-action btn-row-run" style="height: 24px; padding: 0 6px; font-size: 10px;" onclick="handleLinkRun('${t.id}')">
+                  ▶ Run
+                </button>
+                <button class="btn-row-action" style="height: 24px; padding: 0 4px;" onclick="toggleTaskPin('${t.id}')" title="Unpin Task">
+                  &times;
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       SAFE ROW ACTION HANDLERS
+       ========================================================================== */
+    function handleLinkRun(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+      openAssignedLink(item);
+    }
+
+    function handleLinkOpen(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+      openAssignedLink(item);
+    }
+
+    function handleLinkCopy(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+      copyLinkUrl(item.url);
+    }
+
+    function handleLinkDelete(id) {
+      deleteLinkItem(id);
+    }
+
+    /* ==========================================================================
+       DRAWER & LINK ACTIONS
+       ========================================================================== */
+    function openDetailDrawer(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+
+      currentDrawerLinkId = id;
+      document.getElementById('drawerHeading').textContent = 'Edit: ' + (item.title || 'Link');
+      document.getElementById('drawerLinkId').value = item.id;
+      document.getElementById('drawerTitleInput').value = item.title || '';
+      document.getElementById('drawerUrlInput').value = item.url || '';
+      document.getElementById('drawerCategoryInput').value = item.category || '';
+      document.getElementById('drawerNotesInput').value = item.notes || '';
+      document.getElementById('drawerPrioritySelect').value = item.priority || 'normal';
+      const elTask = document.getElementById('drawerTaskCheck');
+      if (elTask) elTask.checked = !!item.isTask;
+      document.getElementById('drawerStarredCheck').checked = !!item.starred;
+      document.getElementById('drawerTagsInput').value = Array.isArray(item.tags) ? item.tags.join(', ') : '';
+
+      populateProfileSelect('drawerProfileSelect', item.profileEmail || item.profileId);
+      populateCategoryDatalist();
+
+      document.getElementById('detailDrawer').classList.add('open');
+    }
+
+    function closeDetailDrawer() {
+      document.getElementById('detailDrawer').classList.remove('open');
+      currentDrawerLinkId = null;
+    }
+
+    async function saveDrawerDetails(event) {
+      if (event) event.preventDefault();
+      const safeUrl = safeLinkUrl(document.getElementById('drawerUrlInput').value.trim());
+      if (!safeUrl) { showToast('Enter a valid HTTP or HTTPS link.'); return; }
+      if (!currentDrawerLinkId) return;
+      const item = (vaultData.links || []).find(l => l.id === currentDrawerLinkId);
+      if (!item) return;
+
+      item.title = document.getElementById('drawerTitleInput').value.trim() || item.title;
+      item.url = safeUrl;
+      item.category = document.getElementById('drawerCategoryInput').value.trim() || 'General';
+      item.notes = document.getElementById('drawerNotesInput').value.trim();
+      item.tags = document.getElementById('drawerTagsInput').value.split(',').map(tag => tag.trim()).filter(Boolean);
+      item.starred = document.getElementById('drawerStarredCheck').checked;
+      item.priority = document.getElementById('drawerPrioritySelect').value;
+      const elTask = document.getElementById('drawerTaskCheck');
+      if (elTask) item.isTask = elTask.checked;
+
+      const profSelect = document.getElementById('drawerProfileSelect');
+      const selectedEmail = profSelect.value;
+      const matchedProf = (vaultData.profiles || []).find(p => (p.email || p.id).toLowerCase() === selectedEmail.toLowerCase());
+      item.profileEmail = matchedProf?.email || '';
+      item.profileId = matchedProf?.id || '';
+      item.profileName = matchedProf ? matchedProf.name : (selectedEmail ? selectedEmail.split('@')[0] : 'Unassigned');
+      item.updatedAt = new Date().toISOString();
+
+      if (item.category && !vaultData.categories.includes(item.category)) {
+        vaultData.categories.push(item.category);
+      }
+
+      const saved = await saveVault();
+      if (!saved.success && !saved.localSaved) return;
+      renderApp();
+      closeDetailDrawer();
+      showToast(syncMeta().dirty && cloudAuthToken ? 'Saved here; cloud sync is pending.' : 'Link changes saved.');
+    }
+
+    function launchCurrentDrawerLink() {
+      if (!currentDrawerLinkId) return;
+      handleLinkRun(currentDrawerLinkId);
+    }
+
+    async function deleteCurrentDrawerLink() {
+      if (!currentDrawerLinkId) return;
+      const id = currentDrawerLinkId;
+      closeDetailDrawer();
+      deleteLinkItem(id);
+    }
+
+    async function toggleStarLink(id, e) {
+      if (e) e.stopPropagation();
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+      item.starred = !item.starred;
+      item.updatedAt = new Date().toISOString();
+      await saveVault();
+      renderApp();
+    }
+
+    async function toggleTaskPin(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+      item.isTask = !item.isTask;
+      item.updatedAt = new Date().toISOString();
+      await saveVault();
+      renderApp();
+      showToast(item.isTask ? '📌 Pinned to Priority Tasks' : 'Unpinned from Tasks');
+    }
+
+    async function toggleTaskDone(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+      item.taskDone = !item.taskDone;
+      item.updatedAt = new Date().toISOString();
+      await saveVault();
+      renderApp();
+    }
+
+    async function clearCompletedTasks() {
+      let count = 0;
+      (vaultData.links || []).forEach(l => {
+        if (l.isTask && l.taskDone) {
+          l.isTask = false;
+          l.updatedAt = new Date().toISOString();
+          count++;
+        }
+      });
+      if (count > 0) {
+        await saveVault();
+        renderApp();
+        showToast('Cleared ' + count + ' completed tasks');
+      }
+    }
+
+    function toggleTaskPanel() {
+      const panel = document.getElementById('tasksSidebar');
+      if (!panel) return;
+      const open = panel.classList.contains('collapsed') || getComputedStyle(panel).display === 'none';
+      panel.classList.toggle('collapsed', !open);
+      panel.style.display = open ? 'flex' : 'none';
+      if (innerWidth <= 1200) panel.style.top = document.querySelector('.app-header').getBoundingClientRect().bottom + 8 + 'px';
+      localStorage.setItem('dreamslab_task_panel', open ? 'open' : 'closed');
+    }
+
+    function selectNavView(view) {
+      activeNavView = view;
+      document.querySelectorAll('.sidebar-left .nav-item').forEach(el => el.classList.remove('active'));
+      const idMap = {
+        ALL: 'navAll',
+        STARRED: 'navStarred',
+        HIGH: 'navHigh',
+        MEDIUM: document.getElementById('navMedium') ? 'navMedium' : 'navMed',
+        LOW: 'navLow'
+      };
+      const targetId = idMap[view];
+      if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) el.classList.add('active');
+      }
+      renderLinksStream();
+    }
+
+    function selectProfileFilter(emailOrId) {
+      if (activeProfileEmail === emailOrId) {
+        activeProfileEmail = null; // Toggle off
+      } else {
+        activeProfileEmail = emailOrId;
+      }
+      renderApp();
+    }
+
+    function selectCategory(cat) {
+      activeCategory = cat;
+      renderApp();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.trim();
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+      renderLinksStream();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('globalSearchInput');
+      if (input) input.value = '';
+      searchQuery = '';
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      renderLinksStream();
+    }
+
+    function populateProfileSelect(selectId, selectedVal) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '<option value="">Unassigned</option>' + sortAndFilterProfiles(vaultData.profiles || []).map(p => {
+        const value = p.email || p.id;
+        return '<option value="' + escapeHtml(value) + '" ' + (value === selectedVal ? 'selected' : '') + '>' + escapeHtml((p.name || p.email) + (p.email ? ' — ' + p.email : '')) + '</option>';
+      }).join('');
+    }
+
+    function populateCategoryDatalist() {
+      const list = document.getElementById('drawerCategoryDatalist');
+      if (!list) return;
+      const cats = new Set([...DEFAULT_CATEGORIES, ...(vaultData.categories || [])]);
+      let html = '';
+      cats.forEach(c => { html += '<option value="' + escapeHtml(c) + '">'; });
+      list.innerHTML = html;
+    }
+
+    function autoFetchTitleForNew(url) {
+      const input = document.getElementById('newLinkTitle');
+      if (!input || input.value.trim() || !url) return;
+      try {
+        let clean = url.trim();
+        if (!clean.startsWith('http://') && !clean.startsWith('https://')) clean = 'https://' + clean;
+        const parsed = new URL(clean);
+        const host = parsed.hostname.replace(/^www\./, '');
+        const brand = host.split('.')[0];
+        input.value = brand.charAt(0).toUpperCase() + brand.slice(1);
+      } catch(e) {}
+    }
+
+    /* ==========================================================================
+       LINK LAUNCHING & BROWSER DISPATCH
+       ========================================================================== */
+
+
+
+    function openDirectTab(url) {
+      url = safeLinkUrl(url);
+      if (!url) { showToast('Enter a valid HTTP or HTTPS link.'); return; }
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      showToast('Link opened in your browser.');
+    }
+
+    function copyLinkUrl(url) {
+      if (!url) return;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('📋 URL copied to clipboard');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('📋 URL copied to clipboard');
+      });
+    }
+
+    async function deleteLinkItem(id) {
+      const item = (vaultData.links || []).find(l => l.id === id);
+      if (!item) return;
+
+      // Deletion tombstone for reliable two-way cloud sync
+      item.deleted = true;
+      item.updatedAt = new Date().toISOString();
+      await saveVault();
+      renderApp();
+      showToast('🗑️ Link deleted');
+    }
+
+    /* ==========================================================================
+       MODALS & DIALOGS
+       ========================================================================== */
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('open');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('open');
+    }
+
+    function openAddLinkModal() {
+      const elTitle = document.getElementById('newLinkTitle');
+      if (elTitle) elTitle.value = '';
+      const elUrl = document.getElementById('newLinkUrl');
+      if (elUrl) elUrl.value = '';
+      const elCat = document.getElementById('newLinkCategory');
+      if (elCat) elCat.value = activeCategory === 'ALL' ? 'General' : activeCategory;
+      const elNotes = document.getElementById('newLinkNotes');
+      if (elNotes) elNotes.value = '';
+      const elPrio = document.getElementById('newLinkPriority');
+      if (elPrio) elPrio.value = 'normal';
+
+      populateProfileSelect('newLinkProfileSelect', activeProfileEmail);
+      populateCategoryDatalist();
+      openModal('addLinkModal');
+      if (elUrl) setTimeout(() => elUrl.focus(), 50);
+    }
+
+    async function saveNewLinkItem(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const titleInput = document.getElementById('newLinkTitle');
+      const urlInput = document.getElementById('newLinkUrl');
+      const catInput = document.getElementById('newLinkCategory');
+      const notesInput = document.getElementById('newLinkNotes');
+      const prioInput = document.getElementById('newLinkPriority');
+      const profSelect = document.getElementById('newLinkProfileSelect');
+
+      let url = urlInput ? urlInput.value.trim() : '';
+      if (!url) { showToast('⚠️ URL is required'); return; }
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
+
+      url = safeLinkUrl(url);
+      if (!url) { showToast('Enter a valid HTTP or HTTPS link.'); return; }
+      let title = titleInput ? titleInput.value.trim() : '';
+      if (!title) {
+        try {
+          const parsed = new URL(url);
+          const brand = parsed.hostname.replace(/^www\./, '').split('.')[0];
+          title = brand.charAt(0).toUpperCase() + brand.slice(1);
+        } catch(e) {
+          title = url;
+        }
+      }
+
+      const cat = (catInput ? catInput.value.trim() : '') || 'General';
+      const prio = (prioInput ? prioInput.value : null) || 'normal';
+      const selectedEmail = profSelect ? profSelect.value : '';
+      const matchedProf = (vaultData.profiles || []).find(p => (p.email || p.id).toLowerCase() === selectedEmail.toLowerCase());
+
+      const newLink = {
+        id: 'link_' + crypto.randomUUID(),
+        deviceIds: [currentDeviceId],
+        order: Math.min(0, ...(vaultData.links || []).map(l => l.order || 0)) - 1,
+        title: title,
+        url: url,
+        category: cat,
+        notes: notesInput ? notesInput.value.trim() : '',
+        priority: prio,
+        isTask: (prio === 'high'),
+        taskDone: false,
+        starred: false,
+        profileEmail: matchedProf?.email || '',
+        profileId: matchedProf?.id || '',
+        profileName: matchedProf ? matchedProf.name : (selectedEmail ? selectedEmail.split('@')[0] : 'Unassigned'),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!Array.isArray(vaultData.links)) vaultData.links = [];
+      vaultData.links.unshift(newLink);
+
+      if (cat && !vaultData.categories.includes(cat)) {
+        vaultData.categories.push(cat);
+      }
+
+      const saved = await saveVault();
+      if (!saved.success && !saved.localSaved) return;
+      renderApp();
+      closeModal('addLinkModal');
+      showToast(syncMeta().dirty && cloudAuthToken ? 'Link saved here; cloud sync is pending.' : 'Link added to vault.');
+    }
+
+    function openAddProfileModal() {
+      document.getElementById('newProfName').value = '';
+      document.getElementById('newProfEmail').value = '';
+      openModal('addProfileModal');
+    }
+
+    async function saveNewProfileItem(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const elName = document.getElementById('newProfName');
+      const elEmail = document.getElementById('newProfEmail');
+
+      const name = elName ? elName.value.trim() : '';
+      const email = elEmail ? elEmail.value.trim().toLowerCase() : '';
+
+      if (!name && !email) {
+        showToast('⚠️ Please provide at least a Profile Name or Google Email');
+        return;
+      }
+
+      if (email && (vaultData.profiles || []).some(p => (p.email || '').toLowerCase() === email)) {
+        showToast('⚠️ A profile with this email already exists in your vault.');
+        return;
+      }
+
+      const meta = getProfileMeta(email, name);
+      const newProf = {
+        id: 'prof_' + Math.random().toString(36).substr(2, 9),
+        name: name || meta.name,
+        email: email,
+        deviceIds: [currentDeviceId],
+        color: meta.color,
+        letter: meta.letter,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!Array.isArray(vaultData.profiles)) vaultData.profiles = [];
+      vaultData.profiles.push(newProf);
+
+      showToast('Account label added.');
+
+      await saveVault();
+      renderApp();
+      closeModal('addProfileModal');
+    }
+
+    /* ==========================================================================
+       CLOUD ACCOUNT
+       ========================================================================== */
+    function openExternalDirect(url) { openDirectTab(url); }
+
+
+
+    function openCloudModal() {
+      document.getElementById('cloudAccountEmail').textContent = currentUserEmail || 'Local vault';
+      document.getElementById('cloudServerLabel').textContent = cloudApiUrl;
+      document.getElementById('cloudSyncStatus').textContent = cloudAuthToken ? (syncMeta().dirty ? 'Local changes are waiting to sync.' : 'Account connected.') : 'Local-only / offline. Sign in online to connect this vault.';
+      openModal('cloudModal');
+    }
+
+
+
+    async function forceCloudSync() {
+      const result = await saveVault();
+      document.getElementById('cloudSyncStatus').textContent = result.localOnly ? 'Saved on this device only. Sign in online to sync.' : result.success ? 'Cloud synced successfully.' : result.error;
+    }
+
+
+
+
+
+
+
+
+
+
+
+/* BACKUP EXPORT / IMPORT */
+    function openLocalSaveModal() {
+      document.getElementById('localSaveStatus').textContent = '';
+      openModal('localSaveModal');
+    }
+
+    function downloadVaultBackup(payload, filename, type) {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: type || 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function exportEncryptedVault() {
+      if (!currentPassword) {
+        showToast('⚠️ Unlock your vault before exporting a backup.');
+        return;
+      }
+      try {
+        const payload = await encryptData(vaultData, currentPassword);
+        downloadVaultBackup({ format: 'dreamslab-vault', version: 1, encrypted: true, exportedAt: new Date().toISOString(), payload }, `DreamsLab_Vault_Backup_${new Date().toISOString().slice(0, 10)}.dlvault`);
+        showToast('🔒 Encrypted backup exported');
+      } catch (err) {
+        showToast('❌ Backup export failed: ' + err.message);
+      }
+    }
+
+    function exportVaultJson() {
+      downloadVaultBackup(vaultData, `DreamsLab_Vault_PLAINTEXT_${new Date().toISOString().slice(0, 10)}.json`);
+      showToast('⚠️ Plaintext backup exported');
+    }
+
+    function openPlaintextExportModal() {
+      if (confirm('Export readable links and notes? Anyone with this file can read them.')) exportVaultJson();
+    }
+
+    function validateImportedVault(vault) {
+      if (!vault || typeof vault !== 'object' || !Array.isArray(vault.links) || !Array.isArray(vault.profiles)) {
+        throw new Error('Backup does not contain a valid vault.');
+      }
+      if (vault.links.length > 50000 || vault.profiles.length > 5000) {
+        throw new Error('Backup exceeds supported size limits.');
+      }
+      return vault;
+    }
+
+    async function handleImportVaultFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const statusEl = document.getElementById('localSaveStatus');
+      try {
+        if (file.size > 15 * 1024 * 1024) throw new Error('Backup exceeds the 15 MB limit.');
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        let imported;
+        if (parsed.format === 'dreamslab-vault' && parsed.encrypted && parsed.payload) {
+          if (!currentPassword) throw new Error('Unlock your vault before importing an encrypted backup.');
+          imported = await decryptData(parsed.payload, currentPassword);
+        } else if (parsed.salt && parsed.iv && parsed.data) {
+          if (!currentPassword) throw new Error('Unlock your vault before importing an encrypted backup.');
+          imported = await decryptData(parsed, currentPassword);
+        } else if (parsed.links && parsed.profiles) {
+          if (!confirm('This is a plaintext backup. It will replace the current local vault. Continue?')) return;
+          imported = parsed;
+        } else {
+          throw new Error('Unrecognized file format');
+        }
+        if (!confirm('Replace your current account vault with this backup? This will sync the replacement online.')) return;
+        vaultData = validateImportedVault(imported);
+        normalizeVaultLinks();
+        await saveVault();
+        renderApp();
+        statusEl.style.color = '#188038';
+        statusEl.textContent = '✅ Restored ' + vaultData.links.length + ' links!';
+        showToast('✅ Vault restored from backup');
+      } catch (err) {
+        statusEl.style.color = '#d93025';
+        statusEl.textContent = 'Import failed: ' + err.message;
+      }
+      e.target.value = '';
+    }
+
+    // Backward-compatible entry point used by older saved pages.
+    async function handleImportJsonFile(e) { return handleImportVaultFile(e); }
+
+    /* SOFTWARE UPDATES */
+
+
+
+
+
+
+    function showToast(msg) {
+      const toast = document.getElementById('appToast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('DOMContentLoaded', checkLockScreenState);
+
+</script>
+<script src="web-app.js"></script>
+<script src="browser-session.js"></script>
+<script src="browser-routing.js"></script>
+<script src="profile-appearance.js"></script>
+</body>
+</html>
