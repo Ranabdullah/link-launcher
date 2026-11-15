@@ -6,6 +6,8 @@
 
 [Open app](https://link-launcher.ranakaharian1.workers.dev) · [Interactive guide](https://link-launcher.ranakaharian1.workers.dev/guide.html) · [Make it yours](docs/SETUP.md)
 
+[Explore the sample workspace](https://link-launcher.ranakaharian1.workers.dev/?view=demo) · [Download Chrome / Edge add-on](https://link-launcher.ranakaharian1.workers.dev/browser-bridge.zip)
+
 ## Explore
 
 [Web app & PWA](#web-app--pwa) | [Cloud sync](#cloud-sync) | [Chrome / Edge](#chrome--edge) | [Backups](#backups) | [Own hosting](docs/SETUP.md)

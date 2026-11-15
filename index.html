@@ -1274,7 +1274,7 @@
 
   </style>
   <link rel="stylesheet" href="responsive.css">
-</head>
+<style>.demo-notice{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:9px 16px;background:#e6effe;color:#183861;font-size:13px}.demo-notice a{color:#174998;font-weight:700;text-decoration:underline;padding:5px 0}body:has(.demo-notice) .app-header button[hidden]{display:none!important}</style></head>
 <body>
 
     <!-- ========================================================================
@@ -1286,7 +1286,7 @@
       <div id="lockTitle" style="font-family: var(--font-google); font-size: 20px; font-weight: 700; color: var(--text-primary);">
         Create Vault Account
       </div>
-      <p id="lockSubtitle" style="font-size: 12px; color: var(--text-muted); margin-top: -4px;">
+      <a href="?view=demo" class="btn-secondary">Explore the fictional demo</a><p id="lockSubtitle" style="font-size: 12px; color: var(--text-muted); margin-top: -4px;">
         Your encrypted links on computers and phones
       </p>
 
@@ -1747,6 +1747,8 @@
        DREAMSLAB LINK LAUNCHER // SECURE ZERO-KNOWLEDGE ARCHITECTURE
        ========================================================================== */
 
+    const entryMode = new URLSearchParams(location.search).get('view');
+    const demoMode = entryMode === 'demo' || (!entryMode && location.hostname === 'link-launcher.ranakaharian1.workers.dev' && !localStorage.getItem('dreamslab_last_email'));
     let currentPassword = null;
     let currentUserEmail = '';
 
@@ -2051,6 +2053,7 @@
     }
 
     async function saveVault() {
+      if (demoMode) return { success: true, localSaved: false };
       if (!currentPassword) return { success: false, error: 'Unlock your vault first.' };
       const email = currentUserEmail, pass = currentPassword;
       let localSaved = false;
@@ -3469,7 +3472,32 @@
         .replace(/'/g, '&#039;');
     }
 
-    window.addEventListener('DOMContentLoaded', checkLockScreenState);
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!demoMode) {
+        checkLockScreenState();
+        if (entryMode === 'create') setLockMode(true);
+        return;
+      }
+      filterToLocalOnly = false;
+      const profile = {id:'demo-studio',name:'Studio',email:'studio@example.invalid',color:'#2563eb',colorSource:'custom'};
+      vaultData = {profiles:[profile],categories:['Work','Learning','Personal'],links:[
+        ['Project board','https://github.com','Work'],
+        ['Web development reference','https://developer.mozilla.org','Learning'],
+        ['Weekend reading','https://www.gutenberg.org','Personal'],
+        ['Design inspiration','https://www.behance.net','Work']
+      ].map(([title,url,category],i)=>({id:'demo-'+i,title,url,category,profileId:profile.id,profileEmail:profile.email,priority:i===0?'high':'normal',starred:i===0,order:i}))};
+      normalizeVaultLinks();
+      document.getElementById('lockScreen').style.display='none';
+      renderApp();
+      const header=document.querySelector('.app-header');
+      const notice=document.createElement('div');
+      notice.className='demo-notice';
+      notice.innerHTML='<strong>Fictional demo</strong><span>Try the workspace. Demo changes reset when you leave.</span><a href="?view=create">Create account</a><a href="?view=signin">Sign in</a><a href="browser-bridge.zip" download>Chrome / Edge add-on</a>';
+      header.after(notice);
+      for(const el of header.querySelectorAll('button')) {
+        if(['Lock','Log Out','Backup'].includes(el.textContent.trim())||el.id==='cloudSyncBadge')el.hidden=true;
+      }
+    });
 
 </script>
 <script src="web-app.js"></script>
